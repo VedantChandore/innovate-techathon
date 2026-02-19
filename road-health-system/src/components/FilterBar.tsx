@@ -57,6 +57,8 @@ export default function FilterBar({
     filters.band,
   ].filter(Boolean).length;
 
+  const isFiltered = filteredCount < totalCount;
+
   return (
     <div className="space-y-3">
       {/* Search + result count */}
@@ -68,10 +70,10 @@ export default function FilterBar({
           />
           <input
             type="text"
-            placeholder="Search road ID, name, district, NH number…"
+            placeholder="Search road ID, name, district, NH number, taluka…"
             value={filters.search}
             onChange={(e) => update("search", e.target.value)}
-            className="w-full pl-10 pr-4 h-10 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+            className="w-full pl-10 pr-4 h-10 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm"
           />
           {filters.search && (
             <button
@@ -83,9 +85,9 @@ export default function FilterBar({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="font-bold text-gray-800">{filteredCount}</span>
-          <span>of {totalCount}</span>
+        <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg ${isFiltered ? "bg-orange-50 border border-orange-200" : "bg-gray-50 border border-gray-200"}`}>
+          <span className={`font-bold ${isFiltered ? "text-orange-700" : "text-gray-800"}`}>{filteredCount.toLocaleString()}</span>
+          <span className={isFiltered ? "text-orange-500" : "text-gray-500"}>of {totalCount.toLocaleString()}</span>
         </div>
       </div>
 
@@ -95,7 +97,7 @@ export default function FilterBar({
           <SlidersHorizontal size={13} />
           <span className="text-[11px] font-semibold uppercase tracking-wider">Filters</span>
           {activeCount > 0 && (
-            <span className="flex items-center justify-center w-4.5 h-4.5 rounded-full bg-blue-600 text-white text-[10px] font-bold leading-none">
+            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold leading-none">
               {activeCount}
             </span>
           )}
@@ -141,14 +143,53 @@ export default function FilterBar({
         {hasFilters && (
           <button
             onClick={clearAll}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-red-600 bg-red-50 text-[11px] font-semibold hover:bg-red-100 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-red-600 bg-red-50 text-[11px] font-semibold hover:bg-red-100 transition-colors border border-red-100"
           >
             <X size={11} />
-            Clear
+            Clear All
           </button>
         )}
       </div>
+
+      {/* Active filter badges */}
+      {hasFilters && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] text-gray-400 font-medium mr-1">Active:</span>
+          {filters.search && (
+            <ActiveBadge label={`"${filters.search}"`} onRemove={() => update("search", "")} />
+          )}
+          {filters.district && (
+            <ActiveBadge label={filters.district} onRemove={() => update("district", "")} />
+          )}
+          {filters.surfaceType && (
+            <ActiveBadge label={filters.surfaceType} onRemove={() => update("surfaceType", "")} />
+          )}
+          {filters.jurisdiction && (
+            <ActiveBadge label={filters.jurisdiction} onRemove={() => update("jurisdiction", "")} />
+          )}
+          {filters.category && (
+            <ActiveBadge label={filters.category} onRemove={() => update("category", "")} />
+          )}
+          {filters.status && (
+            <ActiveBadge label={filters.status} onRemove={() => update("status", "")} />
+          )}
+          {filters.band && (
+            <ActiveBadge label={`Band ${filters.band}`} onRemove={() => update("band", "")} />
+          )}
+        </div>
+      )}
     </div>
+  );
+}
+
+function ActiveBadge({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-semibold border border-orange-200 capitalize">
+      {label}
+      <button onClick={onRemove} className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-orange-200 transition">
+        <X size={8} />
+      </button>
+    </span>
   );
 }
 
@@ -169,7 +210,7 @@ function ChipSelect({
       onChange={(e) => onChange(e.target.value)}
       className={`h-8 px-2.5 rounded-lg border text-[12px] font-medium transition-all cursor-pointer appearance-none pr-6 ${
         value
-          ? "border-blue-200 bg-blue-50 text-blue-700"
+          ? "border-orange-200 bg-orange-50 text-orange-700"
           : "border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50"
       }`}
       style={{

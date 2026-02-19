@@ -10,7 +10,7 @@ import FilterBar from "@/components/FilterBar";
 import RegistryTable from "@/components/RegistryTable";
 import AddRoadModal from "@/components/AddRoadModal";
 import InspectionScheduler from "@/components/InspectionScheduler";
-import { Loader2, Plus, Download, Upload, Database, ArrowLeft, CalendarClock } from "lucide-react";
+import { Loader2, Plus, Download, Upload, Database, CalendarClock } from "lucide-react";
 
 const BAND_ORDER: Band[] = ["A+", "A", "B", "C", "D", "E"];
 
@@ -160,7 +160,7 @@ export default function Home() {
               </div>
               <Loader2 className="w-5 h-5 text-orange-500 animate-spin mx-auto mb-3" />
               <p className="text-gray-500 text-sm font-medium">Generating inspection schedule…</p>
-              <p className="text-gray-400 text-xs mt-1">Analysing 500 road segments</p>
+              <p className="text-gray-400 text-xs mt-1">Analysing 16,000+ road segments</p>
             </div>
           </div>
         </>
@@ -222,7 +222,7 @@ export default function Home() {
             </div>
             <Loader2 className="w-5 h-5 text-orange-500 animate-spin mx-auto mb-3" />
             <p className="text-gray-500 text-sm font-medium">Loading registry data…</p>
-            <p className="text-gray-400 text-xs mt-1">500 road segments</p>
+            <p className="text-gray-400 text-xs mt-1">16,000+ road segments</p>
           </div>
         </div>
       </>

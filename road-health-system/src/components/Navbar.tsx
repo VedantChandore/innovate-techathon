@@ -48,7 +48,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                 scrolled || !isLanding ? "text-gray-900" : "text-white"
               }`}
             >
-              Road<span className="text-orange-500">Raksha</span>
+              Road<span className="text-orange-500">Rakshak</span>
             </span>
             <p
               className={`text-[9px] font-semibold uppercase tracking-[0.15em] transition-colors ${
