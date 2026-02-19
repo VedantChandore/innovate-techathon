@@ -33,7 +33,7 @@
   --font-mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
 }
 
-* { box-sizing: border-box; margin: 0; }
+* { box-sizing: border-box; margin: 5px; }
 
 body {
   background: var(--bg);
