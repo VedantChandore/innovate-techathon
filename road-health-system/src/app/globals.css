@@ -1,0 +1,380 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f0f2f5;
+  --fg: #111827;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --border-light: #f3f4f6;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-subtle: #eff6ff;
+  --muted: #6b7280;
+  --muted-light: #9ca3af;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --sidebar-bg: #111827;
+  --radius: 12px;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-muted: var(--muted);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ─── Band Colors ──────────────────────────────────── */
+.band-a-plus { background: #059669; color: white; }
+.band-a { background: #22c55e; color: white; }
+.band-b { background: #eab308; color: #1c1917; }
+.band-c { background: #f97316; color: white; }
+.band-d { background: #ef4444; color: white; }
+.band-e { background: #991b1b; color: white; }
+
+/* ─── Data Table ───────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.data-table thead th {
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  padding: 0 14px;
+  height: 42px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  border-bottom: 2px solid #e5e7eb;
+  text-align: left;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.data-table tbody tr {
+  transition: background 0.15s ease;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+.data-table tbody tr:hover {
+  background: #fff7ed !important;
+}
+
+.data-table tbody tr:active {
+  background: #ffedd5 !important;
+}
+
+.data-table tbody td {
+  padding: 0 14px;
+  height: 46px;
+  font-size: 13px;
+  white-space: nowrap;
+  vertical-align: middle;
+  color: #374151;
+}
+
+/* ─── Animations ───────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up { animation: fadeUp 0.25s ease-out; }
+.animate-slide-right { animation: slideRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-overlay-in { animation: overlayIn 0.2s ease-out; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }
+
+/* ─── Parameter Bar ────────────────────────────────── */
+.param-bar-bg {
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.param-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Utility ──────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Focus ring */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ════════════════════════════════════════════════════
+   LANDING PAGE STYLES
+   ════════════════════════════════════════════════════ */
+
+/* ─── Hero Gradient ────────────────────────────────── */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    #0c1220 0%,
+    #0f1d32 25%,
+    #14284a 50%,
+    #1a365d 75%,
+    #0f1d32 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(251,146,60,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 80% 80%, rgba(59,130,246,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ─── Highway Lines (road lane markings) ───────────── */
+.highway-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.06;
+}
+
+.highway-lines::before,
+.highway-lines::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 28px,
+    #fff 28px,
+    #fff 56px
+  );
+}
+
+.highway-lines::before { left: 30%; }
+.highway-lines::after  { right: 30%; }
+
+/* ─── NH Badge ─────────────────────────────────────── */
+.nh-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.nh-badge:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(251, 146, 60, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ─── Feature Card ─────────────────────────────────── */
+.feature-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px 28px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+  border-color: #fed7aa;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+/* ─── Score Card Hero ──────────────────────────────── */
+.score-card-hero {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.score-card-hero::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(251,146,60,0.12), transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Road Dash Line (workflow connector) ──────────── */
+.road-dash-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    to right,
+    #f97316 0px,
+    #f97316 12px,
+    transparent 12px,
+    transparent 24px
+  );
+  transform: translateY(-50%);
+  animation: dashScroll 1.5s linear infinite;
+}
+
+@keyframes dashScroll {
+  from { background-position: 0 0; }
+  to   { background-position: 24px 0; }
+}
+
+/* ─── Scroll Indicator ─────────────────────────────── */
+@keyframes scrollBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%      { transform: translateY(6px); opacity: 1; }
+}
+
+.animate-scroll-bounce {
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+/* ─── Stats Counter Pulse ──────────────────────────── */
+@keyframes counterGlow {
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  50%      { text-shadow: 0 0 20px rgba(251, 146, 60, 0.3); }
+}
+
+.stat-counter-glow {
+  animation: counterGlow 3s ease-in-out infinite;
+}
+
+/* ─── Landing page section styling ─────────────────── */
+.landing-section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Adjust focus ring to use orange for landing page buttons */
+.btn-primary-landing {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px -3px rgba(249, 115, 22, 0.4);
+}
+
+.btn-primary-landing:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -4px rgba(249, 115, 22, 0.5);
+}
