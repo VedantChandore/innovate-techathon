@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Shield, Menu, X } from "lucide-react";
 
-type PageId = "landing" | "registry" | "scheduling";
+type PageId = "landing" | "registry" | "scheduling" | "geoview";
 
 interface NavbarProps {
   currentPage: PageId;
@@ -66,6 +66,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
             { id: "landing" as const, label: "Home" },
             { id: "registry" as const, label: "Road Registry" },
             { id: "scheduling" as const, label: "Inspection Scheduler" },
+            { id: "geoview" as const, label: "GeoView" },
           ].map((item) => (
             <button
               key={item.id}
@@ -106,6 +107,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
               { id: "landing" as const, label: "Home" },
               { id: "registry" as const, label: "Road Registry" },
               { id: "scheduling" as const, label: "Inspection Scheduler" },
+              { id: "geoview" as const, label: "GeoView" },
             ].map((item) => (
               <button
                 key={item.id}
