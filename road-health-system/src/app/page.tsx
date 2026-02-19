@@ -76,7 +76,7 @@ export default function Home() {
           r.name.toLowerCase().includes(q) ||
           r.district.toLowerCase().includes(q) ||
           r.taluka.toLowerCase().includes(q) ||
-          r.nh_number.toLowerCase().includes(q)
+          r.highway_ref.toLowerCase().includes(q)
       );
     }
     if (filters.district) result = result.filter((r) => r.district === filters.district);
@@ -104,21 +104,22 @@ export default function Home() {
 
   const handleExportCSV = () => {
     const headers = [
-      "road_id", "name", "nh_number", "district", "taluka", "length_km",
+      "road_id", "name", "highway_ref", "district", "taluka", "length_km",
       "surface_type", "lane_count", "jurisdiction", "category", "status",
       "year_constructed", "last_major_rehab_year", "avg_daily_traffic",
-      "truck_percentage", "terrain_type", "elevation_m", "health_band",
-      "health_rating", "condition_score",
+      "truck_percentage", "terrain_type", "elevation_m", "pci_score",
+      "iri_value", "health_band", "health_rating", "condition_score",
     ];
     const csvRows = [headers.join(",")];
     filteredRoads.forEach((r) => {
       csvRows.push(
         [
-          r.road_id, `"${r.name}"`, r.nh_number, r.district, r.taluka,
+          r.road_id, `"${r.name}"`, r.highway_ref, r.district, r.taluka,
           r.length_km, r.surface_type, r.lane_count, r.jurisdiction,
           r.category, r.status, r.year_constructed,
           r.last_major_rehab_year ?? "", r.avg_daily_traffic,
           r.truck_percentage, r.terrain_type, r.elevation_m,
+          r.pci_score, r.iri_value,
           r.healthScore.band, r.healthScore.rating,
           r.healthScore.conditionScore,
         ].join(",")

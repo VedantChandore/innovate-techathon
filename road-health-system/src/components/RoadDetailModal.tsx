@@ -34,14 +34,15 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
   const repairCost = estimateRepairCost(road);
   const inspDays = getInspectionInterval(road.healthScore.band);
   const roadAge = 2026 - road.year_constructed;
-  const { PCI, RSL, DRN, RQL } = road.healthScore.parameters;
+  const { PCI, IRI, DISTRESS, RSL, DRN } = road.healthScore.parameters;
   const bandColor = BAND_COLORS[road.healthScore.band];
 
   const paramInfo = [
     { key: "PCI", label: "Pavement Condition", value: PCI, weight: "30%" },
-    { key: "RSL", label: "Structural Life", value: RSL, weight: "25%" },
-    { key: "DRN", label: "Drainage", value: DRN, weight: "25%" },
-    { key: "RQL", label: "Ride Quality", value: RQL, weight: "20%" },
+    { key: "IRI", label: "Roughness Index", value: IRI, weight: "20%" },
+    { key: "DISTRESS", label: "Distress Index", value: DISTRESS, weight: "20%" },
+    { key: "RSL", label: "Structural Life", value: RSL, weight: "15%" },
+    { key: "DRN", label: "Drainage", value: DRN, weight: "15%" },
   ];
 
   const weakest = paramInfo.reduce((min, p) => (p.value < min.value ? p : min));
@@ -68,7 +69,7 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
                 <MapPin size={12} />
                 <span>{road.district}, {road.taluka}</span>
                 <span className="text-gray-300">•</span>
-                <span>{road.nh_number}</span>
+                <span>{road.highway_ref}</span>
               </div>
             </div>
             <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">

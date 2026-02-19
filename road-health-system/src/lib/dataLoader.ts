@@ -3,7 +3,7 @@ import { RoadRecord, InspectionRecord, RoadWithScore } from "./types";
 import { computeHealthScore } from "./scoring";
 
 function parseBool(val: string): boolean {
-  return val === "TRUE" || val === "true" || val === "1";
+  return val === "TRUE" || val === "true" || val === "True" || val === "1";
 }
 
 function parseNum(val: string): number {
@@ -26,42 +26,75 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
   const registryText = await registryRes.text();
   const inspectionText = await inspectionRes.text();
 
-  // Parse road registry
+  // Parse road registry (ultimate_dataset.csv)
   const registryResult = Papa.parse(registryText, { header: true, skipEmptyLines: true });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roads: RoadRecord[] = registryResult.data.map((row: any) => ({
-    road_id: row.road_id || "",
-    name: row.name || "",
-    nh_number: row.nh_number || "",
+    // Identity
+    road_id: (row.road_id || "").trim(),
+    name: (row.name || "").trim(),
+    geojson_id: (row.geojson_id || "").trim(),
+    highway_ref: (row.highway_ref || "").trim(),
+    segment_number: parseNum(row.segment_number),
+    highway_type: (row.highway_type || "").trim(),
+    oneway: (row.oneway || "").trim(),
+    lanes: (row.lanes || "").trim(),
+    maxspeed: (row.maxspeed || "").trim(),
+    condition: (row.condition || "average") as RoadRecord["condition"],
+
+    // Geometry
+    start_lat: parseNum(row.start_lat),
+    start_lon: parseNum(row.start_lon),
+    end_lat: parseNum(row.end_lat),
+    end_lon: parseNum(row.end_lon),
     segment_start_km: parseNum(row.segment_start_km),
     segment_end_km: parseNum(row.segment_end_km),
-    jurisdiction: row.jurisdiction || "",
-    category: row.category || "",
+
+    // Admin
+    jurisdiction: (row.jurisdiction || "").trim(),
+    category: (row.category || "").trim(),
     length_km: parseNum(row.length_km),
     lane_count: parseNum(row.lane_count),
     surface_type: (row.surface_type || "bitumen") as RoadRecord["surface_type"],
     year_constructed: parseNum(row.year_constructed),
     last_major_rehab_year: parseNullNum(row.last_major_rehab_year),
-    status: (row.status || "active") as RoadRecord["status"],
-    geometry: row.geometry || "",
-    notes: row.notes || "",
-    state: row.state || "Maharashtra",
-    district: row.district || "",
-    taluka: row.taluka || "",
-    region_type: row.region_type || "",
-    terrain_type: (row.terrain_type || "plain") as RoadRecord["terrain_type"],
-    slope_category: (row.slope_category || "flat") as RoadRecord["slope_category"],
+    status: (row.status || "active").trim(),
+
+    // Geography
+    state: (row.state || "Maharashtra").trim(),
+    district: (row.district || "").trim(),
+    taluka: (row.taluka || "").trim(),
+    region_type: (row.region_type || "").trim(),
+    terrain_type: (row.terrain_type || "plain").trim(),
+    slope_category: (row.slope_category || "flat").trim(),
     monsoon_rainfall_category: (row.monsoon_rainfall_category || "medium") as RoadRecord["monsoon_rainfall_category"],
     landslide_prone: parseBool(row.landslide_prone),
     flood_prone: parseBool(row.flood_prone),
     ghat_section_flag: parseBool(row.ghat_section_flag),
     tourism_route_flag: parseBool(row.tourism_route_flag),
     elevation_m: parseNum(row.elevation_m),
+
+    // Traffic
     avg_daily_traffic: parseNum(row.avg_daily_traffic),
     truck_percentage: parseNum(row.truck_percentage),
     peak_hour_traffic: parseNum(row.peak_hour_traffic),
     traffic_weight: parseNum(row.traffic_weight),
     seasonal_variation: row.seasonal_variation || "",
+
+    // Distress metrics
+    potholes_per_km: parseNum(row.potholes_per_km),
+    pothole_avg_depth_cm: parseNum(row.pothole_avg_depth_cm),
+    cracks_longitudinal_pct: parseNum(row.cracks_longitudinal_pct),
+    cracks_transverse_per_km: parseNum(row.cracks_transverse_per_km),
+    alligator_cracking_pct: parseNum(row.alligator_cracking_pct),
+    rutting_depth_mm: parseNum(row.rutting_depth_mm),
+    raveling_pct: parseNum(row.raveling_pct),
+    edge_breaking_pct: parseNum(row.edge_breaking_pct),
+    patches_per_km: parseNum(row.patches_per_km),
+
+    // Measured scores
+    iri_value: parseNum(row.iri_value),
+    pci_score: parseNum(row.pci_score),
   }));
 
   // Parse inspection history

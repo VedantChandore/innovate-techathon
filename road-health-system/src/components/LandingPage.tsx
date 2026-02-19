@@ -1520,9 +1520,10 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
               <div className="mt-4 space-y-5">
                 {[
                   { name: "PCI — Pavement Condition", weight: "30%", value: 78, color: "#22c55e" },
-                  { name: "RSL — Structural Life", weight: "25%", value: 62, color: "#3b82f6" },
-                  { name: "DRN — Drainage", weight: "25%", value: 45, color: "#eab308" },
-                  { name: "RQL — Ride Quality", weight: "20%", value: 85, color: "#8b5cf6" },
+                  { name: "IRI — Roughness Index", weight: "20%", value: 72, color: "#f97316" },
+                  { name: "DISTRESS — Distress Index", weight: "20%", value: 55, color: "#eab308" },
+                  { name: "RSL — Structural Life", weight: "15%", value: 62, color: "#3b82f6" },
+                  { name: "DRN — Drainage", weight: "15%", value: 45, color: "#8b5cf6" },
                 ].map((p, i) => (
                   <FadeSection key={p.name} delay={i * 0.1}>
                     <div className="flex items-center gap-3">

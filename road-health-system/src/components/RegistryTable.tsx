@@ -432,12 +432,13 @@ function HoverInfoCard({
   onMouseLeave: () => void;
 }) {
   const bandColor = BAND_COLORS[road.healthScore.band];
-  const { PCI, RSL, DRN, RQL } = road.healthScore.parameters;
+  const { PCI, IRI, DISTRESS, RSL, DRN } = road.healthScore.parameters;
   const params = [
     { key: "PCI", value: PCI },
+    { key: "IRI", value: IRI },
+    { key: "DISTRESS", value: DISTRESS },
     { key: "RSL", value: RSL },
     { key: "DRN", value: DRN },
-    { key: "RQL", value: RQL },
   ];
   const repairCost = estimateRepairCost(road);
   const inspDays = getInspectionInterval(road.healthScore.band);
@@ -480,7 +481,7 @@ function HoverInfoCard({
               <MapPin size={10} />
               <span>{road.district}, {road.taluka}</span>
               <span className="text-gray-300">•</span>
-              <span>{road.nh_number}</span>
+              <span>{road.highway_ref}</span>
             </div>
           </div>
           <div

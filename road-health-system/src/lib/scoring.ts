@@ -1,7 +1,8 @@
 import { RoadRecord, ConditionParameters, HealthScore, Band } from "./types";
 
-// ─── Road Health Scoring Engine ────────────────────────────────
-// 4 Core Civil Engineering Parameters → Condition Score → CIBIL Band
+// ─── Road Health Scoring Engine (v2 — Data-Driven) ─────────────
+// Uses REAL PCI & IRI from field surveys + 9 distress metrics
+// Formula: 0.30×PCI + 0.20×IRI_norm + 0.20×DISTRESS + 0.15×RSL + 0.15×DRN
 
 const CURRENT_YEAR = 2026;
 
@@ -15,52 +16,55 @@ const SURFACE_LIFESPANS: Record<string, number> = {
 const clamp = (v: number, min = 0, max = 100) =>
   Math.max(min, Math.min(max, Math.round(v * 10) / 10));
 
-function getRehabBonus(lastRehabYear: number | null): number {
-  if (!lastRehabYear) return 0;
-  const yrs = CURRENT_YEAR - lastRehabYear;
-  if (yrs <= 0) return 20;
-  return Math.max(0, 20 - yrs * 2);
+// ─── PCI: Direct from data (0-100) ────────────────────────────
+
+function getPCI(road: RoadRecord): number {
+  return clamp(road.pci_score);
 }
 
-function getRainFactor(cat: string): number {
-  return cat === "high" ? 1.0 : cat === "medium" ? 0.5 : 0.0;
+// ─── IRI: Normalize to 0-100 (lower IRI = better road) ────────
+// IRI range: 0-2 (excellent) to 12+ (very bad)
+// We invert: IRI_norm = max(0, 100 - IRI × 8)
+
+function getIRINormalized(road: RoadRecord): number {
+  return clamp(100 - road.iri_value * 8);
 }
 
-function getTerrainFactor(t: string): number {
-  return t === "steep" ? 1.0 : t === "hilly" ? 0.6 : 0.0;
+// ─── DISTRESS INDEX: Weighted from 9 distress columns ──────────
+// Each metric is normalized to 0-100 deduction, then combined.
+// Higher raw value = more damage = lower score.
+
+function computeDistressIndex(road: RoadRecord): number {
+  // Normalize each: deduction = (value / max_expected) × weight × 100
+  // Then: DISTRESS = 100 - totalDeduction
+
+  const deductions = [
+    // potholes_per_km: 0-30 range, weight 0.20
+    Math.min(1, road.potholes_per_km / 30) * 20,
+    // alligator_cracking_pct: 0-50%, weight 0.18
+    Math.min(1, road.alligator_cracking_pct / 50) * 18,
+    // rutting_depth_mm: 0-40mm, weight 0.15
+    Math.min(1, road.rutting_depth_mm / 40) * 15,
+    // cracks_longitudinal_pct: 0-50%, weight 0.12
+    Math.min(1, road.cracks_longitudinal_pct / 50) * 12,
+    // cracks_transverse_per_km: 0-30, weight 0.10
+    Math.min(1, road.cracks_transverse_per_km / 30) * 10,
+    // pothole_avg_depth_cm: 0-20cm, weight 0.08
+    Math.min(1, road.pothole_avg_depth_cm / 20) * 8,
+    // raveling_pct: 0-50%, weight 0.07
+    Math.min(1, road.raveling_pct / 50) * 7,
+    // edge_breaking_pct: 0-50%, weight 0.05
+    Math.min(1, road.edge_breaking_pct / 50) * 5,
+    // patches_per_km: 0-25, weight 0.05
+    Math.min(1, road.patches_per_km / 25) * 5,
+  ];
+
+  const totalDeduction = deductions.reduce((s, d) => s + d, 0);
+  return clamp(100 - totalDeduction);
 }
 
-function getSlopeFactor(s: string): number {
-  return s === "steep" ? 1.0 : s === "moderate" ? 0.5 : 0.0;
-}
+// ─── RSL: Remaining Structural Life (modeled) ──────────────────
 
-// ─── PCI: Pavement Condition Index ─────────────────────────────
-// Measures surface distress: cracks, potholes, raveling, rutting
-function computePCI(road: RoadRecord): number {
-  const baseScores: Record<string, number> = {
-    concrete: 92,
-    bitumen: 85,
-    gravel: 55,
-    earthen: 30,
-  };
-  const age = CURRENT_YEAR - road.year_constructed;
-  const lifespan = SURFACE_LIFESPANS[road.surface_type] || 15;
-  const ageRatio = Math.min(age / lifespan, 1.5);
-  const rain = getRainFactor(road.monsoon_rainfall_category);
-  const rehab = getRehabBonus(road.last_major_rehab_year);
-
-  let pci = baseScores[road.surface_type] || 50;
-  pci -= ageRatio * 40;
-  pci -= rain * 15;
-  pci -= road.traffic_weight * 8;
-  pci -= road.truck_percentage * 0.3;
-  pci += rehab;
-
-  return clamp(pci);
-}
-
-// ─── RSL: Remaining Structural Life ────────────────────────────
-// Load-bearing capacity & fatigue life based on AASHTO model
 function computeRSL(road: RoadRecord): number {
   const designCycles: Record<string, number> = {
     concrete: 10_000_000,
@@ -74,55 +78,34 @@ function computeRSL(road: RoadRecord): number {
   let consumed = road.avg_daily_traffic * truckEsalFactor * age * 365;
 
   if (road.last_major_rehab_year) {
-    consumed *= 0.4; // rehab restores 60% structural capacity
+    consumed *= 0.4;
   }
 
-  const laneBonus =
-    road.lane_count >= 6 ? 1.3 : road.lane_count >= 4 ? 1.1 : 1.0;
+  const laneCount = road.lane_count || 2;
+  const laneBonus = laneCount >= 6 ? 1.3 : laneCount >= 4 ? 1.1 : 1.0;
 
   return clamp(100 * Math.max(0, 1 - consumed / (dc * laneBonus)));
 }
 
-// ─── DRN: Drainage Condition ───────────────────────────────────
-// Water management: slope, rainfall, flood risk, geography
+// ─── DRN: Drainage Condition (modeled) ─────────────────────────
+
 function computeDRN(road: RoadRecord): number {
   const slopeBase: Record<string, number> = {
     steep: 85,
     moderate: 70,
     flat: 50,
   };
-  const rain = getRainFactor(road.monsoon_rainfall_category);
+  const rainFactor = road.monsoon_rainfall_category === "high" ? 1.0
+    : road.monsoon_rainfall_category === "medium" ? 0.5 : 0.0;
 
   let drn = slopeBase[road.slope_category] || 60;
-  drn -= rain * 20;
+  drn -= rainFactor * 20;
   drn -= road.flood_prone ? 25 : 0;
   drn -= road.landslide_prone ? 8 : 0;
   drn -= road.region_type === "coastal" ? 10 : 0;
   drn -= road.elevation_m < 100 ? 10 : 0;
 
   return clamp(drn);
-}
-
-// ─── RQL: Ride Quality ─────────────────────────────────────────
-// Smoothness/roughness proxy (IRI-based)
-function computeRQL(road: RoadRecord): number {
-  const baseScores: Record<string, number> = {
-    concrete: 95,
-    bitumen: 88,
-    gravel: 50,
-    earthen: 25,
-  };
-  const terrain = getTerrainFactor(road.terrain_type);
-  const age = CURRENT_YEAR - road.year_constructed;
-  const rehab = getRehabBonus(road.last_major_rehab_year);
-
-  let rql = baseScores[road.surface_type] || 50;
-  rql -= terrain * 12;
-  rql -= Math.min(age * 1.5, 30);
-  rql -= road.traffic_weight * 7;
-  rql += rehab * 0.8;
-
-  return clamp(rql);
 }
 
 // ─── Band Mapping ──────────────────────────────────────────────
@@ -143,20 +126,23 @@ function getBandInfo(score: number): BandInfo {
 }
 
 // ─── Main Scoring Function ─────────────────────────────────────
+// NEW: 0.30×PCI + 0.20×IRI_norm + 0.20×DISTRESS + 0.15×RSL + 0.15×DRN
 
 export function computeHealthScore(road: RoadRecord): HealthScore {
   const parameters: ConditionParameters = {
-    PCI: computePCI(road),
+    PCI: getPCI(road),
+    IRI: getIRINormalized(road),
+    DISTRESS: computeDistressIndex(road),
     RSL: computeRSL(road),
     DRN: computeDRN(road),
-    RQL: computeRQL(road),
   };
 
   const conditionScore = Math.round(
-    (0.3 * parameters.PCI +
-      0.25 * parameters.RSL +
-      0.25 * parameters.DRN +
-      0.2 * parameters.RQL) *
+    (0.30 * parameters.PCI +
+      0.20 * parameters.IRI +
+      0.20 * parameters.DISTRESS +
+      0.15 * parameters.RSL +
+      0.15 * parameters.DRN) *
       100
   ) / 100;
 

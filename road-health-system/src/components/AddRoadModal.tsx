@@ -12,7 +12,7 @@ interface AddRoadModalProps {
 
 interface FormData {
   name: string;
-  nh_number: string;
+  highway_ref: string;
   segment_start_km: string;
   segment_end_km: string;
   jurisdiction: string;
@@ -35,12 +35,11 @@ interface FormData {
   elevation_m: string;
   avg_daily_traffic: string;
   truck_percentage: string;
-  notes: string;
 }
 
 const INITIAL: FormData = {
   name: "",
-  nh_number: "",
+  highway_ref: "",
   segment_start_km: "",
   segment_end_km: "",
   jurisdiction: "State PWD",
@@ -63,7 +62,6 @@ const INITIAL: FormData = {
   elevation_m: "",
   avg_daily_traffic: "",
   truck_percentage: "",
-  notes: "",
 };
 
 export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
@@ -97,7 +95,18 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
     const road: RoadRecord = {
       road_id: newId,
       name: form.name,
-      nh_number: form.nh_number || "N/A",
+      geojson_id: "",
+      highway_ref: form.highway_ref || "N/A",
+      segment_number: 0,
+      highway_type: "secondary",
+      oneway: "no",
+      lanes: form.lane_count,
+      maxspeed: "80",
+      condition: "average",
+      start_lat: 0,
+      start_lon: 0,
+      end_lat: 0,
+      end_lon: 0,
       segment_start_km: startKm,
       segment_end_km: endKm,
       jurisdiction: form.jurisdiction,
@@ -110,14 +119,12 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
         ? parseInt(form.last_major_rehab_year)
         : null,
       status: form.status as RoadRecord["status"],
-      geometry: "",
-      notes: form.notes,
       state: "Maharashtra",
       district: form.district,
       taluka: form.taluka || form.district,
       region_type: form.region_type,
-      terrain_type: form.terrain_type as RoadRecord["terrain_type"],
-      slope_category: form.slope_category as RoadRecord["slope_category"],
+      terrain_type: form.terrain_type,
+      slope_category: form.slope_category,
       monsoon_rainfall_category:
         form.monsoon_rainfall_category as RoadRecord["monsoon_rainfall_category"],
       landslide_prone: form.landslide_prone,
@@ -130,6 +137,17 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
       peak_hour_traffic: Math.round((parseInt(form.avg_daily_traffic) || 0) * 0.1),
       traffic_weight: 1,
       seasonal_variation: "",
+      potholes_per_km: 0,
+      pothole_avg_depth_cm: 0,
+      cracks_longitudinal_pct: 0,
+      cracks_transverse_per_km: 0,
+      alligator_cracking_pct: 0,
+      rutting_depth_mm: 0,
+      raveling_pct: 0,
+      edge_breaking_pct: 0,
+      patches_per_km: 0,
+      iri_value: 3,
+      pci_score: 70,
     };
 
     const roadWithScore: RoadWithScore = {
@@ -178,11 +196,11 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
                   className={inputClass(errors.name)}
                 />
               </Field>
-              <Field label="NH Number">
+              <Field label="Highway Ref">
                 <input
                   type="text"
-                  value={form.nh_number}
-                  onChange={(e) => set("nh_number", e.target.value)}
+                  value={form.highway_ref}
+                  onChange={(e) => set("highway_ref", e.target.value)}
                   placeholder="e.g. NH48"
                   className={inputClass()}
                 />
@@ -359,17 +377,8 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
             </div>
           </Section>
 
-          {/* Notes */}
-          <Section title="Additional Notes">
-            <textarea
-              value={form.notes}
-              onChange={(e) => set("notes", e.target.value)}
-              placeholder="Any additional information about this road segment..."
-              rows={3}
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
-            />
-          </Section>
-        </div>
+          {/* Notes removed — no longer in RoadRecord */}
+          </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
