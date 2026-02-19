@@ -33,6 +33,199 @@ interface LandingPageProps {
    SVG MASCOTS & ILLUSTRATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
+/* ── Feature-section-only decorative SVGs ── */
+
+function PotholeSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="30" cy="28" rx="26" ry="10" fill="#d1d5db" />
+      <ellipse cx="30" cy="26" rx="20" ry="7" fill="#9ca3af" />
+      <ellipse cx="30" cy="25" rx="14" ry="5" fill="#6b7280" />
+      <path d="M18 22Q30 32 42 22" fill="none" stroke="#4b5563" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Crack lines */}
+      <path d="M10 24L16 22" stroke="#9ca3af" strokeWidth="1" strokeLinecap="round" />
+      <path d="M44 22L50 24" stroke="#9ca3af" strokeWidth="1" strokeLinecap="round" />
+      <path d="M28 18L26 22" stroke="#9ca3af" strokeWidth="1" strokeLinecap="round" />
+      <path d="M34 18L36 22" stroke="#9ca3af" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SpeedBumpSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 80 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 30Q40 2 76 30" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
+      <path d="M12 28Q40 8 68 28" fill="#fde68a" />
+      {/* Stripes */}
+      <rect x="24" y="14" width="4" height="14" rx="1" fill="white" opacity="0.7" transform="rotate(-10 26 21)" />
+      <rect x="38" y="10" width="4" height="18" rx="1" fill="white" opacity="0.7" />
+      <rect x="52" y="14" width="4" height="14" rx="1" fill="white" opacity="0.7" transform="rotate(10 54 21)" />
+    </svg>
+  );
+}
+
+function TrafficLightSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 40 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Post */}
+      <rect x="17" y="55" width="6" height="22" rx="1" fill="#6b7280" />
+      <rect x="12" y="74" width="16" height="4" rx="2" fill="#4b5563" />
+      {/* Housing */}
+      <rect x="8" y="6" width="24" height="50" rx="5" fill="#374151" />
+      <rect x="10" y="8" width="20" height="46" rx="4" fill="#1f2937" />
+      {/* Red light */}
+      <circle cx="20" cy="18" r="6" fill="#ef4444" />
+      <circle cx="20" cy="18" r="3" fill="#fca5a5" opacity="0.6" />
+      {/* Yellow light */}
+      <circle cx="20" cy="32" r="6" fill="#fbbf24" />
+      <circle cx="20" cy="32" r="3" fill="#fde68a" opacity="0.6" />
+      {/* Green light */}
+      <circle cx="20" cy="46" r="6" fill="#22c55e" />
+      <circle cx="20" cy="46" r="3" fill="#86efac" opacity="0.6" />
+      {/* Hood */}
+      <path d="M6 10L8 6H32L34 10" fill="#374151" />
+    </svg>
+  );
+}
+
+function BridgeSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 100 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Deck */}
+      <rect x="2" y="14" width="96" height="6" rx="2" fill="#6b7280" />
+      {/* Arch */}
+      <path d="M10 20Q50 50 90 20" fill="none" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
+      {/* Cables/pillars */}
+      <rect x="10" y="20" width="4" height="20" rx="1" fill="#4b5563" />
+      <rect x="86" y="20" width="4" height="20" rx="1" fill="#4b5563" />
+      <rect x="30" y="20" width="3" height="14" rx="1" fill="#9ca3af" />
+      <rect x="48" y="20" width="3" height="18" rx="1" fill="#9ca3af" />
+      <rect x="67" y="20" width="3" height="14" rx="1" fill="#9ca3af" />
+      {/* Railing */}
+      <rect x="2" y="12" width="96" height="3" rx="1" fill="#4b5563" />
+    </svg>
+  );
+}
+
+function GPSPinSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 40 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 50L8 28C2 18 6 6 20 4C34 6 38 18 32 28L20 50Z" fill="#3b82f6" />
+      <path d="M20 46L10 28C5 20 8 10 20 8C32 10 35 20 30 28L20 46Z" fill="#60a5fa" />
+      <circle cx="20" cy="20" r="8" fill="white" />
+      <circle cx="20" cy="20" r="4" fill="#3b82f6" />
+      {/* Shadow */}
+      <ellipse cx="20" cy="52" rx="6" ry="2" fill="#1e3a5f" opacity="0.2" />
+    </svg>
+  );
+}
+
+function ShovelSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 45 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Handle */}
+      <rect x="20" y="5" width="5" height="40" rx="2" fill="#92400e" />
+      <rect x="18" y="3" width="9" height="6" rx="2" fill="#78350f" />
+      {/* Blade */}
+      <path d="M10 45L22 44L35 45L32 64Q22 68 13 64L10 45Z" fill="#6b7280" />
+      <path d="M12 46L22 45L33 46L31 60Q22 63 14 60L12 46Z" fill="#9ca3af" />
+      {/* Blade edge highlight */}
+      <path d="M14 47L22 46L31 47" fill="none" stroke="#d1d5db" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WrenchSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M38 6C34 2 28 4 26 8L14 20L8 26Q6 28 8 30L20 42Q22 44 24 42L30 36L42 24C46 22 48 16 44 12L38 18L34 14L38 6Z" fill="#6b7280" />
+      <path d="M16 22L28 34" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="38" cy="12" r="3" fill="#d1d5db" opacity="0.5" />
+    </svg>
+  );
+}
+
+function HelmetSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 55 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 30C6 14 16 4 28 4C40 4 50 14 50 30H6Z" fill="#fbbf24" />
+      <rect x="4" y="28" width="48" height="7" rx="3" fill="#f59e0b" />
+      <path d="M10 28C10 16 18 8 28 8C38 8 46 16 46 28" fill="none" stroke="#fde68a" strokeWidth="2" opacity="0.5" />
+      {/* Front light */}
+      <rect x="22" y="18" width="12" height="8" rx="2" fill="white" opacity="0.4" />
+      {/* Brim */}
+      <rect x="2" y="33" width="52" height="4" rx="2" fill="#d97706" />
+    </svg>
+  );
+}
+
+function MeasureTapeSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 55 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Tape body */}
+      <circle cx="28" cy="28" r="22" fill="#f97316" />
+      <circle cx="28" cy="28" r="18" fill="#fb923c" />
+      <circle cx="28" cy="28" r="8" fill="#ea580c" />
+      <circle cx="28" cy="28" r="4" fill="#f97316" />
+      {/* Tape extending */}
+      <rect x="28" y="6" width="24" height="5" rx="1" fill="#fde68a" />
+      <rect x="48" y="4" width="5" height="9" rx="1" fill="#f59e0b" />
+      {/* Tick marks */}
+      <rect x="32" y="6" width="1" height="5" fill="#92400e" opacity="0.5" />
+      <rect x="37" y="6" width="1" height="3" fill="#92400e" opacity="0.5" />
+      <rect x="42" y="6" width="1" height="5" fill="#92400e" opacity="0.5" />
+    </svg>
+  );
+}
+
+function ClipboardCheckSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 45 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Board */}
+      <rect x="4" y="8" width="37" height="44" rx="4" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="1.5" />
+      <rect x="8" y="12" width="29" height="36" rx="2" fill="white" />
+      {/* Clip */}
+      <rect x="14" y="4" width="17" height="10" rx="3" fill="#6b7280" />
+      <rect x="18" y="2" width="9" height="6" rx="2" fill="#4b5563" />
+      {/* Lines */}
+      <rect x="12" y="20" width="18" height="2" rx="1" fill="#d1d5db" />
+      <rect x="12" y="26" width="22" height="2" rx="1" fill="#d1d5db" />
+      <rect x="12" y="32" width="15" height="2" rx="1" fill="#d1d5db" />
+      {/* Checkmark */}
+      <path d="M18 38L22 42L30 34" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WarningTriangleSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 50 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M25 4L48 40H2L25 4Z" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
+      <path d="M25 10L42 38H8L25 10Z" fill="#fde68a" />
+      <rect x="23" y="18" width="4" height="10" rx="2" fill="#92400e" />
+      <circle cx="25" cy="33" r="2.5" fill="#92400e" />
+    </svg>
+  );
+}
+
+function WheelSVG({ style = {} }: { style?: React.CSSProperties }) {
+  return (
+    <svg style={style} viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="25" cy="25" r="22" fill="#374151" stroke="#1f2937" strokeWidth="2" />
+      <circle cx="25" cy="25" r="16" fill="#4b5563" />
+      <circle cx="25" cy="25" r="6" fill="#6b7280" />
+      <circle cx="25" cy="25" r="3" fill="#9ca3af" />
+      {/* Spokes */}
+      <line x1="25" y1="9" x2="25" y2="19" stroke="#374151" strokeWidth="2" />
+      <line x1="25" y1="31" x2="25" y2="41" stroke="#374151" strokeWidth="2" />
+      <line x1="9" y1="25" x2="19" y2="25" stroke="#374151" strokeWidth="2" />
+      <line x1="31" y1="25" x2="41" y2="25" stroke="#374151" strokeWidth="2" />
+      {/* Tread marks */}
+      <circle cx="25" cy="25" r="20" fill="none" stroke="#1f2937" strokeWidth="1" strokeDasharray="4 3" />
+    </svg>
+  );
+}
+
 function TrafficConeMascot({ style = {} }: { style?: React.CSSProperties }) {
   return (
     <svg style={style} viewBox="0 0 80 110" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -365,6 +558,8 @@ function StatCounter({
 
 export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
   const heroRef = useRef(null);
+  const roadRef = useRef(null);
+  const roadInView = useInView(roadRef, { once: true, margin: "-80px" });
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
@@ -747,25 +942,287 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           FEATURES — 6 cards with stagger & hover spring
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-24 relative" style={{ background: "#f8f9fb" }}>
-        {/* Floating decorative construction elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div style={{ position: "absolute", left: "2%", top: "12%" }}>
-            <FloatingElement delay={0} duration={10} yRange={20} rotateRange={8}>
-              <TrafficConeMascot style={{ width: 40, height: 50, opacity: 0.07 }} />
-            </FloatingElement>
-          </div>
-          <div style={{ position: "absolute", right: "3%", bottom: "15%" }}>
-            <FloatingElement delay={3} duration={11} yRange={15} rotateRange={6}>
-              <RoadRollerSVG style={{ width: 80, height: 45, opacity: 0.05 }} />
-            </FloatingElement>
-          </div>
-          <div style={{ position: "absolute", right: "8%", top: "8%" }}>
-            <FloatingElement delay={1.5} duration={9} yRange={12} rotateRange={4}>
-              <RoadSignSVG text="!" style={{ width: 30, height: 40, opacity: 0.08 }} />
-            </FloatingElement>
-          </div>
-        </div>
+      <section className="py-24 relative overflow-hidden" style={{ background: "#f8f9fb" }}>
+
+        {/* ── DENSE FLOATING / DROPPING ICONS (crowded layout) ── */}
+
+        {/* Row 1 — Top edge, scattered across */}
+        <motion.div className="absolute" style={{ left: "2vw", top: "3%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -70 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.1, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0} duration={6} yRange={10} rotateRange={5}>
+            <PotholeSVG style={{ width: 48, height: 32, opacity: 0.18 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "12vw", top: "2%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -80 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.2, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.5} duration={7} yRange={8} rotateRange={3}>
+            <HelmetSVG style={{ width: 42, height: 34, opacity: 0.16 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "24vw", top: "4%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.35, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1} duration={8} yRange={12} rotateRange={4}>
+            <TrafficLightSVG style={{ width: 22, height: 44, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "37vw", top: "2%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -75 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.15, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.3} duration={6.5} yRange={14} rotateRange={6}>
+            <WrenchSVG style={{ width: 32, height: 32, opacity: 0.15 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "50vw", top: "3%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -85 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.4} duration={7.5} yRange={10} rotateRange={3}>
+            <GPSPinSVG style={{ width: 26, height: 36, opacity: 0.16 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "62vw", top: "2%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -65 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.25, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.7} duration={9} yRange={11} rotateRange={5}>
+            <BridgeSVG style={{ width: 65, height: 32, opacity: 0.13 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "76vw", top: "4%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -70 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.8} duration={6} yRange={9} rotateRange={4}>
+            <SpeedBumpSVG style={{ width: 50, height: 22, opacity: 0.15 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "90vw", top: "3%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -55 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.3, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.2} duration={7} yRange={13} rotateRange={6}>
+            <WarningTriangleSVG style={{ width: 34, height: 30, opacity: 0.17 }} />
+          </FloatingElement>
+        </motion.div>
+
+        {/* Row 2 — Upper-mid band (~18-28%) */}
+        <motion.div className="absolute" style={{ left: "1vw", top: "18%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.45, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.8} duration={8} yRange={15} rotateRange={7}>
+            <ClipboardCheckSVG style={{ width: 30, height: 38, opacity: 0.16 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "10vw", top: "22%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.6, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.2} duration={7} yRange={10} rotateRange={4}>
+            <ShovelSVG style={{ width: 28, height: 44, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "20vw", top: "20%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -45 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.3, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={2} duration={9} yRange={8} rotateRange={3}>
+            <WheelSVG style={{ width: 36, height: 36, opacity: 0.12 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "78vw", top: "19%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -55 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.7, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.4} duration={6.5} yRange={12} rotateRange={5}>
+            <MeasureTapeSVG style={{ width: 38, height: 38, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "88vw", top: "22%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.55, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.6} duration={7.5} yRange={14} rotateRange={6}>
+            <PotholeSVG style={{ width: 44, height: 30, opacity: 0.15 }} />
+          </FloatingElement>
+        </motion.div>
+
+        {/* Row 3 — Mid band (~35-48%) */}
+        <motion.div className="absolute" style={{ left: "0vw", top: "38%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -65 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.2, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.6} duration={6} yRange={16} rotateRange={5}>
+            <GPSPinSVG style={{ width: 28, height: 40, opacity: 0.17 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "8vw", top: "42%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.8, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={2.2} duration={8.5} yRange={9} rotateRange={4}>
+            <WarningTriangleSVG style={{ width: 32, height: 28, opacity: 0.13 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "17vw", top: "36%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -55 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1} duration={7} yRange={11} rotateRange={6}>
+            <TrafficLightSVG style={{ width: 20, height: 40, opacity: 0.11 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "82vw", top: "40%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.65, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.3} duration={6.5} yRange={13} rotateRange={7}>
+            <HelmetSVG style={{ width: 40, height: 32, opacity: 0.15 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "92vw", top: "37%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -45 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.9, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.8} duration={9} yRange={10} rotateRange={3}>
+            <BridgeSVG style={{ width: 55, height: 28, opacity: 0.12 }} />
+          </FloatingElement>
+        </motion.div>
+
+        {/* Row 4 — Lower-mid band (~55-65%) */}
+        <motion.div className="absolute" style={{ left: "1vw", top: "58%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.35, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.9} duration={7} yRange={12} rotateRange={5}>
+            <SpeedBumpSVG style={{ width: 52, height: 22, opacity: 0.16 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "11vw", top: "60%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -55 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.75, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.4} duration={8} yRange={14} rotateRange={4}>
+            <WrenchSVG style={{ width: 34, height: 34, opacity: 0.13 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "21vw", top: "57%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.2} duration={6} yRange={10} rotateRange={6}>
+            <ClipboardCheckSVG style={{ width: 28, height: 35, opacity: 0.12 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "79vw", top: "58%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={2} duration={7.5} yRange={11} rotateRange={5}>
+            <ShovelSVG style={{ width: 26, height: 42, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "90vw", top: "56%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.85, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.6} duration={6.5} yRange={15} rotateRange={7}>
+            <WheelSVG style={{ width: 38, height: 38, opacity: 0.15 }} />
+          </FloatingElement>
+        </motion.div>
+
+        {/* Row 5 — Bottom band (~72-85%) */}
+        <motion.div className="absolute" style={{ left: "2vw", top: "76%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -45 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.55, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.6} duration={8} yRange={9} rotateRange={4}>
+            <MeasureTapeSVG style={{ width: 40, height: 40, opacity: 0.16 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "13vw", top: "78%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -55 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.3, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.4} duration={7} yRange={13} rotateRange={6}>
+            <TrafficLightSVG style={{ width: 24, height: 48, opacity: 0.12 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "22vw", top: "75%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.7, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.2} duration={9} yRange={10} rotateRange={3}>
+            <PotholeSVG style={{ width: 42, height: 28, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "77vw", top: "76%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.45, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.8} duration={6} yRange={14} rotateRange={5}>
+            <GPSPinSVG style={{ width: 24, height: 34, opacity: 0.15 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "86vw", top: "78%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.6, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={2.2} duration={7.5} yRange={11} rotateRange={4}>
+            <WarningTriangleSVG style={{ width: 36, height: 32, opacity: 0.16 }} />
+          </FloatingElement>
+        </motion.div>
+
+        {/* Row 6 — Very bottom (~88-96%) */}
+        <motion.div className="absolute" style={{ left: "4vw", top: "90%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -35 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.25, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.5} duration={6.5} yRange={8} rotateRange={5}>
+            <BridgeSVG style={{ width: 58, height: 30, opacity: 0.13 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "18vw", top: "92%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.8, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.8} duration={8} yRange={7} rotateRange={3}>
+            <HelmetSVG style={{ width: 38, height: 30, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "35vw", top: "91%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.7} duration={7} yRange={10} rotateRange={6}>
+            <WrenchSVG style={{ width: 30, height: 30, opacity: 0.11 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "55vw", top: "93%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -35 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.65, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1} duration={9} yRange={9} rotateRange={4}>
+            <SpeedBumpSVG style={{ width: 46, height: 20, opacity: 0.13 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "72vw", top: "90%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -45 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={1.4} duration={6.5} yRange={12} rotateRange={5}>
+            <ShovelSVG style={{ width: 24, height: 38, opacity: 0.12 }} />
+          </FloatingElement>
+        </motion.div>
+
+        <motion.div className="absolute" style={{ left: "92vw", top: "92%", zIndex: 2 }}
+          initial={{ opacity: 0, y: -30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.9, duration: 1, ease: [0.22, 1, 0.36, 1] }}>
+          <FloatingElement delay={0.3} duration={7.5} yRange={8} rotateRange={7}>
+            <ClipboardCheckSVG style={{ width: 26, height: 32, opacity: 0.14 }} />
+          </FloatingElement>
+        </motion.div>
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <FadeSection className="text-center mb-16">
@@ -783,38 +1240,139 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             </p>
           </FadeSection>
 
-          <motion.div
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
+          <div
+            ref={roadRef}
+            className="relative"
+            style={{ width: "100vw", marginLeft: "calc(-50vw + 50%)", overflow: "hidden", minHeight: 320 }}
           >
-            {features.map((f) => (
-              <motion.div key={f.title} variants={itemVariants}>
+            {/* ── Horizontal Road — reveals from right to left ── */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{ zIndex: 0 }}
+              initial={{ clipPath: "inset(0 0 0 100%)" }}
+              animate={roadInView ? { clipPath: "inset(0 0 0 0%)" } : { clipPath: "inset(0 0 0 100%)" }}
+              transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              {/* Road surface — full height, full width */}
+              <div className="relative w-full h-full" style={{ background: "#1a1a1a" }}>
+                {/* Road top edge line */}
+                <div className="absolute top-0 left-0 right-0" style={{ height: 6, background: "#fbbf24", opacity: 0.85 }} />
+                {/* Road bottom edge line */}
+                <div className="absolute bottom-0 left-0 right-0" style={{ height: 6, background: "#fbbf24", opacity: 0.85 }} />
+                {/* Center dashes — top lane */}
+                <div className="absolute left-0 right-0" style={{ top: "35%", height: 5, background: "repeating-linear-gradient(to right, #fbbf24 0px, #fbbf24 30px, transparent 30px, transparent 60px)" }} />
+                {/* Center dashes — bottom lane */}
+                <div className="absolute left-0 right-0" style={{ top: "65%", height: 5, background: "repeating-linear-gradient(to right, #fbbf24 0px, #fbbf24 30px, transparent 30px, transparent 60px)" }} />
+                {/* Subtle shoulder lines */}
+                <div className="absolute left-0 right-0" style={{ top: 28, height: 2, background: "rgba(255,255,255,0.06)" }} />
+                <div className="absolute left-0 right-0" style={{ bottom: 28, height: 2, background: "rgba(255,255,255,0.06)" }} />
+                {/* Additional lane markings */}
+                <div className="absolute left-0 right-0" style={{ top: "22%", height: 1, background: "rgba(255,255,255,0.04)" }} />
+                <div className="absolute left-0 right-0" style={{ bottom: "22%", height: 1, background: "rgba(255,255,255,0.04)" }} />
+                {/* Road texture dots for realism */}
+                <div className="absolute inset-0" style={{ opacity: 0.03, backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+              </div>
+            </motion.div>
+
+            {/* Feature cards — pop up one by one after road rolls in */}
+            <div
+              className="road-carousel flex gap-8 px-12 overflow-x-auto relative"
+              style={{
+                zIndex: 1,
+                paddingTop: 48,
+                paddingBottom: 48,
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                scrollBehavior: "smooth",
+              }}
+            >
+              {features.map((f, i) => (
                 <motion.div
-                  className="feature-card group text-center"
-                  whileHover={{ y: -8, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.12)" }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  key={`${f.title}-${i}`}
+                  className="flex-shrink-0 w-[260px]"
+                  initial={{ opacity: 0, y: 100, scale: 0.5 }}
+                  animate={roadInView
+                    ? { opacity: 1, y: 0, scale: 1 }
+                    : { opacity: 0, y: 100, scale: 0.5 }}
+                  transition={{
+                    delay: 1.2 + i * 0.1,
+                    duration: 0.65,
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 16,
+                    mass: 0.7,
+                  }}
+                  style={{ transformOrigin: "bottom center" }}
+                  whileHover={{ y: -12, transition: { type: "spring", stiffness: 400, damping: 18 } }}
                 >
-                  <motion.div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 mx-auto"
-                    style={{ background: `${f.color}12`, color: f.color }}
-                    whileHover={{ scale: 1.2, rotate: 5 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                  >
-                    {f.icon}
-                  </motion.div>
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-2">
-                    {f.title}
-                  </h3>
-                  <p className="text-[13px] leading-relaxed text-gray-500 max-w-[280px] mx-auto">
-                    {f.desc}
-                  </p>
+                  {/* ── Road Signboard Card ── */}
+                  <div className="flex flex-col items-center">
+
+                    {/* Sign board */}
+                    <div
+                      className="relative w-full rounded-xl overflow-hidden"
+                      style={{
+                        background: `linear-gradient(145deg, #1e2a3a, #0f172a)`,
+                        border: `2.5px solid ${f.color}`,
+                        boxShadow: `0 0 0 1px rgba(0,0,0,0.4), 0 8px 32px rgba(0,0,0,0.4), 0 0 20px ${f.color}22`,
+                        padding: "22px 20px 18px",
+                      }}
+                    >
+                      {/* Top reflector strip */}
+                      <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, transparent, ${f.color}, transparent)`, opacity: 0.8 }} />
+
+                      {/* NH badge top-right */}
+                      <div
+                        className="absolute top-2.5 right-2.5 text-[9px] font-black px-1.5 py-0.5 rounded"
+                        style={{ background: f.color, color: "#fff", letterSpacing: "0.05em" }}
+                      >
+                        NH
+                      </div>
+
+                      {/* Icon in circle */}
+                      <motion.div
+                        className="w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto relative"
+                        style={{ background: `${f.color}20`, border: `1.5px solid ${f.color}50`, color: f.color }}
+                        whileHover={{ scale: 1.15, rotate: 8 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 12 }}
+                      >
+                        {/* Glow ring */}
+                        <div className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 12px ${f.color}50` }} />
+                        {f.icon}
+                      </motion.div>
+
+                      {/* Title */}
+                      <h3 className="text-[14px] font-extrabold text-center mb-2 leading-tight" style={{ color: f.color }}>
+                        {f.title}
+                      </h3>
+
+                      {/* Divider — road dash line */}
+                      <div className="my-2 mx-auto" style={{ width: "80%", height: 2, background: `repeating-linear-gradient(to right, ${f.color} 0px, ${f.color} 8px, transparent 8px, transparent 14px)`, opacity: 0.5 }} />
+
+                      {/* Desc */}
+                      <p className="text-[11.5px] leading-relaxed text-center" style={{ color: "rgba(255,255,255,0.55)" }}>
+                        {f.desc}
+                      </p>
+
+                      {/* Bottom reflector strip */}
+                      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, transparent, ${f.color}, transparent)`, opacity: 0.5 }} />
+                    </div>
+
+                    {/* Sign pole */}
+                    <div className="flex flex-col items-center" style={{ gap: 0 }}>
+                      {/* Bolt cap top */}
+                      <div className="w-3 h-1.5 rounded-sm" style={{ background: "#4b5563" }} />
+                      {/* Pole */}
+                      <div style={{ width: 6, height: 32, background: "linear-gradient(to bottom, #6b7280, #374151)", borderRadius: 3 }} />
+                      {/* Base plate */}
+                      <div style={{ width: 20, height: 5, background: "#374151", borderRadius: 2 }} />
+                    </div>
+
+                  </div>
                 </motion.div>
-              </motion.div>
-            ))}
-          </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -824,16 +1382,38 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           HOW IT WORKS — 4-step roadway + road roller
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <section className="py-24 relative" style={{ background: "#ffffff" }}>
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-24 relative overflow-hidden" style={{ background: "#0a0e1a" }}>
+        {/* Colorful bokeh blobs — same as footer */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div style={{ position: "absolute", top: "20%", left: "35%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(251,146,60,0.18), transparent 70%)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", top: "40%", right: "30%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.14), transparent 70%)", filter: "blur(50px)" }} />
+          <div style={{ position: "absolute", bottom: "10%", left: "50%", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(34,197,94,0.10), transparent 70%)", filter: "blur(50px)" }} />
+        </div>
+        {/* Subtle star-like dots — same as footer */}
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.15 }}>
+          {[
+            { top: "8%", left: "12%" }, { top: "15%", left: "45%" }, { top: "5%", right: "18%" },
+            { top: "25%", left: "78%" }, { top: "60%", left: "8%" }, { top: "70%", right: "12%" },
+            { top: "45%", left: "22%" }, { top: "55%", right: "35%" },
+          ].map((pos, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full bg-white"
+              style={pos}
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ duration: 2 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+            />
+          ))}
+        </div>
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
           <FadeSection className="text-center mb-16">
-            <span className="inline-block px-3.5 py-1.5 rounded-full bg-green-100 text-green-700 text-[11px] font-bold uppercase tracking-wider mb-5">
+            <span className="inline-block px-3.5 py-1.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-bold uppercase tracking-wider mb-5 border border-blue-400/20">
               How It Works
             </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-              From raw data to <span className="text-green-600">actionable intelligence</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+              From raw data to <span className="text-orange-400">actionable intelligence</span>
             </h2>
-            <p className="text-gray-500 text-[15px] mt-4 max-w-md mx-auto leading-relaxed">
+            <p className="text-blue-200/60 text-[15px] mt-4 max-w-md mx-auto leading-relaxed">
               Four simple steps from data collection to maintenance priorities.
             </p>
           </FadeSection>
@@ -841,7 +1421,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
           <div className="relative">
             {/* Connecting road line */}
             <div className="hidden md:block absolute top-[48px] left-[60px] right-[60px] h-[3px]">
-              <div className="h-full bg-gray-200 rounded-full relative overflow-hidden">
+              <div className="h-full bg-white/10 rounded-full relative overflow-hidden">
                 <div className="road-dash-line" />
               </div>
             </div>
@@ -857,21 +1437,21 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
                 <motion.div key={w.step} variants={itemVariants}>
                   <div className="relative text-center">
                     <motion.div
-                      className="w-24 h-24 mx-auto rounded-3xl bg-gray-50 border-2 border-gray-200 flex items-center justify-center relative z-10 group"
-                      whileHover={{ scale: 1.1, borderColor: "#fb923c", backgroundColor: "#fff7ed" }}
+                      className="w-24 h-24 mx-auto rounded-3xl bg-white/5 border-2 border-white/10 flex items-center justify-center relative z-10 group"
+                      whileHover={{ scale: 1.1, borderColor: "rgba(251,146,60,0.6)", backgroundColor: "rgba(251,146,60,0.1)" }}
                       transition={{ type: "spring", stiffness: 300, damping: 15 }}
                     >
-                      <div className="text-gray-500 group-hover:text-orange-600 transition-colors">
+                      <div className="text-blue-300 group-hover:text-orange-400 transition-colors">
                         {w.icon}
                       </div>
                       <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-orange-500 text-white text-[11px] font-bold flex items-center justify-center shadow-md">
                         {w.step}
                       </span>
                     </motion.div>
-                    <h4 className="text-[15px] font-bold text-gray-900 mt-5">
+                    <h4 className="text-[15px] font-bold text-white mt-5">
                       {w.title}
                     </h4>
-                    <p className="text-[13px] text-gray-500 mt-1.5">
+                    <p className="text-[13px] text-blue-200/50 mt-1.5">
                       {w.desc}
                     </p>
                   </div>
@@ -891,7 +1471,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
                 {/* Shadow underneath */}
                 <motion.div
                   className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 rounded-full"
-                  style={{ width: 140, background: "radial-gradient(ellipse, rgba(0,0,0,0.1), transparent)" }}
+                  style={{ width: 140, background: "radial-gradient(ellipse, rgba(255,255,255,0.06), transparent)" }}
                   animate={{ scaleX: [0.8, 1, 0.8] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 />
