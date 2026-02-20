@@ -196,7 +196,7 @@ function inspectionStatus(road: RoadForReport): "overdue" | "due_soon" | "recent
       road.inspections[0].inspection_date
     )
   );
-  const today = new Date("2026-02-20");
+  const today = new Date(); // use real current date
   const days = daysBetween(lastDate, today);
   if (days > 365) return "overdue";
   if (days > 180) return "due_soon";
@@ -240,7 +240,7 @@ export function applyFiltersAndAggregate(
   totalNetworkRoads: number,
   totalNetworkLengthKm: number
 ): ReportSummary | { error: "empty_dataset"; message: string } {
-  const today = new Date("2026-02-20");
+  const today = new Date(); // use real current date
 
   // ── Step 1: Apply filters sequentially ─────────────────────
   let filtered = [...roads];

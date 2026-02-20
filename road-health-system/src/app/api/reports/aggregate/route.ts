@@ -43,6 +43,21 @@ function decayRateFromProps(pci: number, iri: number, year: number): number {
 }
 
 /**
+ * Normalize a road_id to its numeric segment number for cross-file joining.
+ *
+ * inspection_history.csv  → "MA-RD-SEG-0001"
+ * road_registry.csv       → "MA--SEG-0001", "MA-6-SEG-0001", "MA-NH 361-SEG-0001"
+ *
+ * All formats share the pattern "SEG-<digits>" at the end.
+ * We extract the integer value (e.g. 1, 361, 1000) as the join key.
+ * Returns the original trimmed string if no SEG pattern is found.
+ */
+function normalizeRoadId(id: string): string {
+  const m = id.match(/SEG-(\d+)/i);
+  return m ? String(parseInt(m[1], 10)) : id.trim();
+}
+
+/**
  * RFC-4180 compliant CSV parser.
  * Handles quoted fields with embedded commas, returns array of row objects.
  */
@@ -92,8 +107,9 @@ export async function POST(req: NextRequest) {
     if (fs.existsSync(inspPath)) {
       const inspRows = parseSimpleCsv(fs.readFileSync(inspPath, "utf-8"), 50000);
       for (const row of inspRows) {
-        const rid = (row.road_id || "").trim();
-        if (!rid) continue;
+        const raw = (row.road_id || "").trim();
+        if (!raw) continue;
+        const rid = normalizeRoadId(raw); // "MA-RD-SEG-0001" → "1"
         const arr = inspByRoad.get(rid) ?? [];
         arr.push({
           inspection_date: (row.inspection_date || "").trim(),
@@ -112,7 +128,8 @@ export async function POST(req: NextRequest) {
       const rid   = (row.road_id || "").trim();
 
       // Attach real inspection history — critical for inspectionStatus filter
-      const inspections = inspByRoad.get(rid) ?? [];
+      // Use normalizeRoadId so "MA-6-SEG-0001" matches "MA-RD-SEG-0001" (both → "1")
+      const inspections = inspByRoad.get(normalizeRoadId(rid)) ?? [];
 
       return {
         road_id:              rid,
