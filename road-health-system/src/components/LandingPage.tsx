@@ -641,7 +641,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section
         ref={heroRef}
-        className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden"
+        className="relative h-screen min-h-175 flex items-center justify-center overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0c1220 0%, #0f1d32 25%, #14284a 50%, #1a365d 75%, #0f1d32 100%)" }}
       >
         {/* Subtle radial glow overlays */}
@@ -805,7 +805,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             className="mt-10 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.95]"
           >
             <span className="text-white">Road</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 via-orange-500 to-yellow-400">
               Rakshak
             </span>
           </motion.h1>
@@ -873,7 +873,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
               onClick={onOpenRegistry}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.97 }}
-              className="group inline-flex items-center gap-2.5 px-8 h-14 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-[15px] shadow-2xl shadow-orange-500/30 transition-colors"
+              className="group inline-flex items-center gap-2.5 px-8 h-14 rounded-2xl bg-linear-to-r from-orange-500 to-orange-600 text-white font-bold text-[15px] shadow-2xl shadow-orange-500/30 transition-colors"
             >
               Explore Road Registry
               <ArrowRight
@@ -1231,7 +1231,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             </span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
               Everything you need to <br className="hidden sm:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-700">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-orange-700">
                 manage road infrastructure
               </span>
             </h2>
@@ -1289,7 +1289,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
               {features.map((f, i) => (
                 <motion.div
                   key={`${f.title}-${i}`}
-                  className="flex-shrink-0 w-[260px]"
+                  className="shrink-0 w-65"
                   initial={{ opacity: 0, y: 100, scale: 0.5 }}
                   animate={roadInView
                     ? { opacity: 1, y: 0, scale: 1 }
@@ -1420,7 +1420,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
 
           <div className="relative">
             {/* Connecting road line */}
-            <div className="hidden md:block absolute top-[48px] left-[60px] right-[60px] h-[3px]">
+            <div className="hidden md:block absolute top-12 left-15 right-15 h-0.75">
               <div className="h-full bg-white/10 rounded-full relative overflow-hidden">
                 <div className="road-dash-line" />
               </div>
@@ -1691,7 +1691,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
         <ScaleSection className="relative z-10 text-center max-w-3xl mx-auto px-6">
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
             Ready to transform<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 to-yellow-400">
               road management?
             </span>
           </h2>
@@ -1702,7 +1702,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             onClick={onOpenRegistry}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
-            className="group mt-10 inline-flex items-center gap-2.5 px-10 h-14 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-[15px] shadow-2xl shadow-orange-500/30 transition-colors"
+            className="group mt-10 inline-flex items-center gap-2.5 px-10 h-14 rounded-2xl bg-linear-to-r from-orange-500 to-orange-600 text-white font-bold text-[15px] shadow-2xl shadow-orange-500/30 transition-colors"
           >
             Open Road Registry
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -1754,7 +1754,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
               {/* Left — Brand + Description + Social */}
               <div className="md:col-span-1">
                 <div className="flex items-center gap-2.5 mb-5">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                  <div className="w-9 h-9 rounded-xl bg-linear-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
                     <Shield size={18} className="text-white" />
                   </div>
                   <span className="text-white font-bold text-lg">

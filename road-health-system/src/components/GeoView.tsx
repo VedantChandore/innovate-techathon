@@ -161,44 +161,45 @@ const RISK_COLORS = { critical: "#dc2626", high: "#f97316", medium: "#facc15" };
 const RISK_LABELS = { critical: "Critical Zone", high: "High Risk", medium: "Watch Zone" };
 
 /* ── Risk Flag System ──────────────────────────────────────
-   Anchored to actual dataset p90/p95 percentiles:
-     PCI  p90=92  p95=96  → extreme low = <10, bad = <20
-     IRI  p90=8.4 p95=9.2 → extreme high = >9,  bad = >8.4
-     Poth p90=25  p95=28  → extreme = >27
-     Rut  p90=32.6        → extreme = >36
-   A segment earns "flags". Only segments with 2+ flags are
-   shown as markers. This keeps risk points to the real ~5–10%.
+   Calibrated to actual dataset percentiles (16,335 segments):
+     PCI  p5=6   p10=12  → critical <6, high <12, medium <25
+     IRI  p5=9.2 p10=8.4 → critical >9.2, high >8.4
+     Poth p5=28  p10=25  → critical >28
+     Rut  p5=36  p10=32  → critical >36
+   A segment earns "flags". Only segments with 3+ flags are
+   shown as markers. This keeps risk points to the real ~5%.
 ──────────────────────────────────────────────────────────── */
 function computeRiskFlags(seg: SegmentData): number {
   let flags = 0;
-  // PCI extremes (p95 = <5, p90 = <10, bad = <20)
+  // PCI — only truly bad scores score flags (p5/p10 thresholds)
   if (seg.pci_score != null) {
-    if (seg.pci_score < 5)       flags += 3;
-    else if (seg.pci_score < 10) flags += 2;
-    else if (seg.pci_score < 20) flags += 1;
+    if (seg.pci_score < 6)        flags += 3;  // worst 5%
+    else if (seg.pci_score < 12)  flags += 2;  // worst 10%
+    else if (seg.pci_score < 25)  flags += 1;  // notable
   }
-  // IRI extremes (p95 = >9.2, p90 = >8.4)
+  // IRI — roughness extremes only
   if (seg.iri_value != null) {
-    if (seg.iri_value > 9.5)     flags += 3;
-    else if (seg.iri_value > 9)  flags += 2;
-    else if (seg.iri_value > 8.4) flags += 1;
+    if (seg.iri_value > 9.5)      flags += 3;  // worst 5%
+    else if (seg.iri_value > 9.2) flags += 2;  // p5
+    else if (seg.iri_value > 8.4) flags += 1;  // p10
   }
-  // Potholes extremes (p95 = >28)
+  // Potholes — only extreme counts
   if (seg.potholes_per_km != null) {
-    if (seg.potholes_per_km > 28) flags += 2;
-    else if (seg.potholes_per_km > 25) flags += 1;
+    if (seg.potholes_per_km > 28) flags += 2;  // p5
+    else if (seg.potholes_per_km > 25) flags += 1; // p10
   }
-  // Rutting extreme (p90 = >32.6)
-  if ((seg.rutting_depth_mm ?? 0) > 36) flags += 1;
+  // Rutting — only severe
+  if ((seg.rutting_depth_mm ?? 0) > 36) flags += 2;  // p5
+  else if ((seg.rutting_depth_mm ?? 0) > 32) flags += 1;
   return flags;
 }
 
-// Only segments with flags >= 2 are plotted as markers
-// flags 5+ = critical, 3-4 = high, 2 = medium
+// Only segments with flags >= 4 are plotted as markers (keeps to ~5%)
+// flags 7+ = critical, 5-6 = high, 4 = medium
 function getFlagLevel(flags: number): "critical" | "high" | "medium" | null {
-  if (flags >= 5) return "critical";
-  if (flags >= 3) return "high";
-  if (flags >= 2) return "medium";
+  if (flags >= 7) return "critical";
+  if (flags >= 5) return "high";
+  if (flags >= 4) return "medium";
   return null; // not risky enough to show
 }
 
@@ -512,6 +513,9 @@ export default function GeoView() {
 
         let riskLow = 0, riskMed = 0, riskHigh = 0, riskCrit = 0, hotspots = 0, risky = 0;
 
+        // Collect all risk markers first, then cap at 500 sorted by severity
+        const pendingRiskMarkers: { flags: number; fl: "critical"|"high"|"medium"; marker: L.Marker; isCritical: boolean }[] = [];
+
         keys.forEach(nh => {
           const nhData    = allData[nh] || {};
           const nhFeatures = featuresByRef[nh] || [];
@@ -732,14 +736,19 @@ export default function GeoView() {
               );
             })());
 
-            hotspotGroup.addLayer(marker);
-            if (isCritical) hotspots++;
-
-            // count for stats
-            if (fl === "medium") riskMed++;
-            else if (fl === "high") riskHigh++;
-            else riskCrit++;
+            pendingRiskMarkers.push({ flags, fl, marker, isCritical });
           });
+        });
+
+        // Sort by severity (highest flags first) and cap at 500 markers for performance
+        pendingRiskMarkers.sort((a, b) => b.flags - a.flags);
+        const MAX_RISK_MARKERS = 500;
+        pendingRiskMarkers.slice(0, MAX_RISK_MARKERS).forEach(({ fl, marker, isCritical }) => {
+          hotspotGroup.addLayer(marker);
+          if (isCritical) hotspots++;
+          if (fl === "medium") riskMed++;
+          else if (fl === "high") riskHigh++;
+          else riskCrit++;
         });
 
         // Fit to all highways
@@ -845,10 +854,10 @@ export default function GeoView() {
         </div>
       )}
 
-      {/* ── Layer Mode Toggle — top centre ── */}
+      {/* ── Layer Mode Toggle — mid bottom ── */}
       {!loading && (
         <div className="absolute left-1/2 -translate-x-1/2 z-1000 flex rounded-xl overflow-hidden"
-          style={{ top: 74, background: panelBg, border: `1px solid ${panelBorder}`, boxShadow: panelShadow }}>
+          style={{ bottom: 28, background: panelBg, border: `1px solid ${panelBorder}`, boxShadow: panelShadow }}>
           <button
             onClick={() => switchLayer("conditions")}
             className="flex items-center gap-2 px-4 py-2.5 text-[12px] font-semibold transition-all"

@@ -539,7 +539,7 @@ function RecalcToast({ oldScore, newScore, oldBand, newBand, roadName, onClose }
   const newCondition = newScore >= 80 ? "Good" : newScore >= 60 ? "Fair" : newScore >= 40 ? "Poor" : "Critical";
   return (
     <div className="fixed top-24 right-6 z-50" style={{ animation: "slideInRight 0.4s ease-out" }}>
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 w-[340px]">
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 w-85">
         <div className="flex items-center justify-between mb-3">
           <p className="text-[13px] font-bold text-gray-900">
             <CheckCircle2 size={14} className="inline mr-1 text-green-500 -mt-0.5" />
@@ -663,7 +663,6 @@ function InspectorDetailCard({
                   <span className="text-[10px] text-gray-500">•</span>
                   <span className="text-[11px] text-gray-400">{road.district}, {road.taluka}</span>
                 </div>
-              </div>
               </div>
             </div>
             {/* Actions */}
@@ -1085,7 +1084,6 @@ function InspectorDetailCard({
                     )}
                   </div>
                 </div>
-                </div>
 
                 {/* Equipment Needed */}
                 <div className="rounded-2xl overflow-hidden shadow-sm" style={{ border: "1.5px solid #bfdbfe" }}>
@@ -1407,7 +1405,7 @@ export default function InspectionScheduler({ roads }: Props) {
                 <p className="text-2xl font-extrabold tabular-nums" style={{ color: cfg.color }}>{count.toLocaleString()}</p>
                 <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{pct}% of fleet</p>
               </div>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: `${cfg.color}18`, color: cfg.color }}>
                 {cat === "Critical" ? <Zap size={18} /> : cat === "Poor" ? <AlertTriangle size={18} /> : cat === "Fair" ? <Activity size={18} /> : <CheckCircle2 size={18} />}
               </div>
@@ -1435,7 +1433,7 @@ export default function InspectionScheduler({ roads }: Props) {
             </div>
           </div>
           <button onClick={() => { setMonsoonMode(!monsoonMode); setPage(0); }}
-            className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${monsoonMode ? "bg-cyan-400" : "bg-gray-300"}`}>
+            className={`relative w-12 h-6 rounded-full transition-all shrink-0 ${monsoonMode ? "bg-cyan-400" : "bg-gray-300"}`}>
             <span className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
               style={{ left: monsoonMode ? 26 : 4 }} />
           </button>
@@ -1445,7 +1443,7 @@ export default function InspectionScheduler({ roads }: Props) {
       {/* ═══ FILTERS ═══ */}
       <div className="rounded-2xl bg-white border border-gray-200 p-4">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-50">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input type="text" value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(0); }}
@@ -1524,7 +1522,7 @@ export default function InspectionScheduler({ roads }: Props) {
                         <div className="flex items-center gap-2">
                           <ChevronRight size={13} className={`transition-transform ${isSelected ? "rotate-90 text-orange-500" : "text-gray-300 group-hover:text-orange-400"}`} />
                           <div>
-                            <p className="text-[12px] font-semibold text-gray-900 truncate max-w-[180px]">{item.road.name}</p>
+                            <p className="text-[12px] font-semibold text-gray-900 truncate max-w-45">{item.road.name}</p>
                             <p className="text-[10px] text-gray-400">{item.road.road_id} · {item.road.highway_ref}</p>
                           </div>
                         </div>
