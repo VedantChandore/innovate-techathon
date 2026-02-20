@@ -14,14 +14,14 @@ import {
 } from "@/lib/scheduler";
 import { RoadWithScore, Band, InspectionRecord } from "@/lib/types";
 import {
-  AlertTriangle, CalendarClock, Clock, ChevronDown, ChevronUp, Search,
+  AlertTriangle, CalendarClock, Clock, Search,
   ArrowUpDown, Shield, Droplets, Mountain, CloudRain, MapPin, Activity,
   CheckCircle2, XCircle, Download, CloudLightning, TrendingDown,
-  TrendingUp, Minus, CalendarPlus, ClipboardCheck, X, Zap, Eye,
+  TrendingUp, CalendarPlus, ClipboardCheck, X, Zap, Eye,
   Wrench, FileWarning, Timer, BarChart3, History, Info,
   Gauge, Truck, Ruler, Layers, ArrowRight,
   User, Building2, Navigation, Send, Calendar, Clipboard, Phone,
-  Globe, Thermometer, LocateFixed,
+  Globe, Thermometer, LocateFixed, ChevronRight,
 } from "lucide-react";
 
 /* ════════════════════════════════════════════════════════════════
@@ -112,175 +112,6 @@ function StatCard({ label, value, sub, icon, color, bg }: {
       <p className="text-2xl font-extrabold tabular-nums" style={{ color }}>{value}</p>
       <p className="text-[11px] font-semibold text-gray-600 mt-0.5">{label}</p>
       {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════
-   SCHEDULE MODAL — Book an inspection  
-   ════════════════════════════════════════════════════════════════ */
-
-function ScheduleModal({ item, onClose, onConfirm }: {
-  item: ScheduledInspection;
-  onClose: () => void;
-  onConfirm: (date: string, agency: string, type: InspectionType, team: string, notes: string) => void;
-}) {
-  const suggestedDate = new Date();
-  suggestedDate.setDate(suggestedDate.getDate() + (item.isOverdue ? 1 : Math.min(item.daysUntilDue, 3)));
-  const [date, setDate] = useState(suggestedDate.toISOString().split("T")[0]);
-  const [agency, setAgency] = useState(item.assignedAgency);
-  const [type, setType] = useState<InspectionType>("full");
-  const [teamLead, setTeamLead] = useState("");
-  const [teamSize, setTeamSize] = useState("3");
-  const [notes, setNotes] = useState("");
-
-  // AI recommendations based on road conditions
-  const equipmentNeeded: string[] = [];
-  if (item.road.potholes_per_km > 10) equipmentNeeded.push("Pothole measuring wheel");
-  if (item.road.rutting_depth_mm > 15) equipmentNeeded.push("Rut depth gauge");
-  if (item.road.iri_value > 6) equipmentNeeded.push("Profilometer");
-  if (item.road.alligator_cracking_pct > 15) equipmentNeeded.push("Crack survey kit");
-  if (item.road.flood_prone) equipmentNeeded.push("Drainage testing equipment");
-  if (equipmentNeeded.length === 0) equipmentNeeded.push("Standard survey kit");
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100"
-          style={{ background: "linear-gradient(135deg, #fff7ed, #fffbeb)" }}>
-          <div>
-            <h3 className="text-[15px] font-bold text-gray-900 flex items-center gap-2">
-              <CalendarPlus size={16} className="text-orange-500" /> Schedule Inspection
-            </h3>
-            <p className="text-[11px] text-gray-400">{item.road.road_id} — {item.road.name}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/70 transition">
-            <X size={18} className="text-gray-400" />
-          </button>
-        </div>
-
-        <div className="px-6 py-5 space-y-5">
-          {/* Road Snapshot */}
-          <div className="flex gap-3">
-            {[
-              { label: "CIBIL", val: item.finalCibilScore.toFixed(0), color: cibilColor(item.finalCibilScore) },
-              { label: "Condition", val: item.conditionCategory, color: conditionCfg(item.conditionCategory).color },
-              { label: "PDI", val: item.pdi.toFixed(0), color: item.pdi < 30 ? "#dc2626" : "#374151" },
-              { label: "Priority", val: item.priorityScore.toFixed(0), color: PRIORITY_CFG[item.priority].color },
-            ].map((s) => (
-              <div key={s.label} className="flex-1 rounded-xl p-3" style={{ background: "#f8fafc" }}>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase">{s.label}</p>
-                <p className="text-lg font-bold" style={{ color: s.color }}>{s.val}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* AI Recommendation */}
-          <div className="rounded-xl border border-orange-200 p-4" style={{ background: "#fffbeb" }}>
-            <p className="text-[11px] font-bold text-orange-700 mb-1 flex items-center gap-1">
-              <Zap size={12} /> CIBIL-Driven Recommendation
-            </p>
-            <p className="text-[12px] text-orange-900 leading-relaxed">
-              {item.isOverdue
-                ? `⚠️ This road is ${item.overdueDays} days overdue. CIBIL: ${item.finalCibilScore.toFixed(0)} (${item.conditionCategory}). Recommend immediate ${type} inspection.${item.decayRate > 0.05 ? ` Deteriorating at ${item.decayRate.toFixed(3)}/day.` : ""}`
-                : item.daysUntilDue <= 7
-                  ? `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. Schedule this week.`
-                  : `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. Interval driven by score tier.`
-              }
-            </p>
-            {item.trendAlert && (
-              <p className="text-[11px] text-red-700 mt-1 font-semibold">⚡ {item.trendAlert}</p>
-            )}
-            {item.riskFactors.length > 0 && (
-              <p className="text-[11px] text-orange-700 mt-1">
-                Risk factors: {item.riskFactors.slice(0, 3).join(", ")}
-              </p>
-            )}
-          </div>
-
-          {/* Equipment Recommendation */}
-          <div className="rounded-xl border border-blue-200 p-4" style={{ background: "#eff6ff" }}>
-            <p className="text-[11px] font-bold text-blue-700 mb-2">🛠️ Recommended Equipment</p>
-            <div className="flex flex-wrap gap-1.5">
-              {equipmentNeeded.map((eq) => (
-                <span key={eq} className="px-2 py-1 rounded-md bg-white border border-blue-200 text-[10px] font-medium text-blue-700">
-                  {eq}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Scheduling Form */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Inspection Date *</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Assign Agency *</label>
-              <select value={agency} onChange={(e) => setAgency(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-[13px] bg-white focus:outline-none focus:border-orange-400">
-                <option>NHAI</option><option>State PWD</option><option>Municipality</option><option>PMGSY</option><option>ThirdParty</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Team Lead Name</label>
-              <input type="text" value={teamLead} onChange={(e) => setTeamLead(e.target.value)}
-                placeholder="e.g. Eng. Patil"
-                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Team Size</label>
-              <select value={teamSize} onChange={(e) => setTeamSize(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-[13px] bg-white focus:outline-none focus:border-orange-400">
-                {[2, 3, 4, 5, 6, 8].map((n) => <option key={n} value={n}>{n} members</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-semibold text-gray-500 mb-2 block">Inspection Type *</label>
-            <div className="flex gap-2">
-              {([
-                { key: "full" as InspectionType, label: "Full Inspection", desc: "Complete survey with all equipment" },
-                { key: "quick" as InspectionType, label: "Quick Check", desc: "Visual inspection + key metrics" },
-                { key: "monsoon_special" as InspectionType, label: "Monsoon Special", desc: "Drainage + waterlogging focus" },
-              ]).map((t) => (
-                <button key={t.key} onClick={() => setType(t.key)}
-                  className={`flex-1 px-3 py-2.5 rounded-lg text-left border transition-all ${type === t.key ? "border-orange-300 shadow-sm" : "border-gray-200 hover:bg-gray-50"}`}
-                  style={type === t.key ? { background: "#fff7ed" } : undefined}>
-                  <p className={`text-[12px] font-semibold ${type === t.key ? "text-orange-700" : "text-gray-600"}`}>{t.label}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{t.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-semibold text-gray-500 mb-1 block">Notes / Instructions</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
-              placeholder="Special instructions for the inspection team..."
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 resize-none" />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100"
-          style={{ background: "#fafafa" }}>
-          <p className="text-[10px] text-gray-400">Est. cost: ₹{item.estimatedCostLakhs}L</p>
-          <div className="flex gap-3">
-            <button onClick={onClose} className="px-4 py-2 rounded-lg text-[13px] font-medium text-gray-600 hover:bg-gray-100 transition">Cancel</button>
-            <button onClick={() => onConfirm(date, agency, type, `${teamLead} (${teamSize} members)`, notes)}
-              className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white transition-all hover:shadow-lg"
-              style={{ background: "#f97316" }}>
-              <CalendarPlus size={14} className="inline mr-1.5 -mt-0.5" />Confirm Schedule
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -744,202 +575,6 @@ function RecalcToast({ oldScore, newScore, oldBand, newBand, roadName, onClose }
         </div>
         <p className="text-[10px] text-gray-400 mt-3">Queue re-sorted. Next inspection auto-scheduled.</p>
       </div>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════
-   EXPANDED ROW — Tabbed detail view  
-   ════════════════════════════════════════════════════════════════ */
-
-function ExpandedDetail({ item }: { item: ScheduledInspection }) {
-  const [tab, setTab] = useState<"overview" | "distress" | "risk" | "history">("overview");
-  const road = item.road;
-
-  const tabs = [
-    { key: "overview" as const, label: "Overview", icon: <Info size={11} /> },
-    { key: "distress" as const, label: "Distress Analysis", icon: <BarChart3 size={11} /> },
-    { key: "risk" as const,     label: "Risk Factors", icon: <Shield size={11} /> },
-    { key: "history" as const,  label: "Inspection History", icon: <History size={11} /> },
-  ];
-
-  return (
-    <div style={{ background: "#f8fafc", padding: "16px 20px" }}>
-      {/* Tab Bar */}
-      <div className="flex gap-1 mb-4 border-b border-gray-200 pb-2">
-        {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg text-[11px] font-semibold transition-all ${tab === t.key ? "text-orange-700 border-b-2 border-orange-500" : "text-gray-400 hover:text-gray-600"}`}
-            style={tab === t.key ? { background: "white" } : undefined}>
-            {t.icon}{t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Overview Tab */}
-      {tab === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-          <div>
-            <h4 className="text-[10px] font-bold uppercase text-gray-400 tracking-wider mb-2">Scheduling</h4>
-            <div className="space-y-1.5 text-[11px]">
-              <p><span className="text-gray-400 w-24 inline-block">Base Interval:</span> <span className="font-semibold text-gray-700">{item.baseIntervalDays}d</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">Adjusted:</span> <span className="font-semibold text-gray-700">{item.adjustedIntervalDays}d</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">Last Inspection:</span> <span className="font-semibold text-gray-700">{fmt(item.lastInspectionDate)}</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">Agency:</span> <span className="font-semibold text-gray-700">{item.assignedAgency}</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">Quarter:</span> <span className="font-semibold text-gray-700">{item.quarterLabel}</span></p>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-[10px] font-bold uppercase text-gray-400 tracking-wider mb-2">Condition</h4>
-            <div className="space-y-1.5 text-[11px]">
-              <p><span className="text-gray-400 w-24 inline-block">CIBIL:</span> <span className="font-bold" style={{ color: cibilColor(road.healthScore.finalCibilScore) }}>{road.healthScore.finalCibilScore.toFixed(0)}</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">Category:</span> <span className="font-semibold text-gray-700">{road.healthScore.conditionCategory}</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">PDI:</span> <span className="font-semibold text-gray-700">{road.healthScore.pdi.toFixed(1)}</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">IRI:</span> <span className="font-semibold text-gray-700">{road.iri_value}</span></p>
-              <p><span className="text-gray-400 w-24 inline-block">Distress:</span> <span className="font-semibold">{item.distressSeverity.toFixed(1)}%</span></p>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-[10px] font-bold uppercase text-gray-400 tracking-wider mb-2">Road Info</h4>
-            <div className="space-y-1.5 text-[11px]">
-              <p><span className="text-gray-400">Ref:</span> <span className="font-semibold">{road.highway_ref}</span></p>
-              <p><span className="text-gray-400">Surface:</span> <span className="font-semibold">{road.surface_type}</span></p>
-              <p><span className="text-gray-400">Lanes:</span> <span className="font-semibold">{road.lane_count}</span></p>
-              <p><span className="text-gray-400">Terrain:</span> <span className="font-semibold">{road.terrain_type} / {road.slope_category}</span></p>
-              <p><span className="text-gray-400">Built:</span> <span className="font-semibold">{road.year_constructed} ({2026 - road.year_constructed}yr old)</span></p>
-            </div>
-          </div>
-          <div>
-            <h4 className="text-[10px] font-bold uppercase text-gray-400 tracking-wider mb-2">Traffic</h4>
-            <div className="space-y-1.5 text-[11px]">
-              <p><span className="text-gray-400">ADT:</span> <span className="font-semibold">{road.avg_daily_traffic.toLocaleString()}</span></p>
-              <p><span className="text-gray-400">Trucks:</span> <span className="font-semibold">{road.truck_percentage}%</span></p>
-              <p><span className="text-gray-400">Rainfall:</span> <span className="font-semibold">{road.monsoon_rainfall_category}</span></p>
-              <p><span className="text-gray-400">Tourism:</span> <span className="font-semibold">{road.tourism_route_flag ? "Yes" : "No"}</span></p>
-              <p><span className="text-gray-400">Cost Est:</span> <span className="font-semibold">₹{item.estimatedCostLakhs}L</span></p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Distress Tab */}
-      {tab === "distress" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { label: "Potholes /km", val: road.potholes_per_km, max: 30, critical: 15, icon: <FileWarning size={12} className="text-red-500" /> },
-            { label: "Pothole Depth (cm)", val: road.pothole_avg_depth_cm, max: 20, critical: 10, icon: <Ruler size={12} className="text-orange-500" /> },
-            { label: "Longitudinal Cracks %", val: road.cracks_longitudinal_pct, max: 50, critical: 25, icon: <Layers size={12} className="text-yellow-600" /> },
-            { label: "Transverse Cracks /km", val: road.cracks_transverse_per_km, max: 30, critical: 15, icon: <Layers size={12} className="text-yellow-600" /> },
-            { label: "Alligator Cracking %", val: road.alligator_cracking_pct, max: 50, critical: 20, icon: <AlertTriangle size={12} className="text-red-600" /> },
-            { label: "Rutting Depth (mm)", val: road.rutting_depth_mm, max: 40, critical: 20, icon: <Gauge size={12} className="text-red-500" /> },
-            { label: "Raveling %", val: road.raveling_pct, max: 50, critical: 25, icon: <Activity size={12} className="text-purple-500" /> },
-            { label: "Edge Breaking %", val: road.edge_breaking_pct, max: 50, critical: 25, icon: <Mountain size={12} className="text-amber-600" /> },
-            { label: "Patches /km", val: road.patches_per_km, max: 25, critical: 12, icon: <Wrench size={12} className="text-blue-500" /> },
-          ].map((d) => {
-            const pct = (d.val / d.max) * 100;
-            const isCritical = d.val >= d.critical;
-            return (
-              <div key={d.label} className="rounded-xl border p-3"
-                style={{ borderColor: isCritical ? "#fecaca" : "#e5e7eb", background: isCritical ? "#fef2f2" : "white" }}>
-                <div className="flex items-center gap-1.5 mb-2">{d.icon}
-                  <span className="text-[10px] font-semibold text-gray-600">{d.label}</span>
-                  {isCritical && <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-red-100 text-red-700">CRITICAL</span>}
-                </div>
-                <p className="text-[18px] font-bold tabular-nums" style={{ color: isCritical ? "#dc2626" : "#374151" }}>{d.val}</p>
-                <div className="mt-1.5 h-2 rounded-full overflow-hidden" style={{ background: "#e5e7eb" }}>
-                  <div className="h-full rounded-full transition-all"
-                    style={{ width: `${Math.min(100, pct)}%`, background: pct > 70 ? "#dc2626" : pct > 40 ? "#ea580c" : "#22c55e" }} />
-                </div>
-                <p className="text-[9px] text-gray-400 mt-1">Threshold: {d.critical} / Max: {d.max}</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Risk Tab */}
-      {tab === "risk" && (
-        <div className="space-y-4">
-          {item.riskFactors.length > 0 ? (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {item.riskFactors.map((rf) => {
-                  let icon = <AlertTriangle size={12} className="text-orange-500" />;
-                  let bg = "#fff7ed";
-                  let border = "#fed7aa";
-                  if (rf.includes("Flood")) { icon = <Droplets size={12} className="text-blue-500" />; bg = "#eff6ff"; border = "#bfdbfe"; }
-                  if (rf.includes("Landslide") || rf.includes("Ghat")) { icon = <Mountain size={12} className="text-amber-600" />; bg = "#fffbeb"; border = "#fde68a"; }
-                  if (rf.includes("rainfall")) { icon = <CloudRain size={12} className="text-indigo-500" />; bg = "#eef2ff"; border = "#c7d2fe"; }
-                  if (rf.includes("pothole") || rf.includes("crack")) { icon = <FileWarning size={12} className="text-red-500" />; bg = "#fef2f2"; border = "#fecaca"; }
-                  if (rf.includes("truck") || rf.includes("traffic")) { icon = <Truck size={12} className="text-gray-600" />; bg = "#f8fafc"; border = "#e2e8f0"; }
-                  return (
-                    <div key={rf} className="flex items-center gap-2 px-3 py-2 rounded-xl border text-[11px] font-medium"
-                      style={{ background: bg, borderColor: border }}>
-                      {icon}<span className="text-gray-700">{rf}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="rounded-xl border border-gray-200 p-4 bg-white">
-                <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Risk Impact on Schedule</p>
-                <div className="text-[11px] text-gray-600 space-y-1">
-                  <p>• Base interval: <strong>{item.baseIntervalDays} days</strong></p>
-                  <p>• Adjusted interval: <strong>{item.adjustedIntervalDays} days</strong> ({Math.round((1 - item.adjustedIntervalDays / item.baseIntervalDays) * 100)}% reduction due to risks)</p>
-                  <p>• Decay rate: <strong>{item.decayRate.toFixed(4)}/day</strong> ({item.decayTrend})</p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <p className="text-[12px] text-gray-400 italic py-4">No additional risk factors identified for this road.</p>
-          )}
-        </div>
-      )}
-
-      {/* History Tab */}
-      {tab === "history" && (
-        <div>
-          {road.inspections.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[11px]">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Date</th>
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Agency</th>
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Score</th>
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Damage %</th>
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Drainage</th>
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Water</th>
-                    <th className="text-left py-2 px-2 font-semibold text-gray-400">Remarks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {road.inspections
-                    .sort((a, b) => new Date(b.inspection_date).getTime() - new Date(a.inspection_date).getTime())
-                    .map((insp) => (
-                      <tr key={insp.inspection_id} className="border-b border-gray-100 hover:bg-white/50">
-                        <td className="py-2 px-2 font-medium">{new Date(insp.inspection_date).toLocaleDateString("en-IN")}</td>
-                        <td className="py-2 px-2">{insp.inspector_agency}</td>
-                        <td className="py-2 px-2 font-bold" style={{ color: insp.condition_score < 30 ? "#dc2626" : insp.condition_score < 50 ? "#ea580c" : "#22c55e" }}>
-                          {insp.condition_score}
-                        </td>
-                        <td className="py-2 px-2">{insp.surface_damage_pct}%</td>
-                        <td className="py-2 px-2">{insp.drainage_status}</td>
-                        <td className="py-2 px-2">{insp.waterlogging_flag ? "🔴 Yes" : "🟢 No"}</td>
-                        <td className="py-2 px-2 text-gray-500 max-w-[200px] truncate">{insp.remarks}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <History size={32} className="text-gray-300 mx-auto mb-2" />
-              <p className="text-[12px] text-gray-400">No previous inspections recorded.</p>
-              <p className="text-[10px] text-gray-300 mt-1">Click "Record" to enter the first inspection data.</p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -1512,9 +1147,7 @@ export default function InspectionScheduler({ roads }: Props) {
   const [conditionFilter, setConditionFilter] = useState<"all" | "Critical" | "Poor" | "Fair" | "Good">("all");
   const [sortKey, setSortKey] = useState<"priority" | "dueDate" | "cibil" | "decay" | "pci">("priority");
   const [sortAsc, setSortAsc] = useState(false);
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [scheduleModal, setScheduleModal] = useState<ScheduledInspection | null>(null);
   const [recordModal, setRecordModal] = useState<ScheduledInspection | null>(null);
   const [toast, setToast] = useState<{ oldScore: number; newScore: number; oldBand: Band; newBand: Band; roadName: string } | null>(null);
   const [selectedItem, setSelectedItem] = useState<ScheduledInspection | null>(null);
@@ -1566,16 +1199,6 @@ export default function InspectionScheduler({ roads }: Props) {
     if (sortKey === key) setSortAsc(!sortAsc);
     else { setSortKey(key); setSortAsc(false); }
   };
-
-  // Schedule handler
-  const handleScheduleConfirm = useCallback((date: string, agency: string, type: InspectionType, _team: string, _notes: string) => {
-    if (!scheduleModal) return;
-    scheduleModal.isScheduled = true;
-    scheduleModal.scheduledDate = new Date(date);
-    scheduleModal.scheduledAgency = agency;
-    scheduleModal.scheduledType = type;
-    setScheduleModal(null);
-  }, [scheduleModal]);
 
   // Record inspection handler  
   const handleRecordSubmit = useCallback((data: RecordData) => {
@@ -1673,80 +1296,29 @@ export default function InspectionScheduler({ roads }: Props) {
         })}
       </div>
 
-      {/* ═══ ACTION BAR + MONSOON TOGGLE ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Action Distribution */}
-        <div className="lg:col-span-2 rounded-2xl bg-white border border-gray-200 p-4">
-          <h3 className="text-[12px] font-bold text-gray-600 mb-3 uppercase tracking-wider">Action Distribution</h3>
-          <div className="flex rounded-xl overflow-hidden h-7">
-            {(Object.keys(summary.byAction) as ActionType[]).map((action) => {
-              const count = summary.byAction[action];
-              if (!count) return null;
-              const pct = (count / summary.total) * 100;
-              return (
-                <div key={action}
-                  className="flex items-center justify-center text-white text-[9px] font-bold cursor-pointer transition-all hover:opacity-80"
-                  onClick={() => setActionFilter(actionFilter === action ? "all" : action)}
-                  style={{ width: `${pct}%`, background: ACTION_CFG[action].color, minWidth: pct > 3 ? 0 : 2 }}
-                  title={`${ACTION_CFG[action].label}: ${count} — Click to filter`}>
-                  {pct > 10 && count}
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex gap-4 mt-2.5 flex-wrap">
-            {(Object.keys(summary.byAction) as ActionType[]).map((action) => {
-              const count = summary.byAction[action];
-              if (!count) return null;
-              const isActive = actionFilter === action;
-              return (
-                <button key={action} onClick={() => setActionFilter(isActive ? "all" : action)}
-                  className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-md transition-all ${isActive ? "ring-2 ring-orange-400 bg-orange-50" : "hover:bg-gray-50"}`}>
-                  <div className="w-2 h-2 rounded-sm" style={{ background: ACTION_CFG[action].color }} />
-                  <span className="text-gray-500 font-medium">{ACTION_CFG[action].label}</span>
-                  <span className="text-gray-400 font-bold">({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Monsoon Toggle */}
-        <div className="rounded-2xl border p-4 transition-all" style={{
-          background: monsoonMode ? "linear-gradient(135deg, #0c4a6e, #164e63)" : "#ffffff",
-          borderColor: monsoonMode ? "#06b6d4" : "#e5e7eb",
-        }}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <CloudLightning size={18} className={monsoonMode ? "text-cyan-300" : "text-gray-400"} />
+      {/* ═══ MONSOON TOGGLE ═══ */}
+      <div className="rounded-2xl border p-4 transition-all" style={{
+        background: monsoonMode ? "linear-gradient(135deg, #0c4a6e, #164e63)" : "#ffffff",
+        borderColor: monsoonMode ? "#06b6d4" : "#e5e7eb",
+      }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CloudLightning size={20} className={monsoonMode ? "text-cyan-300" : "text-gray-400"} />
+            <div>
               <h3 className={`text-[13px] font-bold ${monsoonMode ? "text-white" : "text-gray-700"}`}>Monsoon Mode</h3>
+              <p className={`text-[11px] leading-relaxed ${monsoonMode ? "text-cyan-200" : "text-gray-400"}`}>
+                {monsoonMode
+                  ? `Active — High-rainfall, flood-prone & ghat roads get accelerated schedules. ${schedule.filter((s) => getMonsoonMultiplier(s.road, true) < 0.9).length} roads affected.`
+                  : "Activate to simulate monsoon-season scheduling with tightened inspection intervals."
+                }
+              </p>
             </div>
-            <button onClick={() => { setMonsoonMode(!monsoonMode); setPage(0); }}
-              className={`relative w-12 h-6 rounded-full transition-all ${monsoonMode ? "bg-cyan-400" : "bg-gray-300"}`}>
-              <span className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
-                style={{ left: monsoonMode ? 26 : 4 }} />
-            </button>
           </div>
-          <p className={`text-[11px] leading-relaxed ${monsoonMode ? "text-cyan-200" : "text-gray-400"}`}>
-            {monsoonMode
-              ? "Active — High-rainfall, flood-prone & ghat roads get accelerated schedules. Queue re-prioritized."
-              : "Activate to simulate monsoon-season scheduling with tightened inspection intervals."
-            }
-          </p>
-          {monsoonMode && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.1)" }}>
-                <p className="text-[10px] text-cyan-300 font-semibold">Affected Roads</p>
-                <p className="text-[15px] font-bold text-white">
-                  {schedule.filter((s) => getMonsoonMultiplier(s.road, true) < 0.9).length}
-                </p>
-              </div>
-              <div className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.1)" }}>
-                <p className="text-[10px] text-cyan-300 font-semibold">New Overdue</p>
-                <p className="text-[15px] font-bold text-white">{summary.overdue}</p>
-              </div>
-            </div>
-          )}
+          <button onClick={() => { setMonsoonMode(!monsoonMode); setPage(0); }}
+            className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${monsoonMode ? "bg-cyan-400" : "bg-gray-300"}`}>
+            <span className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
+              style={{ left: monsoonMode ? 26 : 4 }} />
+          </button>
         </div>
       </div>
 
@@ -1797,7 +1369,6 @@ export default function InspectionScheduler({ roads }: Props) {
             <thead>
               <tr>
                 <th style={{ width: 32 }}>#</th>
-                <th style={{ width: 32 }} />
                 <th>Road</th>
                 <th>District</th>
                 <th className="cursor-pointer select-none" onClick={() => toggleSort("cibil")}>
@@ -1811,38 +1382,32 @@ export default function InspectionScheduler({ roads }: Props) {
                   <span className="inline-flex items-center gap-1">Next Due <ArrowUpDown size={10} className="text-gray-400" /></span>
                 </th>
                 <th>Status</th>
-                <th className="cursor-pointer select-none" onClick={() => toggleSort("decay")}>
-                  <span className="inline-flex items-center gap-1">Decay <ArrowUpDown size={10} className="text-gray-400" /></span>
-                </th>
-                <th>Action</th>
-                <th>Inspector Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {paged.map((item, idx) => {
                 const pCfg = PRIORITY_CFG[item.priority];
-                const aCfg = ACTION_CFG[item.action];
-                const expanded = expandedRow === item.road.road_id;
                 const rank = page * PAGE_SIZE + idx + 1;
+                const isSelected = selectedItem?.road.road_id === item.road.road_id;
 
                 return (
                   <Fragment key={item.road.road_id}>
                     <tr onClick={() => {
-                      setExpandedRow(expanded ? null : item.road.road_id);
-                      setSelectedItem(item);
-                      setTimeout(() => detailCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                      setSelectedItem(isSelected ? null : item);
+                      if (!isSelected) setTimeout(() => detailCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
                     }}
-                      className={`group cursor-pointer ${selectedItem?.road.road_id === item.road.road_id ? "ring-2 ring-orange-400 ring-inset" : ""}`}
-                      style={item.isScheduled ? { background: "#f0fdf4" } : selectedItem?.road.road_id === item.road.road_id ? { background: "#fff7ed" } : undefined}>
+                      className={`group cursor-pointer ${isSelected ? "ring-2 ring-orange-400 ring-inset" : ""}`}
+                      style={item.isScheduled ? { background: "#f0fdf4" } : isSelected ? { background: "#fff7ed" } : undefined}>
                       <td className="text-[11px] font-bold text-gray-400 text-center">{rank}</td>
-                      <td className="text-center">
-                        {expanded
-                          ? <ChevronUp size={13} className="text-orange-500 mx-auto" />
-                          : <ChevronDown size={13} className="text-gray-400 mx-auto group-hover:text-orange-400 transition" />}
-                      </td>
                       <td>
-                        <p className="text-[12px] font-semibold text-gray-900 truncate max-w-[180px]">{item.road.name}</p>
-                        <p className="text-[10px] text-gray-400">{item.road.road_id}</p>
+                        <div className="flex items-center gap-2">
+                          <ChevronRight size={13} className={`transition-transform ${isSelected ? "rotate-90 text-orange-500" : "text-gray-300 group-hover:text-orange-400"}`} />
+                          <div>
+                            <p className="text-[12px] font-semibold text-gray-900 truncate max-w-[180px]">{item.road.name}</p>
+                            <p className="text-[10px] text-gray-400">{item.road.road_id} · {item.road.highway_ref}</p>
+                          </div>
+                        </div>
                       </td>
                       <td className="text-[11px] text-gray-600">{item.road.district}</td>
                       <td>
@@ -1887,48 +1452,15 @@ export default function InspectionScheduler({ roads }: Props) {
                           </span>
                         )}
                       </td>
-                      <td>
-                        <div className="flex items-center gap-1">
-                          {item.decayTrend === "accelerating" ? <TrendingDown size={12} className="text-red-500" />
-                            : item.decayTrend === "improving" ? <TrendingUp size={12} className="text-green-500" />
-                            : <Minus size={12} className="text-gray-400" />}
-                          <span className="text-[11px] font-mono tabular-nums"
-                            style={{ color: item.decayRate > 0.05 ? "#dc2626" : item.decayRate > 0.02 ? "#ea580c" : "#6b7280" }}>
-                            {item.decayRate.toFixed(3)}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: aCfg.color }}>
-                          {aCfg.icon}{aCfg.label}
-                        </span>
-                      </td>
                       <td onClick={(e) => e.stopPropagation()}>
-                        <div className="flex gap-1.5">
-                          <button onClick={() => setScheduleModal(item)}
-                            className="px-2.5 py-1.5 rounded-md text-[10px] font-semibold border transition-all hover:shadow-sm"
-                            style={{ borderColor: "#fed7aa", color: "#c2410c", background: "#fff7ed" }}
-                            title="Schedule an inspection for this road">
-                            <CalendarPlus size={11} className="inline mr-0.5 -mt-0.5" />Schedule
-                          </button>
-                          <button onClick={() => setRecordModal(item)}
-                            className="px-2.5 py-1.5 rounded-md text-[10px] font-semibold border transition-all hover:shadow-sm"
-                            style={{ borderColor: "#bbf7d0", color: "#15803d", background: "#f0fdf4" }}
-                            title="Record inspection results with distress metrics">
-                            <ClipboardCheck size={11} className="inline mr-0.5 -mt-0.5" />Record
-                          </button>
-                        </div>
+                        <button onClick={() => setRecordModal(item)}
+                          className="px-2.5 py-1.5 rounded-md text-[10px] font-semibold border transition-all hover:shadow-sm"
+                          style={{ borderColor: "#bbf7d0", color: "#15803d", background: "#f0fdf4" }}
+                          title="Record inspection results with distress metrics">
+                          <ClipboardCheck size={11} className="inline mr-0.5 -mt-0.5" />Record
+                        </button>
                       </td>
                     </tr>
-
-                    {/* Expanded Row */}
-                    {expanded && (
-                      <tr key={`${item.road.road_id}-detail`}>
-                        <td colSpan={12} style={{ padding: 0 }}>
-                          <ExpandedDetail item={item} />
-                        </td>
-                      </tr>
-                    )}
                   </Fragment>
                 );
               })}
@@ -1986,7 +1518,6 @@ export default function InspectionScheduler({ roads }: Props) {
       )}
 
       {/* ═══ MODALS ═══ */}
-      {scheduleModal && <ScheduleModal item={scheduleModal} onClose={() => setScheduleModal(null)} onConfirm={handleScheduleConfirm} />}
       {recordModal && <RecordModal item={recordModal} onClose={() => setRecordModal(null)} onSubmit={handleRecordSubmit} />}
 
       {/* Inline Keyframes */}

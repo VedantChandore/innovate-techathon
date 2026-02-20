@@ -154,7 +154,7 @@ export default function Home() {
     return (
       <>
         <Navbar currentPage="geoview" onNavigate={navigate} />
-        <div style={{ paddingTop: 67, height: "100vh", background: "#0a0e1a", overflow: "hidden" }}>
+        <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#ffffff", zIndex: 0 }}>
           <GeoView />
         </div>
       </>
