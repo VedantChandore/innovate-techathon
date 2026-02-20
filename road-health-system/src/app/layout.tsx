@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Road Raksha — Maharashtra Road Health System",
+  title: "Road Raksha — India Road Health System",
   description:
-    "Digital road condition management system with CIBIL-style health scoring for Maharashtra highways",
+    "Digital road condition management system with CIBIL-style health scoring for India's national highways",
 };
 
 export default function RootLayout({

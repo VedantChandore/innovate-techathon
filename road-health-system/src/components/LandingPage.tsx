@@ -571,7 +571,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
     {
       icon: <Database size={24} />,
       title: "Central Road Registry",
-      desc: "500+ road segments with 32 data attributes per record. Search, filter and export Maharashtra's highway data instantly.",
+      desc: "500+ road segments with 32 data attributes per record. Search, filter and export India's highway data instantly.",
       color: "#2563eb",
     },
     {
@@ -793,7 +793,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
           >
             <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
             <span className="text-[12px] font-semibold text-white/80 tracking-wide uppercase">
-              Government of Maharashtra • Public Works Department
+              Government of India • Ministry of Road Transport & Highways
             </span>
           </motion.div>
 
@@ -839,7 +839,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             transition={{ delay: 0.65, duration: 0.8 }}
             className="mt-1 text-lg md:text-xl text-white/80 font-medium"
           >
-            Maharashtra&apos;s National Highways.
+            India&apos;s National Highways.
           </motion.p>
 
           {/* NH badge row — pop-in one by one */}
@@ -1696,7 +1696,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             </span>
           </h2>
           <p className="text-white/50 mt-6 text-lg max-w-xl mx-auto leading-relaxed">
-            Access the Central Road Registry — search, filter and analyze 500+ road segments across Maharashtra.
+            Access the Central Road Registry — search, filter and analyze 500+ road segments across India.
           </p>
           <motion.button
             onClick={onOpenRegistry}
@@ -1762,7 +1762,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
                   </span>
                 </div>
                 <p className="text-white/50 text-[13px] leading-relaxed mb-6 max-w-xs">
-                  A digital road condition management system for Maharashtra&apos;s highways. Monitoring, scoring &amp; healing — empowering data-driven infrastructure decisions.
+                  A digital road condition management system for India&apos;s national highways. Monitoring, scoring &amp; healing — empowering data-driven infrastructure decisions.
                 </p>
 
                 {/* Social icons */}
@@ -1817,7 +1817,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
                     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24" className="text-white/40 mt-0.5 shrink-0"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                     <div>
                       <p className="text-white/70 text-[13px] font-semibold">Email</p>
-                      <p className="text-white/40 text-[13px]">pwd@maharashtra.gov.in</p>
+                      <p className="text-white/40 text-[13px]">support@roadraksha.gov.in</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -1858,7 +1858,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
 
             {/* Copyright */}
             <p className="text-center text-white/30 text-[13px]">
-              &copy; 2026 Road Rakshak &bull; Government of Maharashtra. All rights reserved.
+              &copy; 2026 Road Rakshak &bull; Government of India. All rights reserved.
             </p>
           </div>
         </div>

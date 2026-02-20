@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maharashtra Road Condition Monitor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { height: 100%; width: 100%; padding: 2px; background-color: #333; }
+        .map-container { height: 100%; width: 100%; border-radius: 10px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4); position: relative; }
+        #map { height: 100%; width: 100%; }
+
+        .side-panel {
+            position: absolute; left: 10px; top: 10px; width: 320px; height: calc(100% - 20px);
+            background: #ffffff; border-radius: 12px; z-index: 1000; padding: 24px;
+            overflow-y: auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;
+        }
+        .side-panel::-webkit-scrollbar { width: 6px; }
+        .side-panel::-webkit-scrollbar-track { background: transparent; }
+        .side-panel::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .side-panel::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .side-panel h2 { margin: 0 0 4px 0; font-size: 22px; color: #111827; font-weight: 600; letter-spacing: -0.5px; }
+        .side-panel h3 { margin: 24px 0 12px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .side-panel .subtitle { font-size: 14px; color: #6b7280; margin-bottom: 16px; font-weight: 400; }
+
+        .hw-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; max-height: 140px; overflow-y: auto; padding: 4px 0; }
+        .hw-btn {
+            padding: 7px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px;
+            font-weight: 600; cursor: pointer; background: #ffffff; color: #6b7280;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .hw-btn:hover { border-color: #9ca3af; color: #111827; }
+        .hw-btn.active { background: #111827; color: #ffffff; border-color: #111827; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card {
+            background: #f9fafb; padding: 16px; border-radius: 8px; text-align: center;
+            border: 1px solid #f3f4f6; transition: border-color 0.2s;
+        }
+        .stat-card:hover { border-color: #e5e7eb; }
+        .stat-number { font-size: 28px; font-weight: 600; margin: 4px 0; color: #111827; letter-spacing: -1px; }
+        .stat-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+
+        .legend-item {
+            display: flex; align-items: center; margin: 8px 0; padding: 12px;
+            background: #ffffff; border-radius: 8px; border: 1px solid #f3f4f6; transition: border-color 0.2s;
+        }
+        .legend-item:hover { border-color: #e5e7eb; }
+        .legend-color { width: 4px; height: 32px; border-radius: 2px; margin-right: 12px; }
+        .legend-text { font-size: 14px; color: #374151; font-weight: 500; }
+        .legend-count { margin-left: auto; font-size: 15px; font-weight: 600; color: #111827; }
+
+        .info-box { background: #f9fafb; padding: 14px; border-radius: 8px; margin-top: 20px; border: 1px solid #f3f4f6; }
+        .info-box p { margin: 6px 0; font-size: 13px; color: #6b7280; line-height: 1.5; }
+        .info-box strong { color: #111827; font-size: 13px; font-weight: 600; }
+
+        .search-box { margin-bottom: 20px; }
+        .search-box input {
+            width: 100%; padding: 11px 14px; border: 1px solid #e5e7eb; border-radius: 8px;
+            font-size: 14px; outline: none; background: #ffffff; transition: border-color 0.2s; font-family: inherit;
+        }
+        .search-box input:focus { border-color: #9ca3af; }
+        .search-box input::placeholder { color: #9ca3af; }
+        .search-results { max-height: 180px; overflow-y: auto; margin-top: 8px; }
+        .search-result-item {
+            padding: 11px 14px; background: #ffffff; margin: 6px 0; border-radius: 8px;
+            cursor: pointer; font-size: 13px; border: 1px solid #f3f4f6; transition: border-color 0.2s;
+        }
+        .search-result-item:hover { border-color: #e5e7eb; }
+        .search-result-item .segment-id { font-weight: 600; color: #111827; font-size: 14px; }
+        .search-result-item .segment-nh { font-size: 11px; color: #9ca3af; font-weight: 500; }
+        .search-result-item .segment-condition { font-size: 12px; margin-top: 4px; font-weight: 500; }
+        .no-results { padding: 12px; text-align: center; color: #9ca3af; font-size: 13px; background: #f9fafb; border-radius: 8px; border: 1px solid #f3f4f6; }
+
+        .leaflet-control-zoom { display: none !important; }
+
+        .dark-popup .leaflet-popup-content-wrapper { background: transparent; box-shadow: none; border-radius: 10px; padding: 0; }
+        .dark-popup .leaflet-popup-content { margin: 0; }
+        .dark-popup .leaflet-popup-tip { background: #1f2937; }
+        .dark-popup .leaflet-popup-close-button { color: #9ca3af; font-size: 18px; padding: 6px 8px; }
+
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 10000; display: flex;
+            justify-content: center; align-items: center; color: white;
+            font-family: Arial, sans-serif; text-align: center;
+        }
+        .loading-content { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; }
+        .loading-bar { width: 250px; height: 6px; background: #333; border-radius: 6px; overflow: hidden; margin-top: 20px; }
+        .loading-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #eab308, #ef4444); animation: loading 1.5s infinite; }
+        @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h2>Loading Maharashtra Highways...</h2>
+            <p>Loading all 114 national highways...</p>
+            <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div class="side-panel">
+            <h2>Road Monitor</h2>
+            <p class="subtitle">Maharashtra National Highways</p>
+
+            <div class="hw-selector" id="hw-selector-container">
+                <button class="hw-btn active" data-nh="ALL" onclick="updateStats('ALL')">All</button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="segment-search" placeholder="Search segment or district..." />
+                <div id="search-results" class="search-results"></div>
+            </div>
+
+            <h3>Road Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Segments</div>
+                    <div class="stat-number" id="total-segments">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Highways</div>
+                    <div class="stat-number" id="highway-count">114</div>
+                </div>
+            </div>
+
+            <h3>Condition Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #22c55e;"></div>
+                <span class="legend-text">Good Condition</span>
+                <span class="legend-count" id="good-count">-</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #eab308;"></div>
+                <span class="legend-text">Average Condition</span>
+                <span class="legend-count" id="average-count">-</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ef4444;"></div>
+                <span class="legend-text">Poor Condition</span>
+                <span class="legend-count" id="bad-count">-</span>
+            </div>
+
+            <div class="info-box">
+                <p><strong>How to Use</strong></p>
+                <p>&bull; Select a highway or view all</p>
+                <p>&bull; Click on any segment for details</p>
+                <p>&bull; Search by segment number or district</p>
+                <p>&bull; Scroll to zoom, drag to pan</p>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script_highways.js"></script>
+    <script>
+        var allSegments = [];
+        var searchInterval = setInterval(function() {
+            if (dataLoaded && Object.keys(allHighwaysData).length > 0) {
+                clearInterval(searchInterval);
+                allSegments = buildSearchIndex();
+                console.log('Search index built:', allSegments.length, 'segments');
+            }
+        }, 500);
+
+        document.getElementById('segment-search').addEventListener('input', function(e) {
+            var searchTerm = e.target.value.toLowerCase().trim();
+            var resultsDiv = document.getElementById('search-results');
+            if (searchTerm === '') { resultsDiv.innerHTML = ''; return; }
+
+            var matches = allSegments.filter(function(seg) {
+                return seg.segmentNumber.toString().includes(searchTerm) ||
+                    seg.id.toLowerCase().includes(searchTerm) ||
+                    seg.nh.toLowerCase().includes(searchTerm) ||
+                    (seg.district && seg.district.toLowerCase().includes(searchTerm)) ||
+                    (seg.taluka && seg.taluka.toLowerCase().includes(searchTerm));
+            }).slice(0, 10);
+
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">No segments found</div>';
+                return;
+            }
+
+            var condColors = { 'good': '#22c55e', 'average': '#eab308', 'very_bad': '#ef4444' };
+            var condLabels = { 'good': 'Good', 'average': 'Average', 'very_bad': 'Poor' };
+
+            resultsDiv.innerHTML = matches.map(function(seg) {
+                return '<div class="search-result-item" onclick="zoomToSegment(\'' + seg.id + '\', [[' + seg.coordinates[0] + '],[' + seg.coordinates[1] + ']])">' +
+                    '<div class="segment-id">Segment #' + seg.segmentNumber + ' <span class="segment-nh">' + seg.nh + '</span></div>' +
+                    '<div class="segment-condition" style="color: ' + condColors[seg.condition] + ';">&#9679; ' + condLabels[seg.condition] +
+                    (seg.district ? ' &middot; ' + seg.district : '') + '</div></div>';
+            }).join('');
+        });
+
+        function zoomToSegment(segmentId, coordinates) {
+            if (typeof map !== 'undefined' && coordinates && coordinates.length > 0) {
+                var latLngs = coordinates.map(function(c) { return [c[1], c[0]]; });
+                map.flyToBounds(L.latLngBounds(latLngs), { padding: [50, 50], maxZoom: 15, duration: 1.5 });
+                document.getElementById('search-results').innerHTML = '';
+                document.getElementById('segment-search').value = '';
+                setTimeout(function() {
+                    map.eachLayer(function(layer) {
+                        if (layer.feature && layer.feature.id === segmentId && layer.getPopup()) layer.openPopup();
+                    });
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>

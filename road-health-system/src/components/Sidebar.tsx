@@ -52,7 +52,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               RoadCIBIL
             </h1>
             <p className="text-[10px] text-gray-400 font-medium tracking-wide uppercase whitespace-nowrap">
-              Maharashtra PWD
+              India PWD
             </p>
           </div>
         )}

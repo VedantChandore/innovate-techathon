@@ -55,7 +55,7 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
                 scrolled || !isLanding ? "text-gray-400" : "text-white/60"
               }`}
             >
-              Maharashtra PWD
+              India PWD
             </p>
           </div>
         </button>
@@ -64,9 +64,9 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
         <div className="hidden md:flex items-center gap-1">
           {[
             { id: "landing" as const, label: "Home" },
+            { id: "geoview" as const, label: "GeoView" },
             { id: "registry" as const, label: "Road Registry" },
             { id: "scheduling" as const, label: "Inspection Scheduler" },
-            { id: "geoview" as const, label: "GeoView" },
             { id: "reports" as const, label: "Reports" },
             { id: "complaints" as const, label: "📞 Complaints" },
           ].map((item) => (
@@ -107,9 +107,9 @@ export default function Navbar({ currentPage, onNavigate }: NavbarProps) {
           <div className="px-4 py-3 space-y-1">
             {[
               { id: "landing" as const, label: "Home" },
+              { id: "geoview" as const, label: "GeoView" },
               { id: "registry" as const, label: "Road Registry" },
               { id: "scheduling" as const, label: "Inspection Scheduler" },
-              { id: "geoview" as const, label: "GeoView" },
               { id: "reports" as const, label: "Reports" },
               { id: "complaints" as const, label: "📞 Complaints" },
             ].map((item) => (

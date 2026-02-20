@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Loader2, Map, Search, X, ChevronDown, Layers, BarChart2, Sun, Moon, AlertTriangle, Activity } from "lucide-react";
+import { Loader2, Map, Search, X, ChevronDown, Layers, BarChart2, Sun, Moon, AlertTriangle, Activity, MessageSquareWarning } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────── */
 interface SegmentData {
@@ -88,7 +88,63 @@ interface RiskStats {
   riskyTurns: number;
 }
 
-type LayerMode = "conditions" | "risk";
+type LayerMode = "conditions" | "risk" | "complaints";
+
+/* ── Complaint seed data ────────────────────────────────────
+   Realistic citizen complaints pinned to major NH corridors.
+   category: pothole | flooding | damage | lighting | encroachment
+──────────────────────────────────────────────────────────── */
+interface Complaint {
+  id: string;
+  lat: number;
+  lng: number;
+  nh: string;
+  category: "pothole" | "flooding" | "damage" | "lighting" | "encroachment";
+  severity: "low" | "medium" | "high";
+  title: string;
+  description: string;
+  reportedBy: string;
+  date: string;
+  upvotes: number;
+  status: "open" | "in_progress" | "resolved";
+}
+
+const COMPLAINT_COLORS = {
+  pothole:      "#f97316",
+  flooding:     "#3b82f6",
+  damage:       "#ef4444",
+  lighting:     "#facc15",
+  encroachment: "#a855f7",
+};
+const COMPLAINT_ICONS = {
+  pothole:      "🕳️",
+  flooding:     "🌊",
+  damage:       "#",
+  lighting:     "💡",
+  encroachment: "⚠️",
+};
+const COMPLAINT_SEVERITY_COLOR = { low: "#22c55e", medium: "#f97316", high: "#ef4444" };
+const COMPLAINT_STATUS_LABEL   = { open: "Open", in_progress: "In Progress", resolved: "Resolved" };
+const COMPLAINT_STATUS_COLOR   = { open: "#ef4444", in_progress: "#f97316", resolved: "#22c55e" };
+
+// Seed complaints pinned across Maharashtra NH corridors
+const SEED_COMPLAINTS: Complaint[] = [
+  { id:"c1",  lat:19.076, lng:72.877, nh:"NH48",  category:"pothole",      severity:"high",   title:"Deep potholes near Khopoli",      description:"Multiple large craters causing tyre damage. 3 accidents this week.",         reportedBy:"Ramesh K.",    date:"2026-02-14", upvotes:42, status:"open" },
+  { id:"c2",  lat:18.519, lng:73.856, nh:"NH48",  category:"flooding",     severity:"high",   title:"Waterlogging at Khed-Shivapur",   description:"Road submerged after rain, heavy traffic diverted.",                         reportedBy:"Priya S.",     date:"2026-02-13", upvotes:38, status:"in_progress" },
+  { id:"c3",  lat:19.997, lng:73.789, nh:"NH160", category:"damage",       severity:"high",   title:"Bridge crack near Nashik bypass",  description:"Visible crack on approach slab. Heavy vehicles banned.",                    reportedBy:"Ajay M.",      date:"2026-02-15", upvotes:61, status:"open" },
+  { id:"c4",  lat:17.687, lng:75.901, nh:"NH65",  category:"lighting",     severity:"medium", title:"No street lights for 8 km",       description:"Entire stretch dark after sunset. Accident prone.",                          reportedBy:"Sunita P.",    date:"2026-02-12", upvotes:29, status:"open" },
+  { id:"c5",  lat:21.145, lng:79.082, nh:"NH44",  category:"encroachment", severity:"medium", title:"Vendors blocking NH shoulder",    description:"Daily market occupying emergency lane near Nagpur.",                         reportedBy:"Vijay T.",     date:"2026-02-11", upvotes:18, status:"in_progress" },
+  { id:"c6",  lat:18.996, lng:76.112, nh:"NH752", category:"pothole",      severity:"medium", title:"Rutted surface near Latur",       description:"Severe rutting post-monsoon. IRI > 9.",                                      reportedBy:"Meena B.",     date:"2026-02-10", upvotes:22, status:"open" },
+  { id:"c7",  lat:16.705, lng:74.243, nh:"NH48",  category:"flooding",     severity:"low",    title:"Stagnant water at Kolhapur entry", description:"Drain blocked, water on road after light rain.",                            reportedBy:"Suresh N.",    date:"2026-02-09", upvotes:11, status:"resolved" },
+  { id:"c8",  lat:20.001, lng:73.775, nh:"NH160", category:"pothole",      severity:"high",   title:"Crater at km 203 Nashik-Pune",   description:"Pothole 40cm wide, 15cm deep. Night-time hazard.",                          reportedBy:"Anita R.",     date:"2026-02-16", upvotes:74, status:"open" },
+  { id:"c9",  lat:19.300, lng:74.150, nh:"NH60",  category:"damage",       severity:"medium", title:"Guardrail missing for 500m",      description:"Guardrail removed by accident. Steep drop on right side.",                  reportedBy:"Harish D.",    date:"2026-02-08", upvotes:33, status:"in_progress" },
+  { id:"c10", lat:17.340, lng:76.822, nh:"NH65",  category:"lighting",     severity:"low",    title:"Broken reflectors on divider",   description:"Cats-eye reflectors missing on 3 km median stretch.",                       reportedBy:"Lakshmi V.",   date:"2026-02-07", upvotes:9,  status:"resolved" },
+  { id:"c11", lat:20.930, lng:77.775, nh:"NH44",  category:"encroachment", severity:"high",   title:"Illegal hoardings blocking sign", description:"Billboard blocking NH direction signs near Akola flyover.",                 reportedBy:"Ravi G.",      date:"2026-02-15", upvotes:44, status:"open" },
+  { id:"c12", lat:18.200, lng:74.600, nh:"NH48",  category:"pothole",      severity:"medium", title:"Patch work failing near Pune",   description:"Recent patch already broken. Back to original pothole.",                    reportedBy:"Kavita J.",    date:"2026-02-13", upvotes:19, status:"open" },
+  { id:"c13", lat:21.800, lng:74.250, nh:"NH52",  category:"damage",       severity:"high",   title:"Culvert collapse near Dhule",    description:"Box culvert on left shoulder partially collapsed after floods.",            reportedBy:"Nilesh S.",    date:"2026-02-16", upvotes:57, status:"open" },
+  { id:"c14", lat:19.854, lng:75.345, nh:"NH752", category:"flooding",     severity:"medium", title:"Waterlogging Aurangabad bypass",  description:"Low-lying section floods during moderate rain.",                            reportedBy:"Deepa M.",     date:"2026-02-11", upvotes:26, status:"in_progress" },
+  { id:"c15", lat:17.005, lng:73.310, nh:"NH66",  category:"pothole",      severity:"high",   title:"Ghat road potholes near Chiplun", description:"Monsoon damage on curves. Bikes skidding. Needs urgent repair.",          reportedBy:"Sachin A.",    date:"2026-02-14", upvotes:68, status:"open" },
+];
 
 /* ── Constants ──────────────────────────────────────────── */
 const CONDITION_COLORS: Record<string, string> = {
@@ -189,14 +245,19 @@ export default function GeoView() {
   const riskLayersRef    = useRef<Record<string, L.GeoJSON>>({});     // risk layer
   const hotspotLayerRef  = useRef<L.LayerGroup | null>(null);         // accident hotspot markers
   const turnLayerRef     = useRef<L.LayerGroup | null>(null);         // risky turn markers
+  const complaintsLayerRef = useRef<L.LayerGroup | null>(null);       // complaints markers
   const highwayColorsRef = useRef<Record<string, string>>({});
   const allHighwaysDataRef = useRef<AllHighwaysData>({});
   const isDarkRef = useRef(false);
   const layerModeRef = useRef<LayerMode>("conditions");
 
+  type ThemeMode = "light" | "dark" | "vintage";
+  const [theme, setTheme]             = useState<ThemeMode>("light");
+  const isDark    = theme === "dark";
+  const isVintage = theme === "vintage";
+
   const [loading, setLoading]         = useState(true);
   const [loadingMsg, setLoadingMsg]   = useState("Initialising map…");
-  const [isDark, setIsDark]           = useState(false);
   const [layerMode, setLayerMode]     = useState<LayerMode>("conditions");
   const [activeNH, setActiveNH]       = useState("ALL");
   const [nhKeys, setNhKeys]           = useState<string[]>([]);
@@ -206,23 +267,35 @@ export default function GeoView() {
   const [searchResults, setSearchResults] = useState<SearchSegment[]>([]);
   const [searchIndex, setSearchIndex] = useState<SearchSegment[]>([]);
   const [nhSelectorOpen, setNhSelectorOpen] = useState(false);
+  const [is3D, setIs3D]               = useState(false);
+  const [complaintStats, setComplaintStats] = useState({ total: 15, open: 10, in_progress: 3, resolved: 2, high: 7, medium: 5, low: 3 });
 
   /* ── Theme derived ── */
   useEffect(() => { isDarkRef.current = isDark; }, [isDark]);
-  const panelBg      = isDark ? "rgba(15,23,42,0.90)"        : "rgba(255,255,255,0.92)";
-  const panelBorder  = isDark ? "rgba(255,255,255,0.10)"     : "rgba(0,0,0,0.10)";
-  const textPrimary  = isDark ? "#f9fafb"                    : "#111827";
-  const textSecondary= isDark ? "rgba(255,255,255,0.50)"     : "#6b7280";
-  const textMuted    = isDark ? "rgba(255,255,255,0.30)"     : "#9ca3af";
-  const hoverBg      = isDark ? "rgba(255,255,255,0.05)"     : "rgba(0,0,0,0.04)";
-  const statCellBg   = isDark ? "rgba(255,255,255,0.04)"     : "rgba(0,0,0,0.04)";
-  const statCellBorder = isDark ? "rgba(255,255,255,0.06)"   : "rgba(0,0,0,0.08)";
-  const barTrackBg   = isDark ? "rgba(255,255,255,0.06)"     : "rgba(0,0,0,0.08)";
-  const scrollColor  = isDark ? "#374151 transparent"        : "#d1d5db transparent";
+
+  /* ── Invalidate map size after 3D transition completes ── */
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    const timer = setTimeout(() => { map.invalidateSize(); }, 650);
+    return () => clearTimeout(timer);
+  }, [is3D]);
+  const panelBg      = isDark ? "rgba(15,23,42,0.90)"       : isVintage ? "rgba(245,233,196,0.94)"  : "rgba(255,255,255,0.92)";
+  const panelBorder  = isDark ? "rgba(255,255,255,0.10)"    : isVintage ? "rgba(120,80,40,0.28)"    : "rgba(0,0,0,0.10)";
+  const textPrimary  = isDark ? "#f9fafb"                   : isVintage ? "#3d2b1f"                 : "#111827";
+  const textSecondary= isDark ? "rgba(255,255,255,0.50)"    : isVintage ? "#7a5c3e"                 : "#6b7280";
+  const textMuted    = isDark ? "rgba(255,255,255,0.30)"    : isVintage ? "#a08060"                 : "#9ca3af";
+  const hoverBg      = isDark ? "rgba(255,255,255,0.05)"    : isVintage ? "rgba(120,80,40,0.07)"    : "rgba(0,0,0,0.04)";
+  const statCellBg   = isDark ? "rgba(255,255,255,0.04)"    : isVintage ? "rgba(120,80,40,0.06)"    : "rgba(0,0,0,0.04)";
+  const statCellBorder = isDark ? "rgba(255,255,255,0.06)"  : isVintage ? "rgba(120,80,40,0.15)"    : "rgba(0,0,0,0.08)";
+  const barTrackBg   = isDark ? "rgba(255,255,255,0.06)"    : isVintage ? "rgba(120,80,40,0.10)"    : "rgba(0,0,0,0.08)";
+  const scrollColor  = isDark ? "#374151 transparent"       : isVintage ? "#b8956a transparent"     : "#d1d5db transparent";
   const nhBtnInactive = isDark
     ? "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10"
-    : "bg-black/5 text-gray-600 hover:bg-black/10 hover:text-gray-900 border border-black/10";
-  const panelShadow  = isDark ? "0 4px 24px rgba(0,0,0,0.4)" : "0 4px 24px rgba(0,0,0,0.10)";
+    : isVintage
+      ? "bg-amber-900/10 text-amber-900/70 hover:bg-amber-900/20 hover:text-amber-950 border border-amber-900/20"
+      : "bg-black/5 text-gray-600 hover:bg-black/10 hover:text-gray-900 border border-black/10";
+  const panelShadow  = isDark ? "0 4px 24px rgba(0,0,0,0.4)" : isVintage ? "0 4px 24px rgba(80,40,10,0.18)" : "0 4px 24px rgba(0,0,0,0.10)";
 
   /* ── Switch layers on mode change ── */
   const applyLayerMode = useCallback((mode: LayerMode, nh: string) => {
@@ -230,28 +303,36 @@ export default function GeoView() {
     if (!map) return;
     layerModeRef.current = mode;
 
-    const condLayers = highwayLayersRef.current;
-    const riskLyrMap = riskLayersRef.current;
-    const hotLayer   = hotspotLayerRef.current;
-    const turnLayer  = turnLayerRef.current;
-    const nhsToShow  = nh === "ALL" ? Object.keys(condLayers) : [nh];
+    const condLayers      = highwayLayersRef.current;
+    const riskLyrMap      = riskLayersRef.current;
+    const hotLayer        = hotspotLayerRef.current;
+    const turnLayer       = turnLayerRef.current;
+    const complaintsLayer = complaintsLayerRef.current;
+    const nhsToShow       = nh === "ALL" ? Object.keys(condLayers) : [nh];
+
+    // Always hide all first, then show what belongs to this mode
+    Object.values(condLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    Object.values(riskLyrMap).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    if (hotLayer        && map.hasLayer(hotLayer))        map.removeLayer(hotLayer);
+    if (turnLayer       && map.hasLayer(turnLayer))       map.removeLayer(turnLayer);
+    if (complaintsLayer && map.hasLayer(complaintsLayer)) map.removeLayer(complaintsLayer);
 
     if (mode === "conditions") {
       Object.entries(condLayers).forEach(([k, l]) => {
         if (nhsToShow.includes(k)) { if (!map.hasLayer(l)) l.addTo(map); }
-        else { if (map.hasLayer(l)) map.removeLayer(l); }
       });
-      Object.values(riskLyrMap).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
-      if (hotLayer  && map.hasLayer(hotLayer))  map.removeLayer(hotLayer);
-      if (turnLayer && map.hasLayer(turnLayer)) map.removeLayer(turnLayer);
-    } else {
-      Object.values(condLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    } else if (mode === "risk") {
       Object.entries(riskLyrMap).forEach(([k, l]) => {
         if (nhsToShow.includes(k)) { if (!map.hasLayer(l)) l.addTo(map); }
-        else { if (map.hasLayer(l)) map.removeLayer(l); }
       });
       if (hotLayer)  { if (!map.hasLayer(hotLayer))  hotLayer.addTo(map); }
       if (turnLayer) { if (!map.hasLayer(turnLayer)) turnLayer.addTo(map); }
+    } else if (mode === "complaints") {
+      // Show conditions as faded grey base + complaints on top
+      Object.entries(condLayers).forEach(([k, l]) => {
+        if (nhsToShow.includes(k)) { if (!map.hasLayer(l)) l.addTo(map); }
+      });
+      if (complaintsLayer) { if (!map.hasLayer(complaintsLayer)) complaintsLayer.addTo(map); }
     }
   }, []);
 
@@ -320,19 +401,23 @@ export default function GeoView() {
     setLayerMode(mode);
     applyLayerMode(mode, activeNH);
   }, [applyLayerMode, activeNH]);
-
-  /* ── Toggle map tile theme ── */
+  /* ── Toggle map tile theme (light → dark → vintage → light) ── */
   const toggleTheme = useCallback(async () => {
     const map = mapInstanceRef.current;
     if (!map) return;
     const L = (await import("leaflet")).default;
-    setIsDark(prev => {
-      const next = !prev;
+    setTheme(prev => {
+      const next: ThemeMode = prev === "light" ? "dark" : prev === "dark" ? "vintage" : "light";
       if (tileLayerRef.current) map.removeLayer(tileLayerRef.current);
-      const tileUrl = next
-        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      const tileUrl =
+        next === "dark"    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : next === "vintage" ? "https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.png"
         : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-      const newTile = L.tileLayer(tileUrl, { attribution: "&copy; CartoDB &copy; OpenStreetMap", maxZoom: 19 });
+      const attribution =
+        next === "vintage"
+          ? "&copy; <a href='https://stamen.com'>Stamen Design</a> &copy; OpenStreetMap"
+          : "&copy; CartoDB &copy; OpenStreetMap";
+      const newTile = L.tileLayer(tileUrl, { attribution, maxZoom: 19 });
       newTile.addTo(map);
       newTile.bringToBack();
       tileLayerRef.current = newTile;
@@ -682,6 +767,54 @@ export default function GeoView() {
       });
       setSearchIndex(idx);
       setStats({ total: t, good: g, average: a, very_bad: vb, highways: keys.length });
+
+      // ── Build Complaints layer ──
+      const complaintsGroup = L.layerGroup();
+      SEED_COMPLAINTS.forEach(c => {
+        const catColor  = COMPLAINT_COLORS[c.category];
+        const sevColor  = COMPLAINT_SEVERITY_COLOR[c.severity];
+        const isHigh    = c.severity === "high";
+        const size      = isHigh ? 30 : c.severity === "medium" ? 24 : 20;
+        const emoji     = COMPLAINT_ICONS[c.category];
+        const statusClr = COMPLAINT_STATUS_COLOR[c.status];
+
+        const html = `<div style="
+          width:${size}px;height:${size}px;border-radius:50%;
+          background:${catColor};border:${isHigh ? 3 : 2}px solid white;
+          box-shadow:0 2px 8px ${catColor}99${isHigh ? `,0 0 0 4px ${catColor}33` : ""};
+          ${isHigh ? "animation:pulse-hotspot 2s ease-in-out infinite;" : ""}
+          display:flex;align-items:center;justify-content:center;
+          font-size:${isHigh ? 14 : 11}px;line-height:1;cursor:pointer;
+        ">${emoji}</div>`;
+
+        const icon = L.divIcon({ html, className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+        const marker = L.marker([c.lat, c.lng], { icon });
+
+        const popupHtml = `
+          <div style="font-family:-apple-system,sans-serif;min-width:260px;padding:16px;border-radius:10px;margin:-14px -20px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.18)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span style="background:${catColor};color:white;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700">${emoji} ${c.category.charAt(0).toUpperCase() + c.category.slice(1)}</span>
+              <span style="background:${sevColor}22;color:${sevColor};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid ${sevColor}44">${c.severity.toUpperCase()}</span>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:#111827;margin-bottom:6px">${c.title}</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5">${c.description}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:11px;color:#9ca3af;margin-bottom:8px">
+              <span>📍 ${c.nh}</span>
+              <span>👤 ${c.reportedBy}</span>
+              <span>📅 ${c.date}</span>
+              <span>👍 ${c.upvotes} upvotes</span>
+            </div>
+            <div style="padding:6px 10px;border-radius:6px;background:${statusClr}15;border:1px solid ${statusClr}33;display:inline-block">
+              <span style="color:${statusClr};font-size:12px;font-weight:600">● ${COMPLAINT_STATUS_LABEL[c.status]}</span>
+            </div>
+          </div>`;
+        marker.bindPopup(popupHtml, { className: "light-popup", closeButton: true, maxWidth: 320 });
+        marker.bindTooltip(`<b>${c.title}</b><br/>${c.nh} · ${c.severity} severity`, { direction: "top", offset: [0, -size / 2] });
+        complaintsGroup.addLayer(marker);
+      });
+      complaintsLayerRef.current = complaintsGroup;
+      // Don't add to map yet — shown only in complaints mode
+
       setLoading(false);
     }
 
@@ -697,7 +830,7 @@ export default function GeoView() {
 
   /* ── Render ── */
   return (
-    <div className="flex h-full w-full relative" style={{ minHeight: "calc(100vh - 67px)" }}>
+    <div className="flex w-full relative" style={{ height: "100%", overflow: "hidden" }}>
 
       {/* ── Loading overlay ── */}
       {loading && (
@@ -708,15 +841,15 @@ export default function GeoView() {
             </div>
             <Loader2 className="w-6 h-6 text-orange-500 animate-spin mx-auto mb-3" />
             <p className="text-gray-800 font-semibold text-[15px]">{loadingMsg}</p>
-            <p className="text-gray-400 text-[12px] mt-1">Maharashtra National Highways</p>
+            <p className="text-gray-400 text-[12px] mt-1">India National Highways</p>
           </div>
         </div>
       )}
 
       {/* ── Layer Mode Toggle — top centre ── */}
       {!loading && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-1000 flex rounded-xl overflow-hidden"
-          style={{ background: panelBg, border: `1px solid ${panelBorder}`, boxShadow: panelShadow }}>
+        <div className="absolute left-1/2 -translate-x-1/2 z-1000 flex rounded-xl overflow-hidden"
+          style={{ top: 74, background: panelBg, border: `1px solid ${panelBorder}`, boxShadow: panelShadow }}>
           <button
             onClick={() => switchLayer("conditions")}
             className="flex items-center gap-2 px-4 py-2.5 text-[12px] font-semibold transition-all"
@@ -728,6 +861,7 @@ export default function GeoView() {
             <Activity size={13} />
             Road Conditions
           </button>
+          <div style={{ width: 1, background: panelBorder, margin: "6px 0" }} />
           <button
             onClick={() => switchLayer("risk")}
             className="flex items-center gap-2 px-4 py-2.5 text-[12px] font-semibold transition-all"
@@ -739,12 +873,24 @@ export default function GeoView() {
             <AlertTriangle size={13} />
             Risk Analysis
           </button>
+          <div style={{ width: 1, background: panelBorder, margin: "6px 0" }} />
+          <button
+            onClick={() => switchLayer("complaints")}
+            className="flex items-center gap-2 px-4 py-2.5 text-[12px] font-semibold transition-all"
+            style={{
+              background: layerMode === "complaints" ? "#8b5cf6" : "transparent",
+              color: layerMode === "complaints" ? "white" : textSecondary,
+            }}
+          >
+            <MessageSquareWarning size={13} />
+            Complaints
+          </button>
         </div>
       )}
 
       {/* ── Side Panel ── */}
-      <aside className="absolute left-3 top-3 z-1000 flex flex-col gap-3 overflow-y-auto"
-        style={{ width: 300, maxHeight: "calc(100% - 24px)", scrollbarWidth: "none" }}>
+      <aside className="absolute left-3 z-1000 flex flex-col gap-3 overflow-y-auto"
+        style={{ top: 74, width: 300, maxHeight: "calc(100% - 82px)", scrollbarWidth: "none" }}>
 
         {/* Header */}
         <div className="rounded-xl p-4 backdrop-blur-xl"
@@ -756,14 +902,32 @@ export default function GeoView() {
               </div>
               <span className="font-bold text-[15px]" style={{ color: textPrimary }}>GeoView</span>
             </div>
-            <button onClick={toggleTheme} title={isDark ? "Switch to Light" : "Switch to Dark"}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-200 text-[11px] font-semibold"
-              style={{ background: isDark ? "rgba(249,115,22,0.15)" : "rgba(0,0,0,0.07)", color: isDark ? "#fb923c" : "#374151", border: `1px solid ${isDark ? "rgba(249,115,22,0.30)" : "rgba(0,0,0,0.12)"}` }}>
-              {isDark ? <Sun size={12} /> : <Moon size={12} />}
-              {isDark ? "Light" : "Dark"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* 3D toggle */}
+              <button onClick={() => setIs3D(v => !v)} title={is3D ? "Switch to 2D" : "Switch to 3D view"}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all duration-200 text-[11px] font-semibold"
+                style={{
+                  background: is3D ? "rgba(99,102,241,0.18)" : (isDark ? "rgba(255,255,255,0.07)" : isVintage ? "rgba(120,80,40,0.10)" : "rgba(0,0,0,0.07)"),
+                  color: is3D ? "#818cf8" : (isDark ? "rgba(255,255,255,0.6)" : isVintage ? "#7a4a1e" : "#374151"),
+                  border: `1px solid ${is3D ? "rgba(99,102,241,0.35)" : (isDark ? "rgba(255,255,255,0.12)" : isVintage ? "rgba(120,80,40,0.25)" : "rgba(0,0,0,0.12)")}`,
+                }}>
+                <span style={{ fontSize: 12 }}>{is3D ? "⬜" : "⬡"}</span>
+                {is3D ? "2D" : "3D"}
+              </button>
+              {/* Theme toggle */}
+              <button onClick={toggleTheme} title={theme === "dark" ? "Switch to Vintage" : theme === "vintage" ? "Switch to Light" : "Switch to Dark"}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-200 text-[11px] font-semibold"
+                style={{
+                  background: isDark ? "rgba(249,115,22,0.15)" : isVintage ? "rgba(120,80,40,0.15)" : "rgba(0,0,0,0.07)",
+                  color: isDark ? "#fb923c" : isVintage ? "#7a4a1e" : "#374151",
+                  border: `1px solid ${isDark ? "rgba(249,115,22,0.30)" : isVintage ? "rgba(120,80,40,0.35)" : "rgba(0,0,0,0.12)"}`,
+                }}>
+                {theme === "dark" ? <Sun size={12} /> : theme === "vintage" ? <Moon size={12} /> : <span style={{ fontSize: 13 }}>🗺️</span>}
+                {theme === "dark" ? "Light" : theme === "vintage" ? "Dark" : "Vintage"}
+              </button>
+            </div>
           </div>
-          <p className="text-[11px] mt-1" style={{ color: textMuted }}>Maharashtra National Highways</p>
+          <p className="text-[11px] mt-1" style={{ color: textMuted }}>India National Highways</p>
         </div>
 
         {/* NH Selector */}
@@ -829,15 +993,17 @@ export default function GeoView() {
           {searchTerm && !searchResults.length && <p className="text-[12px] text-center py-3" style={{ color: textMuted }}>No results found</p>}
         </div>
 
-        {/* Stats — switches between conditions & risk */}
+        {/* Stats — switches between conditions / risk / complaints */}
         <div className="rounded-xl backdrop-blur-xl p-4"
           style={{ background: panelBg, border: `1px solid ${panelBorder}`, boxShadow: panelShadow }}>
           <div className="flex items-center gap-2 mb-3">
             {layerMode === "conditions"
               ? <Activity size={13} className="text-orange-400" />
-              : <AlertTriangle size={13} className="text-red-400" />}
+              : layerMode === "risk"
+                ? <AlertTriangle size={13} className="text-red-400" />
+                : <MessageSquareWarning size={13} className="text-violet-500" />}
             <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-              {layerMode === "conditions" ? "Condition Stats" : "Risk Stats"}
+              {layerMode === "conditions" ? "Condition Stats" : layerMode === "risk" ? "Risk Stats" : "Complaint Stats"}
             </span>
           </div>
 
@@ -866,7 +1032,7 @@ export default function GeoView() {
                 );
               })}
             </>
-          ) : (
+          ) : layerMode === "risk" ? (
             <>
               {/* Risk hotspot summary cards */}
               <div className="grid grid-cols-2 gap-2 mb-3">
@@ -885,7 +1051,6 @@ export default function GeoView() {
                 { label: "Critical Zone", key: "critical" as const, color: RISK_COLORS.critical },
               ].map(({ label, key, color }) => {
                 const count = riskStats[key];
-                // use hotspot total (high + critical) as denominator so bars fill meaningfully
                 const denom = riskStats.hotspots || 1;
                 const pct = Math.round((count / denom) * 100);
                 return (
@@ -913,6 +1078,55 @@ export default function GeoView() {
                 </div>
               </div>
             </>
+          ) : (
+            <>
+              {/* Complaint summary cards */}
+              <div className="grid grid-cols-3 gap-1.5 mb-3">
+                <div className="rounded-lg p-2.5 text-center" style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                  <div className="text-[20px] font-bold leading-none text-red-500">{complaintStats.open}</div>
+                  <div className="text-[9px] uppercase tracking-wider mt-1" style={{ color: textMuted }}>Open</div>
+                </div>
+                <div className="rounded-lg p-2.5 text-center" style={{ background: "rgba(249,115,22,0.10)", border: "1px solid rgba(249,115,22,0.25)" }}>
+                  <div className="text-[20px] font-bold leading-none text-orange-500">{complaintStats.in_progress}</div>
+                  <div className="text-[9px] uppercase tracking-wider mt-1" style={{ color: textMuted }}>In Progress</div>
+                </div>
+                <div className="rounded-lg p-2.5 text-center" style={{ background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                  <div className="text-[20px] font-bold leading-none text-green-500">{complaintStats.resolved}</div>
+                  <div className="text-[9px] uppercase tracking-wider mt-1" style={{ color: textMuted }}>Resolved</div>
+                </div>
+              </div>
+              {/* Severity bars */}
+              {[
+                { label: "High Severity", val: complaintStats.high,   color: "#ef4444" },
+                { label: "Medium",        val: complaintStats.medium, color: "#f97316" },
+                { label: "Low",           val: complaintStats.low,    color: "#22c55e" },
+              ].map(({ label, val, color }) => {
+                const pct = Math.round((val / complaintStats.total) * 100);
+                return (
+                  <div key={label} className="mb-2 last:mb-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full" style={{ background: color }} /><span className="text-[11px]" style={{ color: textSecondary }}>{label}</span></div>
+                      <span className="text-[11px] font-semibold" style={{ color: textPrimary }}>{val}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: barTrackBg }}>
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Category legend */}
+              <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${panelBorder}` }}>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: textMuted }}>Categories</p>
+                <div className="flex flex-wrap gap-y-1.5 gap-x-2">
+                  {(Object.entries(COMPLAINT_COLORS) as [keyof typeof COMPLAINT_COLORS, string][]).map(([cat, color]) => (
+                    <div key={cat} className="flex items-center gap-1.5">
+                      <span style={{ fontSize: 11 }}>{COMPLAINT_ICONS[cat]}</span>
+                      <span className="text-[10px] capitalize" style={{ color: textSecondary }}>{cat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
         </div>
 
@@ -920,14 +1134,51 @@ export default function GeoView() {
         <div className="rounded-xl backdrop-blur-xl p-4"
           style={{ background: panelBg, border: `1px solid ${panelBorder}`, boxShadow: panelShadow }}>
           <p className="text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: textMuted }}>How to Use</p>
-          {["Toggle between Road Conditions / Risk Analysis", "Select a highway or view all", "Click any segment for details", "Scroll to zoom · drag to pan"].map(tip => (
+          {["Toggle: Road Conditions / Risk Analysis / Complaints", "Select a highway or view all", "Click any segment or pin for details", "Scroll to zoom · drag to pan"].map(tip => (
             <p key={tip} className="text-[11px] leading-relaxed" style={{ color: textMuted }}>· {tip}</p>
           ))}
         </div>
       </aside>
 
-      {/* ── Map ── */}
-      <div ref={mapRef} className="flex-1 w-full h-full" style={{ minHeight: "calc(100vh - 67px)" }} />
+      {/* ── Map wrapper (3D perspective shell) ── */}
+      <div className="flex-1 relative overflow-hidden" style={{
+        perspective: is3D ? "900px" : "none",
+        perspectiveOrigin: "50% 65%",
+      }}>
+        {/* Actual Leaflet mount — tilted in 3D mode */}
+        <div ref={mapRef} className="absolute inset-0 w-full h-full"
+          style={{
+            height: "100%",
+            filter: isVintage ? "sepia(0.82) brightness(0.88) contrast(1.08) saturate(0.55)" : "none",
+            transition: "filter 0.5s ease, transform 0.6s cubic-bezier(0.4,0,0.2,1)",
+            transformOrigin: "50% 65%",
+            transform: is3D ? "rotateX(38deg) scale(1.18)" : "rotateX(0deg) scale(1)",
+          }} />
+        {/* Ground-plane edge shadow (only in 3D) */}
+        {is3D && (
+          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{
+            height: "18%",
+            background: isDark
+              ? "linear-gradient(to top, rgba(2,6,23,0.92) 0%, transparent 100%)"
+              : isVintage
+                ? "linear-gradient(to top, rgba(60,35,10,0.40) 0%, transparent 100%)"
+                : "linear-gradient(to top, rgba(255,255,255,0.85) 0%, transparent 100%)",
+            zIndex: 500,
+          }} />
+        )}
+        {/* Sky-horizon blend (only in 3D) */}
+        {is3D && (
+          <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{
+            height: "22%",
+            background: isDark
+              ? "linear-gradient(to bottom, rgba(2,6,23,0.80) 0%, transparent 100%)"
+              : isVintage
+                ? "linear-gradient(to bottom, rgba(200,180,130,0.45) 0%, transparent 100%)"
+                : "linear-gradient(to bottom, rgba(255,255,255,0.70) 0%, transparent 100%)",
+            zIndex: 500,
+          }} />
+        )}
+      </div>
 
       <style>{`
         .dark-popup .leaflet-popup-content-wrapper,.light-popup .leaflet-popup-content-wrapper { background:transparent;box-shadow:none;border-radius:10px;padding:0; }
