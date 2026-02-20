@@ -553,7 +553,6 @@ export default function GeoView() {
                 const cls = dark ? "dark-popup" : "light-popup";
 
                 const rows = segData ? ([
-                  ["District", segData.district], ["Taluka", segData.taluka],
                   ["Surface", segData.surface_type], ["Lanes", segData.lane_count],
                   ["Terrain", segData.terrain_type], ["Slope", segData.slope_category],
                   ["Jurisdiction", segData.jurisdiction], ["Region", segData.region_type],
@@ -669,7 +668,7 @@ export default function GeoView() {
               const icon = L.divIcon({ html: turnHtml, className: "", iconSize: [20, 20], iconAnchor: [10, 10] });
               const marker = L.marker(mid, { icon });
               marker.bindTooltip(
-                `<b>↺ Risky Turn</b><br/>${seg.district ?? ""} · ${seg.taluka ?? ""}`,
+                `<b>↺ Risky Turn</b>`,
                 { direction: "top", offset: [0, -12] }
               );
               turnGroup.addLayer(marker);
@@ -728,7 +727,7 @@ export default function GeoView() {
                   </div>
                   ${extraBadges ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${extraBadges}</div>` : ""}
                   ${factors.length ? `<div style="font-size:11px;font-weight:700;color:${muted};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">Risk Factors</div>${factors.map(f=>`<div style="font-size:12px;color:${txt};padding:1px 0">• ${f}</div>`).join("")}` : ""}
-                  <div style="margin-top:10px;font-size:11px;color:${muted}">${seg.district ?? ""}${seg.taluka ? ` · ${seg.taluka}` : ""}${seg.avg_daily_traffic ? ` · ${seg.avg_daily_traffic.toLocaleString()} veh/day` : ""}${seg.terrain_type ? ` · ${seg.terrain_type}` : ""}</div>
+                  <div style="margin-top:10px;font-size:11px;color:${muted}">${seg.avg_daily_traffic ? `${seg.avg_daily_traffic.toLocaleString()} veh/day` : ""}${seg.terrain_type ? ` · ${seg.terrain_type}` : ""}</div>
                 </div>`
               );
             })());
@@ -984,7 +983,6 @@ export default function GeoView() {
                   <div className="flex items-center gap-1 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: CONDITION_COLORS[seg.condition] }} />
                     <span className="text-[11px]" style={{ color: CONDITION_COLORS[seg.condition] }}>{CONDITION_LABELS[seg.condition]}</span>
-                    {seg.district && <span className="text-[11px]" style={{ color: textMuted }}>· {seg.district}</span>}
                   </div>
                 </button>
               ))}
