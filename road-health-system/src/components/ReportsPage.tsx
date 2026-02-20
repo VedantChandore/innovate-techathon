@@ -393,47 +393,11 @@ export default function ReportsPage() {
           maxHeight: "calc(100vh - 120px)", position: "sticky", top: 0,
         }}>
 
-          {/* Report Type Selector */}
-          <div className="mb-6">
-            <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "#64748b", marginBottom: 12 }}>
-              1. Select Report Type
-            </h3>
-            <div className="flex flex-col gap-2">
-              {REPORT_TYPES.map(rt => {
-                const Icon = rt.icon;
-                const active = selectedType === rt.id;
-                return (
-                  <button
-                    key={rt.id}
-                    onClick={() => setSelectedType(rt.id)}
-                    style={{
-                      border: `2px solid ${active ? rt.color : "#e2e8f0"}`,
-                      background: active ? rt.bg : "#fff",
-                      borderRadius: 10, padding: "10px 14px",
-                      display: "flex", alignItems: "center", gap: 12,
-                      textAlign: "left", cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: active ? rt.color : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Icon size={15} className={active ? "text-white" : "text-gray-400"} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: active ? rt.color : "#1e293b" }}>{rt.label}</div>
-                      <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 1 }}>{rt.description}</div>
-                    </div>
-                    {active && <CheckCircle2 size={14} style={{ marginLeft: "auto", color: rt.color, flexShrink: 0 }} />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Basic Filters */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px", color: "#64748b" }}>
-                2. Filters
+                Filters
               </h3>
               <div className="flex items-center gap-2">
                 {activeFilterCount > 0 && (
@@ -455,6 +419,7 @@ export default function ReportsPage() {
 
               <FilterInput label="Highway Ref" placeholder="e.g. NH60, NH 61, NH130D" value={filters.highway}
                 onChange={v => setFilters(f => ({ ...f, highway: v }))} />
+
               <FilterSelect label="Condition Band" value={filters.conditionBand} onChange={v => setFilters(f => ({ ...f, conditionBand: v }))}
                 options={["Critical", "Poor", "Fair", "Good"]} />
 
