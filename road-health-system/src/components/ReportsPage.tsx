@@ -514,18 +514,56 @@ export default function ReportsPage() {
             {isLoading ? "Generating…" : "Generate Report"}
           </button>
 
-          {/* Progress Bar */}
+          {/* Progress Steps */}
           {isLoading && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 6, textAlign: "center" }}>{stepLabel}</div>
-              <div style={{ height: 4, background: "#e2e8f0", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ marginTop: 14, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
+              {/* Step dots */}
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+                {[
+                  { key: "aggregating", num: 1, label: "Data" },
+                  { key: "generating",  num: 2, label: "AI" },
+                  { key: "building_pdf",num: 3, label: "Build" },
+                ].map((s, i) => {
+                  const done = (step === "generating" && i === 0) || (step === "building_pdf" && i <= 1);
+                  const active = step === s.key;
+                  return (
+                    <div key={s.key} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : "none" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                        <div style={{
+                          width: 26, height: 26, borderRadius: "50%",
+                          background: done ? "#22c55e" : active ? "linear-gradient(135deg,#2563eb,#7c3aed)" : "#e2e8f0",
+                          color: done || active ? "#fff" : "#94a3b8",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 11, fontWeight: 700,
+                          boxShadow: active ? "0 0 0 3px rgba(37,99,235,0.2)" : "none",
+                          transition: "all 0.3s ease",
+                        }}>
+                          {done ? "✓" : s.num}
+                        </div>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: active ? "#2563eb" : done ? "#16a34a" : "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                          {s.label}
+                        </span>
+                      </div>
+                      {i < 2 && (
+                        <div style={{ flex: 1, height: 2, margin: "0 4px", marginBottom: 14, background: done ? "#22c55e" : "#e2e8f0", transition: "background 0.4s ease", borderRadius: 1 }} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Animated bar */}
+              <div style={{ height: 5, background: "#e2e8f0", borderRadius: 10, overflow: "hidden" }}>
                 <div style={{
-                  height: "100%", borderRadius: 2,
-                  background: "linear-gradient(90deg, #2563eb, #7c3aed)",
-                  width: step === "aggregating" ? "33%" : step === "generating" ? "66%" : "90%",
-                  transition: "width 0.4s ease",
+                  height: "100%", borderRadius: 10,
+                  background: "linear-gradient(90deg, #2563eb, #7c3aed, #06b6d4)",
+                  backgroundSize: "200% 100%",
+                  width: step === "aggregating" ? "30%" : step === "generating" ? "65%" : "92%",
+                  transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
+                  animation: "shimmer 1.5s linear infinite",
                 }} />
               </div>
+              <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+              <p style={{ fontSize: 10, color: "#64748b", marginTop: 7, textAlign: "center", fontWeight: 500 }}>{stepLabel}</p>
             </div>
           )}
 
@@ -611,21 +649,120 @@ export default function ReportsPage() {
 
           {/* Loading state */}
           {isLoading && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "calc(100vh - 200px)", gap: 20 }}>
-              <div style={{ position: "relative" }}>
-                <div style={{ width: 64, height: 64, borderRadius: 16, background: "linear-gradient(135deg, #1d3557, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Sparkles size={28} className="text-white" />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "calc(100vh - 200px)", gap: 0, padding: "0 48px" }}>
+
+              {/* Animated icon */}
+              <div style={{ position: "relative", marginBottom: 32 }}>
+                <div style={{
+                  width: 80, height: 80, borderRadius: 22,
+                  background: "linear-gradient(135deg, #1d3557 0%, #2563eb 60%, #7c3aed 100%)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 8px 32px rgba(37,99,235,0.35)",
+                }}>
+                  <Sparkles size={34} className="text-white" />
                 </div>
-                <Loader2 size={16} style={{ position: "absolute", bottom: -4, right: -4, color: "#2563eb", animation: "spin 1s linear infinite" }} />
+                {/* Pulsing ring */}
+                <div style={{
+                  position: "absolute", inset: -6, borderRadius: 28,
+                  border: "2px solid rgba(37,99,235,0.25)",
+                  animation: "pulse-ring 2s ease-in-out infinite",
+                }} />
+                <div style={{
+                  position: "absolute", inset: -13, borderRadius: 34,
+                  border: "2px solid rgba(37,99,235,0.1)",
+                  animation: "pulse-ring 2s ease-in-out infinite 0.4s",
+                }} />
               </div>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: 15, fontWeight: 600, color: "#1e293b" }}>{stepLabel}</p>
-                <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>
-                  {step === "aggregating" && "Computing statistics across road network…"}
-                  {step === "generating" && "Gemini is writing your formal report…"}
-                  {step === "building_pdf" && "Assembling styled government document…"}
-                </p>
+
+              {/* Heading */}
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1e293b", marginBottom: 6, textAlign: "center" }}>
+                {step === "aggregating" && "Crunching Road Data"}
+                {step === "generating"  && "Writing AI Report"}
+                {step === "building_pdf" && "Assembling Document"}
+              </h2>
+              <p style={{ fontSize: 13, color: "#64748b", textAlign: "center", marginBottom: 36, lineHeight: 1.6 }}>
+                {step === "aggregating" && "Computing statistics across the Maharashtra road network…"}
+                {step === "generating"  && "Gemini AI is crafting your formal governance report…"}
+                {step === "building_pdf" && "Styling charts, tables and government header…"}
+              </p>
+
+              {/* Step tracker */}
+              <div style={{ width: "100%", maxWidth: 420, background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "20px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+                {[
+                  { key: "aggregating",  icon: "📊", title: "Data Aggregation",    desc: "Computing PCI, CIBIL, inspection metrics" },
+                  { key: "generating",   icon: "✨", title: "AI Narrative",        desc: "Gemini generating formal analysis text" },
+                  { key: "building_pdf", icon: "📄", title: "Report Assembly",     desc: "Building styled government PDF document" },
+                ].map((s, i) => {
+                  const done   = (i === 0 && (step === "generating" || step === "building_pdf"))
+                               || (i === 1 && step === "building_pdf");
+                  const active = step === s.key;
+                  const waiting = !done && !active;
+                  return (
+                    <div key={s.key} style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: i < 2 ? 16 : 0, position: "relative" }}>
+                      {/* Connector line */}
+                      {i < 2 && (
+                        <div style={{
+                          position: "absolute", left: 16, top: 36, width: 2, height: 16,
+                          background: done ? "#22c55e" : "#e2e8f0", transition: "background 0.4s",
+                        }} />
+                      )}
+                      {/* Circle */}
+                      <div style={{
+                        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
+                        background: done ? "#f0fdf4" : active ? "linear-gradient(135deg,#eff6ff,#f5f3ff)" : "#f8fafc",
+                        border: `2px solid ${done ? "#22c55e" : active ? "#2563eb" : "#e2e8f0"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 15,
+                        boxShadow: active ? "0 0 0 4px rgba(37,99,235,0.12)" : "none",
+                        transition: "all 0.3s ease",
+                      }}>
+                        {done ? "✓" : s.icon}
+                      </div>
+                      {/* Text */}
+                      <div style={{ paddingTop: 4 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: done ? "#16a34a" : active ? "#1e40af" : "#94a3b8", transition: "color 0.3s" }}>
+                          {s.title}
+                          {active && <span style={{ marginLeft: 8, fontSize: 10, background: "linear-gradient(135deg,#2563eb,#7c3aed)", color: "#fff", borderRadius: 20, padding: "1px 8px", fontWeight: 700, verticalAlign: "middle" }}>RUNNING</span>}
+                          {done   && <span style={{ marginLeft: 8, fontSize: 10, background: "#22c55e", color: "#fff", borderRadius: 20, padding: "1px 8px", fontWeight: 700, verticalAlign: "middle" }}>DONE</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: waiting ? "#cbd5e1" : "#64748b", marginTop: 1 }}>{s.desc}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Progress bar */}
+                <div style={{ marginTop: 20, height: 6, background: "#f1f5f9", borderRadius: 10, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", borderRadius: 10,
+                    background: "linear-gradient(90deg, #2563eb, #7c3aed, #06b6d4)",
+                    backgroundSize: "200% 100%",
+                    width: step === "aggregating" ? "30%" : step === "generating" ? "65%" : "93%",
+                    transition: "width 0.7s cubic-bezier(0.4,0,0.2,1)",
+                    animation: "shimmer 1.8s linear infinite",
+                  }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+                  <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Step {step === "aggregating" ? 1 : step === "generating" ? 2 : 3} of 3
+                  </span>
+                  <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 600 }}>
+                    {step === "aggregating" ? "30" : step === "generating" ? "65" : "93"}%
+                  </span>
+                </div>
               </div>
+
+              <style>{`
+                @keyframes pulse-ring {
+                  0%   { opacity: 0.8; transform: scale(1); }
+                  50%  { opacity: 0.3; transform: scale(1.05); }
+                  100% { opacity: 0.8; transform: scale(1); }
+                }
+                @keyframes shimmer {
+                  0%   { background-position: 200% 0; }
+                  100% { background-position: -200% 0; }
+                }
+              `}</style>
             </div>
           )}
 
