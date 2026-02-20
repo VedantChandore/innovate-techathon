@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 import { RoadRecord, InspectionRecord, RoadWithScore } from "./types";
-import { computeHealthScore } from "./scoring";
+import { fallbackScore } from "./scoring";
 
 function parseBool(val: string): boolean {
   return val === "TRUE" || val === "true" || val === "1";
@@ -87,10 +87,12 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
     inspectionMap.set(insp.road_id, existing);
   });
 
-  // Compute scores and attach inspections
+  // Score all roads instantly using deterministic fallback formula.
+  // The ML API (scoreRoad) is reserved for single-road detail views —
+  // calling it 16k times would take ~50 minutes.
   const roadsWithScores: RoadWithScore[] = roads.map((road) => ({
     ...road,
-    healthScore: computeHealthScore(road),
+    healthScore: fallbackScore(road),
     inspections: inspectionMap.get(road.road_id) || [],
   }));
 

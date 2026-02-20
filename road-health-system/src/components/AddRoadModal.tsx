@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { RoadRecord, RoadWithScore } from "@/lib/types";
-import { computeHealthScore } from "@/lib/scoring";
+import { scoreRoad } from "@/lib/scoring";
 import { X } from "lucide-react";
 
 interface AddRoadModalProps {
@@ -85,8 +85,11 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (!validate()) return;
+    setSubmitting(true);
 
     const startKm = parseFloat(form.segment_start_km);
     const endKm = parseFloat(form.segment_end_km);
@@ -132,12 +135,14 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
       seasonal_variation: "",
     };
 
+    const healthScore = await scoreRoad(road);
     const roadWithScore: RoadWithScore = {
       ...road,
-      healthScore: computeHealthScore(road),
+      healthScore,
       inspections: [],
     };
 
+    setSubmitting(false);
     onAdd(roadWithScore);
   };
 
@@ -381,9 +386,10 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            className="px-5 h-9 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm shadow-blue-600/20 transition"
+            disabled={submitting}
+            className="px-5 h-9 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm shadow-blue-600/20 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Add Road Segment
+            {submitting ? "Scoring…" : "Add Road Segment"}
           </button>
         </div>
       </div>

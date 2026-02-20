@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv*/
+*.egg-info/
+
+# Next.js
+road-health-system/.next/
+road-health-system/node_modules/
+
+# ML model venv (large, local only)
+road-health-system/Cibil_Score_Model/.venv*/
