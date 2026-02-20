@@ -106,22 +106,48 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
     remarks: row.remarks || "",
   }));
 
-  // Group inspections by road_id
+  // Group inspections by road_id (exact) AND by segment suffix (e.g. "0001" from "MA-RD-SEG-0001")
+  // This handles the ID format mismatch between inspection history (MA-RD-SEG-XXXX)
+  // and the new road registry (MA--SEG-XXXX, MA-6-SEG-XXXX, MA-NH 361-SEG-XXXX, etc.)
   const inspectionMap = new Map<string, InspectionRecord[]>();
+  const inspectionBySegNum = new Map<string, InspectionRecord[]>();
+
+  function extractSegNum(road_id: string): string | null {
+    const m = road_id.match(/SEG-(\d+)$/i);
+    return m ? m[1] : null;
+  }
+
   inspections.forEach((insp) => {
+    // Exact match index
     const existing = inspectionMap.get(insp.road_id) || [];
     existing.push(insp);
     inspectionMap.set(insp.road_id, existing);
+
+    // Segment-number fallback index
+    const segNum = extractSegNum(insp.road_id);
+    if (segNum) {
+      const byNum = inspectionBySegNum.get(segNum) || [];
+      byNum.push(insp);
+      inspectionBySegNum.set(segNum, byNum);
+    }
   });
 
   // Score all roads instantly using deterministic fallback formula.
   // The ML API (scoreRoad) is reserved for single-road detail views —
   // calling it 16k times would take ~50 minutes.
-  const roadsWithScores: RoadWithScore[] = roads.map((road) => ({
-    ...road,
-    healthScore: fallbackScore(road),
-    inspections: inspectionMap.get(road.road_id) || [],
-  }));
+  const roadsWithScores: RoadWithScore[] = roads.map((road) => {
+    // Try exact match first, then fall back to segment-number match
+    let roadInspections = inspectionMap.get(road.road_id);
+    if (!roadInspections || roadInspections.length === 0) {
+      const segNum = extractSegNum(road.road_id);
+      if (segNum) roadInspections = inspectionBySegNum.get(segNum);
+    }
+    return {
+      ...road,
+      healthScore: fallbackScore(road),
+      inspections: roadInspections || [],
+    };
+  });
 
   return roadsWithScores;
 }
