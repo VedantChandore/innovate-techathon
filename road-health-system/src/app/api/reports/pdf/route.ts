@@ -81,9 +81,9 @@ function donutSvg(summary: ReportSummary): string {
   const total = totalFilteredRoads || 1;
   const data = [
     { label: "Critical", count: conditionBreakdown.Critical, color: "#c0392b" },
-    { label: "Poor",     count: conditionBreakdown.Poor,     color: "#e67e22" },
-    { label: "Fair",     count: conditionBreakdown.Fair,     color: "#f1c40f" },
-    { label: "Good",     count: conditionBreakdown.Good,     color: "#27ae60" },
+    { label: "Poor", count: conditionBreakdown.Poor, color: "#e67e22" },
+    { label: "Fair", count: conditionBreakdown.Fair, color: "#f1c40f" },
+    { label: "Good", count: conditionBreakdown.Good, color: "#27ae60" },
   ];
   const W = 440, H = 210;
   const cx = 105, cy = 104, outerR = 84, innerR = 50;
@@ -122,9 +122,9 @@ function priorityBarSvg(summary: ReportSummary): string {
   const total = summary.totalFilteredRoads || 1;
   const bars = [
     { label: "Critical", count: summary.priorityBreakdown.Critical, color: "#c0392b" },
-    { label: "High",     count: summary.priorityBreakdown.High,     color: "#e67e22" },
-    { label: "Medium",   count: summary.priorityBreakdown.Medium,   color: "#f39c12" },
-    { label: "Low",      count: summary.priorityBreakdown.Low,      color: "#27ae60" },
+    { label: "High", count: summary.priorityBreakdown.High, color: "#e67e22" },
+    { label: "Medium", count: summary.priorityBreakdown.Medium, color: "#f39c12" },
+    { label: "Low", count: summary.priorityBreakdown.Low, color: "#27ae60" },
   ];
   const W = 440, barH = 26, gap = 16, padT = 12, padL = 72;
   const maxBarW = W - padL - 110;
@@ -150,9 +150,9 @@ function inspectionBarSvg(summary: ReportSummary): string {
   const total = summary.totalFilteredRoads || 1;
   const bars = [
     { label: "Recently Inspected", count: inspection.recentlyInspectedCount, color: "#27ae60" },
-    { label: "Due Soon",            count: inspection.dueSoonCount,           color: "#f39c12" },
-    { label: "Overdue",             count: inspection.overdueCount,           color: "#c0392b" },
-    { label: "Never Inspected",     count: inspection.totalWithoutHistory,    color: "#7f8c8d" },
+    { label: "Due Soon", count: inspection.dueSoonCount, color: "#f39c12" },
+    { label: "Overdue", count: inspection.overdueCount, color: "#c0392b" },
+    { label: "Never Inspected", count: inspection.totalWithoutHistory, color: "#7f8c8d" },
   ];
   const W = 440, barH = 26, gap = 16, padT = 12, padL = 128;
   const maxBarW = W - padL - 110;
@@ -177,9 +177,9 @@ function budgetPieSvg(summary: ReportSummary): string {
   const { conditionBreakdown, estimatedTotalCostCrores } = summary;
   const tierCosts = [
     { label: "Critical", count: conditionBreakdown.Critical, factor: 200, color: "#c0392b" },
-    { label: "Poor",     count: conditionBreakdown.Poor,     factor: 100, color: "#e67e22" },
-    { label: "Fair",     count: conditionBreakdown.Fair,     factor: 45,  color: "#f1c40f" },
-    { label: "Good",     count: conditionBreakdown.Good,     factor: 15,  color: "#27ae60" },
+    { label: "Poor", count: conditionBreakdown.Poor, factor: 100, color: "#e67e22" },
+    { label: "Fair", count: conditionBreakdown.Fair, factor: 45, color: "#f1c40f" },
+    { label: "Good", count: conditionBreakdown.Good, factor: 15, color: "#27ae60" },
   ];
   const rawVals = tierCosts.map((t) => t.count * t.factor);
   const rawSum = rawVals.reduce((a, b) => a + b, 0) || 1;
@@ -276,14 +276,14 @@ function surfaceBarSvg(summary: ReportSummary): string {
 // ─── KPI Cards ───────────────────────────────────────────────
 function kpiCards(summary: ReportSummary): string {
   const cards = [
-    { label: "Roads Analysed",      value: fmt(summary.totalFilteredRoads),      sub: `of ${fmt(summary.totalNetworkRoads)} total`,          accent: "#1d4ed8" },
-    { label: "Network Coverage",    value: `${summary.coveragePercent}%`,         sub: `${fmt(summary.totalLengthKm)} km`,                   accent: "#7c3aed" },
-    { label: "Avg CIBIL Score",     value: `${summary.avgCibilScore}`,            sub: "out of 100",                                         accent: "#0891b2" },
-    { label: "Avg PCI Score",       value: `${summary.avgPciScore}`,              sub: "out of 100",                                         accent: "#059669" },
-    { label: "Critical Roads",      value: fmt(summary.conditionBreakdown.Critical), sub: `${summary.conditionPercents.Critical}% of total`, accent: "#dc2626" },
-    { label: "High + Critical",     value: fmt(summary.priorityBreakdown.Critical + summary.priorityBreakdown.High), sub: "by priority",    accent: "#ea580c" },
-    { label: "Overdue Inspections", value: fmt(summary.inspection.overdueCount),  sub: "> 365 days since last",                              accent: "#b45309" },
-    { label: "Est. Repair Cost",    value: `Rs.${fmt(summary.estimatedTotalCostCrores)}Cr`, sub: "total estimated budget",                  accent: "#0f766e" },
+    { label: "Roads Analysed", value: fmt(summary.totalFilteredRoads), sub: `of ${fmt(summary.totalNetworkRoads)} total`, accent: "#1d4ed8" },
+    { label: "Network Coverage", value: `${summary.coveragePercent}%`, sub: `${fmt(summary.totalLengthKm)} km`, accent: "#7c3aed" },
+    { label: "Avg CIBIL Score", value: `${summary.avgCibilScore}`, sub: "out of 100", accent: "#0891b2" },
+    { label: "Avg PCI Score", value: `${summary.avgPciScore}`, sub: "out of 100", accent: "#059669" },
+    { label: "Critical Roads", value: fmt(summary.conditionBreakdown.Critical), sub: `${summary.conditionPercents.Critical}% of total`, accent: "#dc2626" },
+    { label: "High + Critical", value: fmt(summary.priorityBreakdown.Critical + summary.priorityBreakdown.High), sub: "by priority", accent: "#ea580c" },
+    { label: "Overdue Inspections", value: fmt(summary.inspection.overdueCount), sub: "> 365 days since last", accent: "#b45309" },
+    { label: "Est. Repair Cost", value: `Rs.${fmt(summary.estimatedTotalCostCrores)}Cr`, sub: "total estimated budget", accent: "#0f766e" },
   ];
   return `<div class="kpi-grid">${cards
     .map(
@@ -301,18 +301,18 @@ function kpiCards(summary: ReportSummary): string {
 function filterBadges(summary: ReportSummary): string {
   const f = summary.filtersApplied;
   const active: string[] = [];
-  if (f.district)            active.push(`District: ${f.district}`);
-  if (f.highway)             active.push(`Highway: ${f.highway}`);
-  if (f.conditionBand)       active.push(`Condition: ${f.conditionBand}`);
-  if (f.priorityLevel)       active.push(`Priority: ${f.priorityLevel}`);
-  if (f.inspectionStatus)    active.push(`Inspection: ${f.inspectionStatus}`);
+  if (f.district) active.push(`District: ${f.district}`);
+  if (f.highway) active.push(`Highway: ${f.highway}`);
+  if (f.conditionBand) active.push(`Condition: ${f.conditionBand}`);
+  if (f.priorityLevel) active.push(`Priority: ${f.priorityLevel}`);
+  if (f.inspectionStatus) active.push(`Inspection: ${f.inspectionStatus}`);
   if (f.cibilMin !== undefined) active.push(`CIBIL &ge; ${f.cibilMin}`);
   if (f.cibilMax !== undefined) active.push(`CIBIL &le; ${f.cibilMax}`);
   if (f.constructionYearMin) active.push(`Year &ge; ${f.constructionYearMin}`);
   if (f.constructionYearMax) active.push(`Year &le; ${f.constructionYearMax}`);
-  if (f.inspectionDateFrom)  active.push(`Insp. From: ${f.inspectionDateFrom}`);
-  if (f.inspectionDateTo)    active.push(`Insp. To: ${f.inspectionDateTo}`);
-  if (active.length === 0)   return `<span class="badge">Full Network &mdash; No Filters Applied</span>`;
+  if (f.inspectionDateFrom) active.push(`Insp. From: ${f.inspectionDateFrom}`);
+  if (f.inspectionDateTo) active.push(`Insp. To: ${f.inspectionDateTo}`);
+  if (active.length === 0) return `<span class="badge">Full Network &mdash; No Filters Applied</span>`;
   return active.map((a) => `<span class="badge">${a}</span>`).join(" ");
 }
 
@@ -414,7 +414,7 @@ export async function POST(req: NextRequest) {
 html, body {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   font-size: 11px; color: #1a1a2e; background: #fff;
-  width: 794px; line-height: 1.55;
+  width: 794px; max-width: 794px; overflow: hidden; line-height: 1.55;
 }
 
 /* TRICOLOR */
@@ -428,6 +428,7 @@ html, body {
   display: flex; align-items: center; gap: 14px;
   padding: 13px 34px 12px; background: #fff;
   border-bottom: 3px solid #003580;
+  overflow: hidden; max-width: 794px;
 }
 .gov-center { flex: 1; text-align: center; }
 .gov-title-main {
@@ -439,6 +440,7 @@ html, body {
 .gov-right {
   flex-shrink: 0; text-align: right; font-size: 8px; color: #555;
   line-height: 1.8; border-left: 1px solid #d1d5db; padding-left: 14px;
+  max-width: 140px; overflow: hidden;
 }
 .conf-stamp {
   display: inline-block; font-size: 8.5px; font-weight: 700;
@@ -464,6 +466,7 @@ html, body {
   background: #fffbeb; border-bottom: 2px solid #f59e0b;
   padding: 6px 34px; font-size: 9px; color: #78350f;
   display: flex; flex-wrap: wrap; align-items: center; gap: 3px;
+  overflow: hidden; word-break: break-word; max-width: 794px;
 }
 .badge {
   display: inline-block; background: #fff;
@@ -472,7 +475,7 @@ html, body {
 }
 
 /* CONTENT */
-.content { padding: 20px 34px; }
+.content { padding: 20px 34px; max-width: 794px; overflow: hidden; }
 
 /* KPI GRID */
 .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 20px; }
@@ -505,6 +508,7 @@ html, body {
 .bt {
   font-size: 10px; color: #374151; margin-bottom: 7px;
   text-align: justify; line-height: 1.6;
+  overflow-wrap: break-word; word-break: break-word;
 }
 .rl { padding-left: 16px; margin-bottom: 7px; }
 .rl li { font-size: 10px; color: #374151; margin-bottom: 3px; }
@@ -715,11 +719,11 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
         </tr></thead>
         <tbody>
           ${[
-            ["Critical &lt; 40",  summary.conditionBreakdown.Critical, summary.conditionPercents.Critical, "#c0392b"],
-            ["Poor 40&ndash;59",  summary.conditionBreakdown.Poor,     summary.conditionPercents.Poor,     "#e67e22"],
-            ["Fair 60&ndash;74",  summary.conditionBreakdown.Fair,     summary.conditionPercents.Fair,     "#ca8a04"],
-            ["Good &ge; 75",      summary.conditionBreakdown.Good,     summary.conditionPercents.Good,     "#27ae60"],
-          ].map(([lbl, cnt, pct, col]) => `<tr>
+      ["Critical &lt; 40", summary.conditionBreakdown.Critical, summary.conditionPercents.Critical, "#c0392b"],
+      ["Poor 40&ndash;59", summary.conditionBreakdown.Poor, summary.conditionPercents.Poor, "#e67e22"],
+      ["Fair 60&ndash;74", summary.conditionBreakdown.Fair, summary.conditionPercents.Fair, "#ca8a04"],
+      ["Good &ge; 75", summary.conditionBreakdown.Good, summary.conditionPercents.Good, "#27ae60"],
+    ].map(([lbl, cnt, pct, col]) => `<tr>
             <td><strong>${lbl}</strong></td>
             <td style="text-align:right">${fmt(cnt as number)}</td>
             <td style="text-align:right;font-weight:700;color:${col}">${pct}%</td>
@@ -735,14 +739,14 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
         </tr></thead>
         <tbody>
           ${[
-            ["Critical Priority", summary.priorityBreakdown.Critical, "#c0392b"],
-            ["High Priority",     summary.priorityBreakdown.High,     "#e67e22"],
-            ["Medium Priority",   summary.priorityBreakdown.Medium,   "#ca8a04"],
-            ["Low Priority",      summary.priorityBreakdown.Low,      "#27ae60"],
-          ].map(([lbl, cnt, col]) => `<tr>
+      ["Critical Priority", summary.priorityBreakdown.Critical, "#c0392b"],
+      ["High Priority", summary.priorityBreakdown.High, "#e67e22"],
+      ["Medium Priority", summary.priorityBreakdown.Medium, "#ca8a04"],
+      ["Low Priority", summary.priorityBreakdown.Low, "#27ae60"],
+    ].map(([lbl, cnt, col]) => `<tr>
             <td><strong>${lbl}</strong></td>
             <td style="text-align:right">${fmt(cnt as number)}</td>
-            <td style="text-align:right;font-weight:700;color:${col}">${(((cnt as number)/summary.totalFilteredRoads)*100).toFixed(1)}%</td>
+            <td style="text-align:right;font-weight:700;color:${col}">${(((cnt as number) / summary.totalFilteredRoads) * 100).toFixed(1)}%</td>
           </tr>`).join("")}
         </tbody>
       </table>

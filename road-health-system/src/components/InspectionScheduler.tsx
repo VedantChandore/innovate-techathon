@@ -30,21 +30,21 @@ import {
 
 const PRIORITY_CFG: Record<InspectionPriority, { label: string; color: string; bg: string; border: string }> = {
   critical: { label: "Critical", color: "#991b1b", bg: "#fef2f2", border: "#fecaca" },
-  high:     { label: "High",     color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" },
-  medium:   { label: "Medium",   color: "#a16207", bg: "#fefce8", border: "#fef08a" },
-  low:      { label: "Low",      color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
+  high: { label: "High", color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" },
+  medium: { label: "Medium", color: "#a16207", bg: "#fefce8", border: "#fef08a" },
+  low: { label: "Low", color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
 };
 
 const ACTION_CFG: Record<ActionType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
-  emergency_reconstruction:   { label: "Emergency Reconstruction", icon: <Zap size={12} />,            color: "#7f1d1d", bg: "#fef2f2" },
-  emergency_overlay:          { label: "Emergency Overlay",        icon: <AlertTriangle size={12} />,  color: "#dc2626", bg: "#fef2f2" },
-  priority_structural_repair: { label: "Priority Structural",      icon: <FileWarning size={12} />,   color: "#c2410c", bg: "#fff7ed" },
-  structural_overlay:         { label: "Structural Overlay",       icon: <Layers size={12} />,         color: "#ea580c", bg: "#fff7ed" },
-  major_repair:               { label: "Major Repair",             icon: <Wrench size={12} />,         color: "#d97706", bg: "#fffbeb" },
-  preventive_risk_mitigation: { label: "Preventive + Risk",        icon: <Shield size={12} />,         color: "#2563eb", bg: "#eff6ff" },
-  preventive_maintenance:     { label: "Preventive Maint.",        icon: <Activity size={12} />,       color: "#7c3aed", bg: "#f5f3ff" },
-  routine_patching:           { label: "Routine Patching",         icon: <Eye size={12} />,            color: "#0891b2", bg: "#ecfeff" },
-  monitoring_only:            { label: "Monitoring Only",          icon: <CheckCircle2 size={12} />,   color: "#059669", bg: "#f0fdf4" },
+  emergency_reconstruction: { label: "Emergency Reconstruction", icon: <Zap size={12} />, color: "#7f1d1d", bg: "#fef2f2" },
+  emergency_overlay: { label: "Emergency Overlay", icon: <AlertTriangle size={12} />, color: "#dc2626", bg: "#fef2f2" },
+  priority_structural_repair: { label: "Priority Structural", icon: <FileWarning size={12} />, color: "#c2410c", bg: "#fff7ed" },
+  structural_overlay: { label: "Structural Overlay", icon: <Layers size={12} />, color: "#ea580c", bg: "#fff7ed" },
+  major_repair: { label: "Major Repair", icon: <Wrench size={12} />, color: "#d97706", bg: "#fffbeb" },
+  preventive_risk_mitigation: { label: "Preventive + Risk", icon: <Shield size={12} />, color: "#2563eb", bg: "#eff6ff" },
+  preventive_maintenance: { label: "Preventive Maint.", icon: <Activity size={12} />, color: "#7c3aed", bg: "#f5f3ff" },
+  routine_patching: { label: "Routine Patching", icon: <Eye size={12} />, color: "#0891b2", bg: "#ecfeff" },
+  monitoring_only: { label: "Monitoring Only", icon: <CheckCircle2 size={12} />, color: "#059669", bg: "#f0fdf4" },
 };
 
 // CIBIL condition color helper
@@ -68,9 +68,9 @@ function cibilBg(score: number): string {
 
 function conditionCfg(cat: string): { color: string; bg: string; border: string } {
   if (cat === "Critical") return { color: "#991b1b", bg: "#fef2f2", border: "#fecaca" };
-  if (cat === "Poor")     return { color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" };
-  if (cat === "Fair")     return { color: "#a16207", bg: "#fefce8", border: "#fef08a" };
-  return                         { color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" };
+  if (cat === "Poor") return { color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" };
+  if (cat === "Fair") return { color: "#a16207", bg: "#fefce8", border: "#fef08a" };
+  return { color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" };
 }
 
 const BAND_COLORS: Record<Band, string> = {
@@ -151,24 +151,24 @@ function RecordModal({ item, onClose, onSubmit }: {
 
   // Live score preview — deterministic fallback formula (no async API call needed for preview)
   const previewScore = useMemo(() => {
-    const pciRaw  = conditionScore;
+    const pciRaw = conditionScore;
     const iriNorm = Math.max(0, 100 - (item.road.iri_value ?? 5) * 8);
     const deductions =
-      Math.min(1, potholes           / 30) * 20 +
-      Math.min(1, alligator          / 50) * 18 +
-      Math.min(1, rutting            / 40) * 15 +
-      Math.min(1, cracksLong         / 50) * 12 +
-      Math.min(1, cracksTrans        / 30) * 10 +
-      Math.min(1, potholeDepth       / 20) * 8  +
-      Math.min(1, raveling           / 50) * 7  +
-      Math.min(1, edgeBreak          / 50) * 5  +
-      Math.min(1, patches            / 25) * 5;
+      Math.min(1, potholes / 30) * 20 +
+      Math.min(1, alligator / 50) * 18 +
+      Math.min(1, rutting / 40) * 15 +
+      Math.min(1, cracksLong / 50) * 12 +
+      Math.min(1, cracksTrans / 30) * 10 +
+      Math.min(1, potholeDepth / 20) * 8 +
+      Math.min(1, raveling / 50) * 7 +
+      Math.min(1, edgeBreak / 50) * 5 +
+      Math.min(1, patches / 25) * 5;
     const distress = Math.max(0, Math.min(100, 100 - deductions));
-    const score    = Math.round(0.30 * pciRaw + 0.20 * iriNorm + 0.20 * distress + 0.30 * 60);
+    const score = Math.round(0.30 * pciRaw + 0.20 * iriNorm + 0.20 * distress + 0.30 * 60);
     const getBand = (s: number): Band => {
       if (s >= 90) return "A+"; if (s >= 75) return "A";
-      if (s >= 60) return "B";  if (s >= 45) return "C";
-      if (s >= 30) return "D";  return "E";
+      if (s >= 60) return "B"; if (s >= 45) return "C";
+      if (s >= 30) return "D"; return "E";
     };
     const bandColors: Record<Band, string> = {
       "A+": "#059669", A: "#22c55e", B: "#eab308", C: "#f97316", D: "#ef4444", E: "#991b1b",
@@ -176,11 +176,11 @@ function RecordModal({ item, onClose, onSubmit }: {
     const band = getBand(score);
     return {
       ...item.road.healthScore,
-      finalCibilScore:   score,
-      conditionScore:    score,
-      rating:            score * 10,
+      finalCibilScore: score,
+      conditionScore: score,
+      rating: score * 10,
       band,
-      bandColor:         bandColors[band],
+      bandColor: bandColors[band],
       conditionCategory: score >= 80 ? "Good" : score >= 60 ? "Fair" : score >= 40 ? "Poor" : "Critical",
     };
   }, [conditionScore, potholes, potholeDepth, cracksLong, cracksTrans, alligator, rutting, raveling, edgeBreak, patches, item.road]);
@@ -212,9 +212,8 @@ function RecordModal({ item, onClose, onSubmit }: {
           <div className="flex items-center gap-2">
             {[1, 2, 3].map((s) => (
               <Fragment key={s}>
-                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                  s === step ? "text-white shadow-sm" : s < step ? "text-green-700 bg-green-50" : "text-gray-400"
-                }`} style={s === step ? { background: "#059669" } : undefined}>
+                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${s === step ? "text-white shadow-sm" : s < step ? "text-green-700 bg-green-50" : "text-gray-400"
+                  }`} style={s === step ? { background: "#059669" } : undefined}>
                   {s < step ? <CheckCircle2 size={11} /> : <span className="w-4 text-center">{s}</span>}
                   {stepTitles[s - 1]}
                 </div>
@@ -731,11 +730,10 @@ function InspectorDetailCard({
         <div className="flex gap-1.5">
           {tabs.map((t) => (
             <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-[12px] font-semibold transition-all ${
-                activeTab === t.key
+              className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-[12px] font-semibold transition-all ${activeTab === t.key
                   ? "text-orange-700 bg-white border border-b-0 border-gray-200 -mb-px shadow-sm"
                   : "text-gray-400 hover:text-gray-600 hover:bg-white/60"
-              }`}>
+                }`}>
               <span className={activeTab === t.key ? "text-orange-500" : ""}>{t.icon}</span>
               {t.label}
               {activeTab === t.key && <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full" style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }} />}
@@ -1355,7 +1353,7 @@ export default function InspectionScheduler({ roads }: Props) {
 
   // Export
   const handleExport = () => {
-    const headers = ["Road ID","Name","District","CIBIL Score","Condition","PDI","Priority Score","Priority","Last Inspection","Next Due","Days","Overdue","Action","Agency","Decay Rate","Trend Alert","Risk Factors","Est Cost (₹L)"];
+    const headers = ["Road ID", "Name", "District", "CIBIL Score", "Condition", "PDI", "Priority Score", "Priority", "Last Inspection", "Next Due", "Days", "Overdue", "Action", "Agency", "Decay Rate", "Trend Alert", "Risk Factors", "Est Cost (₹L)"];
     const rows = [headers.join(",")];
     filtered.forEach((s) => {
       rows.push([
@@ -1383,17 +1381,17 @@ export default function InspectionScheduler({ roads }: Props) {
 
       {/* ═══ SUMMARY DASHBOARD ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard label="Total Roads"    value={summary.total.toLocaleString()}           icon={<MapPin size={16} />}       color="#2563eb" bg="#eff6ff" />
-        <StatCard label="Overdue"        value={summary.overdue.toLocaleString()}          sub="Need immediate action"  icon={<XCircle size={16} />}      color="#dc2626" bg="#fef2f2" />
-        <StatCard label="Due This Week"  value={summary.dueThisWeek.toLocaleString()}      icon={<Timer size={16} />}        color="#ea580c" bg="#fff7ed" />
-        <StatCard label="Avg CIBIL"      value={summary.avgCibilScore.toFixed(0)}          sub="Fleet health score"     icon={<Gauge size={16} />}         color={cibilColor(summary.avgCibilScore)} bg={cibilBg(summary.avgCibilScore)} />
-        <StatCard label="Critical + Poor" value={(( summary.byCondition["Critical"] || 0) + (summary.byCondition["Poor"] || 0)).toLocaleString()} sub="Need intervention" icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
-        <StatCard label="Est. Cost"      value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
+        <StatCard label="Total Roads" value={summary.total.toLocaleString()} icon={<MapPin size={16} />} color="#2563eb" bg="#eff6ff" />
+        <StatCard label="Overdue" value={summary.overdue.toLocaleString()} sub="Need immediate action" icon={<XCircle size={16} />} color="#dc2626" bg="#fef2f2" />
+        <StatCard label="Due This Week" value={summary.dueThisWeek.toLocaleString()} icon={<Timer size={16} />} color="#ea580c" bg="#fff7ed" />
+        <StatCard label="Avg CIBIL" value={summary.avgCibilScore.toFixed(0)} sub="Fleet health score" icon={<Gauge size={16} />} color={cibilColor(summary.avgCibilScore)} bg={cibilBg(summary.avgCibilScore)} />
+        <StatCard label="Critical + Poor" value={((summary.byCondition["Critical"] || 0) + (summary.byCondition["Poor"] || 0)).toLocaleString()} sub="Need intervention" icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
+        <StatCard label="Est. Cost" value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
       </div>
 
       {/* ═══ CIBIL CONDITION BREAKDOWN ═══ */}
       <div className="grid grid-cols-4 gap-3">
-        {(["Critical","Poor","Fair","Good"] as const).map((cat) => {
+        {(["Critical", "Poor", "Fair", "Good"] as const).map((cat) => {
           const cfg = conditionCfg(cat);
           const count = summary.byCondition[cat] || 0;
           const pct = summary.total > 0 ? ((count / summary.total) * 100).toFixed(1) : "0";
@@ -1537,8 +1535,10 @@ export default function InspectionScheduler({ roads }: Props) {
                       </td>
                       <td>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                          style={{ background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color,
-                            border: `1px solid ${conditionCfg(item.conditionCategory).border}` }}>
+                          style={{
+                            background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color,
+                            border: `1px solid ${conditionCfg(item.conditionCategory).border}`
+                          }}>
                           {item.conditionCategory}
                         </span>
                       </td>
