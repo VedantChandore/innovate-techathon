@@ -1,5 +1,5 @@
 /**
- * Converts ultimate_dataset.csv → public/ultimate_dataset.json
+ * Converts all_highways_segments_conditions.csv → public/ultimate_dataset.json
  * Keyed as: { [highway_ref]: { [geojson_id]: SegmentData } }
  *
  * Run with: node scripts/convert-csv.js
@@ -8,7 +8,7 @@
 const fs   = require("fs");
 const path = require("path");
 
-const CSV_PATH  = path.resolve(__dirname, "../../ultimate_dataset.csv");
+const CSV_PATH  = path.resolve(__dirname, "../../all_highways_segments_conditions.csv");
 const OUT_PATH  = path.resolve(__dirname, "../public/ultimate_dataset.json");
 
 const raw   = fs.readFileSync(CSV_PATH, "utf8");
