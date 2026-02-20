@@ -246,12 +246,17 @@ export function applyFiltersAndAggregate(
   let filtered = [...roads];
 
   if (filters.district) {
-    filtered = filtered.filter(r => r.district === filters.district);
+    // Case-insensitive, trimmed comparison
+    const dist = filters.district.trim().toLowerCase();
+    filtered = filtered.filter(r => r.district.trim().toLowerCase() === dist);
   }
 
   if (filters.highway) {
-    const hw = filters.highway.toLowerCase();
-    filtered = filtered.filter(r => r.highway_ref.toLowerCase().includes(hw));
+    // Normalise both sides: remove hyphens, spaces, make lowercase
+    // so "NH-60", "NH 60", "nh60" all match the CSV value "NH60"
+    const normalise = (s: string) => s.toLowerCase().replace(/[\s\-_]/g, "");
+    const hw = normalise(filters.highway);
+    filtered = filtered.filter(r => normalise(r.highway_ref).includes(hw));
   }
 
   if (filters.conditionBand) {

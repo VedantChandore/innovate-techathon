@@ -385,9 +385,9 @@ export default function ReportsPage() {
 
             <div className="flex flex-col gap-2.5">
               <FilterSelect label="District" value={filters.district} onChange={v => setFilters(f => ({ ...f, district: v }))}
-                options={["Nagpur", "Pune", "Mumbai", "Nashik", "Aurangabad", "Solapur", "Kolhapur", "Amravati", "Akola", "Latur", "Chandrapur", "Yavatmal", "Nandurbar", "Buldhana"]} />
+                options={["Dhule", "Kolhapur", "Nagpur", "Nashik", "Pune", "Raigad", "Satara", "Sindhudurg", "Solapur"]} />
 
-              <FilterInput label="Highway Ref" placeholder="e.g. NH-6, SH-72" value={filters.highway}
+              <FilterInput label="Highway Ref" placeholder="e.g. NH60, NH 61, NH130D" value={filters.highway}
                 onChange={v => setFilters(f => ({ ...f, highway: v }))} />
 
               <FilterSelect label="Condition Band" value={filters.conditionBand} onChange={v => setFilters(f => ({ ...f, conditionBand: v }))}
