@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback, useRef, Fragment } from "react";
 import {
   ScheduledInspection,
+  ScheduleSummary,
   InspectionPriority,
   ActionType,
   InspectionType,
@@ -11,7 +12,6 @@ import {
   getMonsoonMultiplier,
   recalculateAfterInspection,
 } from "@/lib/scheduler";
-import { computeHealthScore } from "@/lib/scoring";
 import { RoadWithScore, Band, InspectionRecord } from "@/lib/types";
 import {
   AlertTriangle, CalendarClock, Clock, ChevronDown, ChevronUp, Search,
@@ -35,13 +35,43 @@ const PRIORITY_CFG: Record<InspectionPriority, { label: string; color: string; b
   low:      { label: "Low",      color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
 };
 
-const ACTION_CFG: Record<ActionType, { label: string; icon: React.ReactNode; color: string }> = {
-  emergency_repair:       { label: "Emergency Repair",    icon: <Zap size={12} />,            color: "#dc2626" },
-  urgent_inspection:      { label: "Urgent Inspection",   icon: <AlertTriangle size={12} />,  color: "#ea580c" },
-  routine_inspection:     { label: "Routine Inspection",  icon: <Eye size={12} />,            color: "#2563eb" },
-  preventive_maintenance: { label: "Preventive Maint.",   icon: <Wrench size={12} />,         color: "#7c3aed" },
-  monitoring_only:        { label: "Monitoring Only",     icon: <Activity size={12} />,       color: "#059669" },
+const ACTION_CFG: Record<ActionType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
+  emergency_reconstruction:   { label: "Emergency Reconstruction", icon: <Zap size={12} />,            color: "#7f1d1d", bg: "#fef2f2" },
+  emergency_overlay:          { label: "Emergency Overlay",        icon: <AlertTriangle size={12} />,  color: "#dc2626", bg: "#fef2f2" },
+  priority_structural_repair: { label: "Priority Structural",      icon: <FileWarning size={12} />,   color: "#c2410c", bg: "#fff7ed" },
+  structural_overlay:         { label: "Structural Overlay",       icon: <Layers size={12} />,         color: "#ea580c", bg: "#fff7ed" },
+  major_repair:               { label: "Major Repair",             icon: <Wrench size={12} />,         color: "#d97706", bg: "#fffbeb" },
+  preventive_risk_mitigation: { label: "Preventive + Risk",        icon: <Shield size={12} />,         color: "#2563eb", bg: "#eff6ff" },
+  preventive_maintenance:     { label: "Preventive Maint.",        icon: <Activity size={12} />,       color: "#7c3aed", bg: "#f5f3ff" },
+  routine_patching:           { label: "Routine Patching",         icon: <Eye size={12} />,            color: "#0891b2", bg: "#ecfeff" },
+  monitoring_only:            { label: "Monitoring Only",          icon: <CheckCircle2 size={12} />,   color: "#059669", bg: "#f0fdf4" },
 };
+
+// CIBIL condition color helper
+function cibilColor(score: number): string {
+  if (score < 25) return "#7f1d1d";
+  if (score < 40) return "#dc2626";
+  if (score < 55) return "#ea580c";
+  if (score < 70) return "#d97706";
+  if (score < 85) return "#16a34a";
+  return "#059669";
+}
+
+function cibilBg(score: number): string {
+  if (score < 25) return "#fef2f2";
+  if (score < 40) return "#fef2f2";
+  if (score < 55) return "#fff7ed";
+  if (score < 70) return "#fffbeb";
+  if (score < 85) return "#f0fdf4";
+  return "#f0fdf4";
+}
+
+function conditionCfg(cat: string): { color: string; bg: string; border: string } {
+  if (cat === "Critical") return { color: "#991b1b", bg: "#fef2f2", border: "#fecaca" };
+  if (cat === "Poor")     return { color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" };
+  if (cat === "Fair")     return { color: "#a16207", bg: "#fefce8", border: "#fef08a" };
+  return                         { color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" };
+}
 
 const BAND_COLORS: Record<Band, string> = {
   "A+": "#059669", A: "#22c55e", B: "#eab308", C: "#f97316", D: "#ef4444", E: "#991b1b",
@@ -135,9 +165,9 @@ function ScheduleModal({ item, onClose, onConfirm }: {
           {/* Road Snapshot */}
           <div className="flex gap-3">
             {[
-              { label: "PCI", val: item.road.pci_score, color: item.road.pci_score < 30 ? "#dc2626" : "#374151" },
-              { label: "IRI", val: item.road.iri_value, color: item.road.iri_value > 8 ? "#dc2626" : "#374151" },
-              { label: "Health", val: item.road.healthScore.conditionScore.toFixed(1), color: BAND_COLORS[item.road.healthScore.band] },
+              { label: "CIBIL", val: item.finalCibilScore.toFixed(0), color: cibilColor(item.finalCibilScore) },
+              { label: "Condition", val: item.conditionCategory, color: conditionCfg(item.conditionCategory).color },
+              { label: "PDI", val: item.pdi.toFixed(0), color: item.pdi < 30 ? "#dc2626" : "#374151" },
               { label: "Priority", val: item.priorityScore.toFixed(0), color: PRIORITY_CFG[item.priority].color },
             ].map((s) => (
               <div key={s.label} className="flex-1 rounded-xl p-3" style={{ background: "#f8fafc" }}>
@@ -150,16 +180,19 @@ function ScheduleModal({ item, onClose, onConfirm }: {
           {/* AI Recommendation */}
           <div className="rounded-xl border border-orange-200 p-4" style={{ background: "#fffbeb" }}>
             <p className="text-[11px] font-bold text-orange-700 mb-1 flex items-center gap-1">
-              <Zap size={12} /> AI Recommendation
+              <Zap size={12} /> CIBIL-Driven Recommendation
             </p>
             <p className="text-[12px] text-orange-900 leading-relaxed">
               {item.isOverdue
-                ? `⚠️ This road is ${item.overdueDays} days overdue. Recommend immediate ${type} inspection within 1-2 days. ${item.decayRate > 0.05 ? `Condition deteriorating at ${item.decayRate.toFixed(3)}/day — delay risks structural failure.` : ""}`
+                ? `⚠️ This road is ${item.overdueDays} days overdue. CIBIL: ${item.finalCibilScore.toFixed(0)} (${item.conditionCategory}). Recommend immediate ${type} inspection.${item.decayRate > 0.05 ? ` Deteriorating at ${item.decayRate.toFixed(3)}/day.` : ""}`
                 : item.daysUntilDue <= 7
-                  ? `Due in ${item.daysUntilDue} days. Schedule this week to maintain compliance.`
-                  : `Due in ${item.daysUntilDue} days. Band ${item.road.healthScore.band} — ${item.road.healthScore.bandLabel}. Routine scheduling recommended.`
+                  ? `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. Schedule this week.`
+                  : `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. Interval driven by score tier.`
               }
             </p>
+            {item.trendAlert && (
+              <p className="text-[11px] text-red-700 mt-1 font-semibold">⚡ {item.trendAlert}</p>
+            )}
             {item.riskFactors.length > 0 && (
               <p className="text-[11px] text-orange-700 mt-1">
                 Risk factors: {item.riskFactors.slice(0, 3).join(", ")}
@@ -285,26 +318,43 @@ function RecordModal({ item, onClose, onSubmit }: {
   // Step 3 — Remarks
   const [remarks, setRemarks] = useState("");
 
-  // Live score preview using current inputs
+  // Live score preview — deterministic fallback formula (no async API call needed for preview)
   const previewScore = useMemo(() => {
-    // Build a mock road to compute preview health score
-    const mockRoad = {
-      ...item.road,
-      pci_score: conditionScore,
-      potholes_per_km: potholes,
-      pothole_avg_depth_cm: potholeDepth,
-      cracks_longitudinal_pct: cracksLong,
-      cracks_transverse_per_km: cracksTrans,
-      alligator_cracking_pct: alligator,
-      rutting_depth_mm: rutting,
-      raveling_pct: raveling,
-      edge_breaking_pct: edgeBreak,
-      patches_per_km: patches,
+    const pciRaw  = conditionScore;
+    const iriNorm = Math.max(0, 100 - (item.road.iri_value ?? 5) * 8);
+    const deductions =
+      Math.min(1, potholes           / 30) * 20 +
+      Math.min(1, alligator          / 50) * 18 +
+      Math.min(1, rutting            / 40) * 15 +
+      Math.min(1, cracksLong         / 50) * 12 +
+      Math.min(1, cracksTrans        / 30) * 10 +
+      Math.min(1, potholeDepth       / 20) * 8  +
+      Math.min(1, raveling           / 50) * 7  +
+      Math.min(1, edgeBreak          / 50) * 5  +
+      Math.min(1, patches            / 25) * 5;
+    const distress = Math.max(0, Math.min(100, 100 - deductions));
+    const score    = Math.round(0.30 * pciRaw + 0.20 * iriNorm + 0.20 * distress + 0.30 * 60);
+    const getBand = (s: number): Band => {
+      if (s >= 90) return "A+"; if (s >= 75) return "A";
+      if (s >= 60) return "B";  if (s >= 45) return "C";
+      if (s >= 30) return "D";  return "E";
     };
-    return computeHealthScore(mockRoad);
+    const bandColors: Record<Band, string> = {
+      "A+": "#059669", A: "#22c55e", B: "#eab308", C: "#f97316", D: "#ef4444", E: "#991b1b",
+    };
+    const band = getBand(score);
+    return {
+      ...item.road.healthScore,
+      finalCibilScore:   score,
+      conditionScore:    score,
+      rating:            score * 10,
+      band,
+      bandColor:         bandColors[band],
+      conditionCategory: score >= 80 ? "Good" : score >= 60 ? "Fair" : score >= 40 ? "Poor" : "Critical",
+    };
   }, [conditionScore, potholes, potholeDepth, cracksLong, cracksTrans, alligator, rutting, raveling, edgeBreak, patches, item.road]);
 
-  const scoreDelta = previewScore.conditionScore - item.road.healthScore.conditionScore;
+  const scoreDelta = previewScore.finalCibilScore - item.road.healthScore.finalCibilScore;
 
   const stepTitles = ["General Condition", "Distress Metrics", "Review & Submit"];
 
@@ -348,24 +398,34 @@ function RecordModal({ item, onClose, onSubmit }: {
           style={{ background: "#f8fafc" }}>
           <div className="flex items-center gap-4">
             <div>
-              <p className="text-[10px] text-gray-400 font-semibold">CURRENT</p>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md text-[9px] font-bold text-white"
-                  style={{ background: BAND_COLORS[item.road.healthScore.band] }}>{item.road.healthScore.band}</span>
-                <span className="text-[14px] font-bold text-gray-400">{item.road.healthScore.conditionScore.toFixed(1)}</span>
+              <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Current CIBIL</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[22px] font-black tabular-nums leading-none"
+                  style={{ color: cibilColor(item.road.healthScore.finalCibilScore) }}>
+                  {item.road.healthScore.finalCibilScore.toFixed(1)}
+                </span>
+                <span className="text-[10px] text-gray-400 font-semibold self-end pb-0.5">/100</span>
+                <span className="ml-1 px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                  style={conditionCfg(item.road.healthScore.conditionCategory)}>
+                  {item.road.healthScore.conditionCategory}
+                </span>
               </div>
             </div>
             <ArrowRight size={16} className="text-gray-300" />
             <div>
-              <p className="text-[10px] text-gray-400 font-semibold">LIVE PREVIEW</p>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md text-[9px] font-bold text-white"
-                  style={{ background: BAND_COLORS[previewScore.band] }}>{previewScore.band}</span>
-                <span className="text-[14px] font-bold" style={{ color: BAND_COLORS[previewScore.band] }}>
-                  {previewScore.conditionScore.toFixed(1)}
+              <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Live Preview</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[22px] font-black tabular-nums leading-none"
+                  style={{ color: cibilColor(previewScore.finalCibilScore) }}>
+                  {previewScore.finalCibilScore.toFixed(1)}
+                </span>
+                <span className="text-[10px] text-gray-400 font-semibold self-end pb-0.5">/100</span>
+                <span className="ml-1 px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                  style={conditionCfg(previewScore.conditionCategory)}>
+                  {previewScore.conditionCategory}
                 </span>
                 {scoreDelta !== 0 && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${scoreDelta > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1 ${scoreDelta > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                     {scoreDelta > 0 ? "↑" : "↓"}{Math.abs(scoreDelta).toFixed(1)}
                   </span>
                 )}
@@ -373,10 +433,11 @@ function RecordModal({ item, onClose, onSubmit }: {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-gray-400 font-semibold">RATING</p>
-            <p className="text-[14px] font-bold tabular-nums" style={{ color: BAND_COLORS[previewScore.band] }}>
-              {previewScore.rating}/1000
+            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">PDI</p>
+            <p className="text-[18px] font-black tabular-nums" style={{ color: cibilColor(previewScore.finalCibilScore) }}>
+              {previewScore.pdi?.toFixed(1) ?? "—"}
             </p>
+            <p className="text-[9px] text-gray-400">distress index</p>
           </div>
         </div>
 
@@ -497,23 +558,37 @@ function RecordModal({ item, onClose, onSubmit }: {
           <div className="px-6 py-5 space-y-5">
             {/* Summary Cards */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl p-3 border border-gray-200" style={{ background: "#f8fafc" }}>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase">PCI Score</p>
-                <p className="text-xl font-bold" style={{ color: conditionScore < 30 ? "#dc2626" : conditionScore < 50 ? "#ea580c" : "#22c55e" }}>{conditionScore}</p>
+              <div className="rounded-xl p-3 border-2 flex flex-col gap-1"
+                style={{ background: cibilBg(previewScore.finalCibilScore), borderColor: cibilColor(previewScore.finalCibilScore) + "40" }}>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">CIBIL Score</p>
+                <div className="flex items-end gap-1">
+                  <p className="text-3xl font-black tabular-nums leading-none"
+                    style={{ color: cibilColor(previewScore.finalCibilScore) }}>
+                    {previewScore.finalCibilScore.toFixed(1)}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mb-0.5">/100</p>
+                </div>
               </div>
               <div className="rounded-xl p-3 border border-gray-200" style={{ background: "#f8fafc" }}>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase">Surface Damage</p>
-                <p className="text-xl font-bold">{surfaceDmg}%</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Surface Damage</p>
+                <p className="text-xl font-bold mt-1"
+                  style={{ color: surfaceDmg > 40 ? "#dc2626" : surfaceDmg > 20 ? "#ea580c" : "#22c55e" }}>
+                  {surfaceDmg}%
+                </p>
               </div>
-              <div className="rounded-xl p-3 border border-gray-200" style={{ background: "#f8fafc" }}>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase">Predicted Band</p>
+              <div className="rounded-xl p-3 border-2 flex flex-col gap-1"
+                style={conditionCfg(previewScore.conditionCategory)}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ color: conditionCfg(previewScore.conditionCategory).color, opacity: 0.7 }}>
+                  Condition
+                </p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white"
-                    style={{ background: BAND_COLORS[previewScore.band] }}>{previewScore.band}</span>
-                  <span className="text-[14px] font-bold" style={{ color: BAND_COLORS[previewScore.band] }}>
-                    {previewScore.conditionScore.toFixed(1)}
+                  <span className="px-2.5 py-1 rounded-full text-[12px] font-bold border-2"
+                    style={conditionCfg(previewScore.conditionCategory)}>
+                    {previewScore.conditionCategory}
                   </span>
                 </div>
+                <p className="text-[9px] text-gray-400 mt-0.5">PDI: {previewScore.pdi?.toFixed(1) ?? "—"}</p>
               </div>
             </div>
 
@@ -552,24 +627,32 @@ function RecordModal({ item, onClose, onSubmit }: {
                 borderColor: scoreDelta > 0 ? "#bbf7d0" : scoreDelta < 0 ? "#fecaca" : "#e5e7eb",
                 background: scoreDelta > 0 ? "#f0fdf4" : scoreDelta < 0 ? "#fef2f2" : "#f8fafc"
               }}>
-              <p className="text-[11px] font-bold text-gray-600 mb-2">🔄 Predicted Impact After Submission</p>
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="text-[10px] text-gray-400">Before</p>
-                  <p className="text-lg font-bold text-gray-400">{item.road.healthScore.conditionScore.toFixed(1)}</p>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white"
-                    style={{ background: BAND_COLORS[item.road.healthScore.band] }}>{item.road.healthScore.band}</span>
+              <p className="text-[11px] font-bold text-gray-600 mb-3">🔄 Predicted CIBIL Impact After Submission</p>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">Before</p>
+                  <p className="text-2xl font-black tabular-nums leading-none"
+                    style={{ color: cibilColor(item.road.healthScore.finalCibilScore) }}>
+                    {item.road.healthScore.finalCibilScore.toFixed(1)}
+                  </p>
+                  <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                    style={conditionCfg(item.road.healthScore.conditionCategory)}>
+                    {item.road.healthScore.conditionCategory}
+                  </span>
                 </div>
                 <ArrowRight size={20} className="text-gray-300" />
-                <div>
-                  <p className="text-[10px] text-gray-400">After</p>
-                  <p className="text-lg font-bold" style={{ color: BAND_COLORS[previewScore.band] }}>
-                    {previewScore.conditionScore.toFixed(1)}
+                <div className="text-center">
+                  <p className="text-[9px] text-gray-400 uppercase tracking-wider mb-1">After</p>
+                  <p className="text-2xl font-black tabular-nums leading-none"
+                    style={{ color: cibilColor(previewScore.finalCibilScore) }}>
+                    {previewScore.finalCibilScore.toFixed(1)}
                   </p>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white"
-                    style={{ background: BAND_COLORS[previewScore.band] }}>{previewScore.band}</span>
+                  <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                    style={conditionCfg(previewScore.conditionCategory)}>
+                    {previewScore.conditionCategory}
+                  </span>
                 </div>
-                <div className={`ml-2 px-3 py-1.5 rounded-lg text-[12px] font-bold ${scoreDelta > 0 ? "bg-green-100 text-green-700" : scoreDelta < 0 ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
+                <div className={`ml-auto px-3 py-2 rounded-xl text-[13px] font-black ${scoreDelta > 0 ? "bg-green-100 text-green-700" : scoreDelta < 0 ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
                   {scoreDelta > 0 ? `↑ +${scoreDelta.toFixed(1)}` : scoreDelta < 0 ? `↓ ${scoreDelta.toFixed(1)}` : "No change"}
                 </div>
               </div>
@@ -621,6 +704,8 @@ function RecalcToast({ oldScore, newScore, oldBand, newBand, roadName, onClose }
   oldScore: number; newScore: number; oldBand: Band; newBand: Band; roadName: string; onClose: () => void;
 }) {
   const improved = newScore > oldScore;
+  const oldCondition = oldScore >= 80 ? "Good" : oldScore >= 60 ? "Fair" : oldScore >= 40 ? "Poor" : "Critical";
+  const newCondition = newScore >= 80 ? "Good" : newScore >= 60 ? "Fair" : newScore >= 40 ? "Poor" : "Critical";
   return (
     <div className="fixed top-24 right-6 z-50" style={{ animation: "slideInRight 0.4s ease-out" }}>
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-5 w-[340px]">
@@ -631,29 +716,29 @@ function RecalcToast({ oldScore, newScore, oldBand, newBand, roadName, onClose }
           </p>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
         </div>
-        <p className="text-[11px] text-gray-400 mb-2 truncate">{roadName}</p>
+        <p className="text-[11px] text-gray-400 mb-3 truncate">{roadName}</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-gray-500">CIBIL Score</span>
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-bold text-gray-400">{oldScore.toFixed(1)}</span>
+              <span className="text-[13px] font-bold" style={{ color: cibilColor(oldScore) }}>{oldScore.toFixed(1)}</span>
               <span className="text-[11px] text-gray-400">→</span>
-              <span className="text-[13px] font-bold" style={{ color: improved ? "#059669" : "#dc2626" }}>
+              <span className="text-[13px] font-bold" style={{ color: cibilColor(newScore) }}>
                 {newScore.toFixed(1)}
               </span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${improved ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${improved ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                 {improved ? "↑" : "↓"} {Math.abs(newScore - oldScore).toFixed(1)}
               </span>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-gray-500">Band</span>
+            <span className="text-[11px] text-gray-500">Condition</span>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-[10px] font-bold text-white"
-                style={{ background: BAND_COLORS[oldBand] }}>{oldBand}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                style={conditionCfg(oldCondition)}>{oldCondition}</span>
               <span className="text-[11px] text-gray-400">→</span>
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-[10px] font-bold text-white"
-                style={{ background: BAND_COLORS[newBand] }}>{newBand}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold border"
+                style={conditionCfg(newCondition)}>{newCondition}</span>
             </div>
           </div>
         </div>
@@ -707,11 +792,11 @@ function ExpandedDetail({ item }: { item: ScheduledInspection }) {
           <div>
             <h4 className="text-[10px] font-bold uppercase text-gray-400 tracking-wider mb-2">Condition</h4>
             <div className="space-y-1.5 text-[11px]">
-              <p><span className="text-gray-400">PCI:</span> <span className="font-semibold">{road.pci_score}</span></p>
-              <p><span className="text-gray-400">IRI:</span> <span className="font-semibold">{road.iri_value}</span></p>
-              <p><span className="text-gray-400">CIBIL Score:</span> <span className="font-semibold" style={{ color: road.healthScore.bandColor }}>{road.healthScore.conditionScore.toFixed(1)}</span></p>
-              <p><span className="text-gray-400">Rating:</span> <span className="font-semibold text-gray-700">{road.healthScore.rating}/1000</span></p>
-              <p><span className="text-gray-400">Distress:</span> <span className="font-semibold">{item.distressSeverity.toFixed(1)}%</span></p>
+              <p><span className="text-gray-400 w-24 inline-block">CIBIL:</span> <span className="font-bold" style={{ color: cibilColor(road.healthScore.finalCibilScore) }}>{road.healthScore.finalCibilScore.toFixed(0)}</span></p>
+              <p><span className="text-gray-400 w-24 inline-block">Category:</span> <span className="font-semibold text-gray-700">{road.healthScore.conditionCategory}</span></p>
+              <p><span className="text-gray-400 w-24 inline-block">PDI:</span> <span className="font-semibold text-gray-700">{road.healthScore.pdi.toFixed(1)}</span></p>
+              <p><span className="text-gray-400 w-24 inline-block">IRI:</span> <span className="font-semibold text-gray-700">{road.iri_value}</span></p>
+              <p><span className="text-gray-400 w-24 inline-block">Distress:</span> <span className="font-semibold">{item.distressSeverity.toFixed(1)}%</span></p>
             </div>
           </div>
           <div>
@@ -929,12 +1014,12 @@ function InspectorDetailCard({
               {/* Quick Metric Pills */}
               <div className="flex flex-wrap gap-2 mt-3">
                 {[
-                  { label: "Health Score", val: road.healthScore.conditionScore.toFixed(1), color: BAND_COLORS[road.healthScore.band] },
-                  { label: "PCI", val: road.pci_score.toString(), color: road.pci_score < 30 ? "#ef4444" : road.pci_score < 50 ? "#f97316" : "#22c55e" },
-                  { label: "IRI", val: road.iri_value.toString(), color: road.iri_value > 8 ? "#ef4444" : road.iri_value > 5 ? "#f97316" : "#22c55e" },
-                  { label: "Rating", val: `${road.healthScore.rating}/1000`, color: "#8b5cf6" },
+                  { label: "CIBIL Score", val: road.healthScore.finalCibilScore.toFixed(0) + "/100", color: cibilColor(road.healthScore.finalCibilScore) },
+                  { label: "Condition", val: item.conditionCategory, color: conditionCfg(item.conditionCategory).color },
+                  { label: "PDI", val: item.pdi.toFixed(0), color: item.pdi < 30 ? "#ef4444" : "#e2e8f0" },
+                  { label: "Trend", val: item.trendAlert ? "⚡ Alert" : "Stable", color: item.trendAlert ? "#dc2626" : "#059669" },
                   { label: "Priority", val: `${item.priorityScore.toFixed(0)} ${pCfg.label}`, color: pCfg.color },
-                  { label: "Decay", val: `${item.decayRate.toFixed(3)}/d`, color: item.decayRate > 0.05 ? "#ef4444" : "#6b7280" },
+                  { label: "Decay", val: `${item.decayRate.toFixed(3)}/d`, color: item.decayRate > 0.05 ? "#ef4444" : "#94a3b8" },
                 ].map((m) => (
                   <div key={m.label} className="px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.08)" }}>
                     <p className="text-[9px] font-semibold text-gray-400 uppercase">{m.label}</p>
@@ -1024,15 +1109,28 @@ function InspectorDetailCard({
               {/* Condition Info */}
               <div className="rounded-xl border border-gray-200 p-4 bg-white">
                 <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-3 flex items-center gap-1.5">
-                  <Activity size={12} className="text-green-500" />Condition
+                  <Activity size={12} className="text-green-500" />CIBIL Breakdown
                 </h4>
                 <div className="space-y-2.5 text-[12px]">
-                  <div className="flex justify-between"><span className="text-gray-400">PCI Score</span><span className="font-semibold" style={{ color: road.pci_score < 30 ? "#dc2626" : road.pci_score < 50 ? "#ea580c" : "#22c55e" }}>{road.pci_score}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">IRI Value</span><span className="font-semibold text-gray-700">{road.iri_value}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Health Score</span><span className="font-semibold" style={{ color: road.healthScore.bandColor }}>{road.healthScore.conditionScore.toFixed(1)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Rating</span><span className="font-semibold text-gray-700">{road.healthScore.rating}/1000</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Distress</span><span className="font-semibold text-gray-700">{item.distressSeverity.toFixed(1)}%</span></div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Final CIBIL</span>
+                    <span className="font-bold text-lg" style={{ color: cibilColor(item.finalCibilScore) }}>{item.finalCibilScore.toFixed(0)}</span>
+                  </div>
+                  <div className="flex justify-between"><span className="text-gray-400">Condition</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{ background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color }}>
+                      {item.conditionCategory}
+                    </span>
+                  </div>
+                  <div className="flex justify-between"><span className="text-gray-400">PDI-CIBIL (0.7×)</span><span className="font-semibold text-gray-700">{item.pseudoCibil.toFixed(1)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">ML-CIBIL (0.3×)</span><span className="font-semibold text-gray-700">{item.mlPredictedCibil.toFixed(1)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">PDI</span><span className="font-semibold text-gray-700">{item.pdi.toFixed(1)}</span></div>
                 </div>
+                {item.trendAlert && (
+                  <div className="mt-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
+                    <p className="text-[10px] font-bold text-red-700">⚡ {item.trendAlert}</p>
+                  </div>
+                )}
               </div>
               {/* Road Info */}
               <div className="rounded-xl border border-gray-200 p-4 bg-white">
@@ -1234,16 +1332,21 @@ function InspectorDetailCard({
                 {/* AI Recommendation Banner */}
                 <div className="rounded-xl border-2 border-orange-200 p-5" style={{ background: "linear-gradient(135deg, #fffbeb, #fff7ed)" }}>
                   <p className="text-[12px] font-bold text-orange-800 mb-2 flex items-center gap-1.5">
-                    <Zap size={14} className="text-orange-500" /> AI Scheduling Recommendation
+                    <Zap size={14} className="text-orange-500" /> CIBIL-Driven Scheduling Recommendation
                   </p>
                   <p className="text-[13px] text-orange-900 leading-relaxed">
                     {item.isOverdue
-                      ? `\u26A0\uFE0F This road is ${item.overdueDays} days overdue for inspection. Recommend immediate ${schedType} inspection within 1-2 days. ${item.decayRate > 0.05 ? `Condition deteriorating at ${item.decayRate.toFixed(3)}/day \u2014 further delay risks structural failure.` : ""}`
+                      ? `⚠️ This road is ${item.overdueDays} days overdue. CIBIL: ${item.finalCibilScore.toFixed(0)} (${item.conditionCategory}). PDI: ${item.pdi.toFixed(0)}. Recommend immediate inspection within 1-2 days.${item.decayRate > 0.05 ? ` Deteriorating at ${item.decayRate.toFixed(3)}/day — delay risks structural failure.` : ""}`
                       : item.daysUntilDue <= 7
-                        ? `Due in ${item.daysUntilDue} days. Schedule this week to maintain compliance. Band ${road.healthScore.band} \u2014 ${road.healthScore.bandLabel}.`
-                        : `Due in ${item.daysUntilDue} days. Band ${road.healthScore.band} \u2014 ${road.healthScore.bandLabel}. Standard scheduling recommended.`
+                        ? `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. Schedule this week to maintain compliance.`
+                        : `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. CIBIL-tier interval: ${item.cibilDrivenDueDays} days.`
                     }
                   </p>
+                  {item.trendAlert && (
+                    <div className="mt-2 px-3 py-2 rounded-lg bg-red-100 border border-red-300">
+                      <p className="text-[11px] font-bold text-red-800">⚡ Trend Alert: {item.trendAlert}</p>
+                    </div>
+                  )}
                   {item.riskFactors.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {item.riskFactors.slice(0, 4).map((rf) => (
@@ -1406,8 +1509,8 @@ export default function InspectionScheduler({ roads }: Props) {
   const [priorityFilter, setPriorityFilter] = useState<InspectionPriority | "all">("all");
   const [actionFilter, setActionFilter] = useState<ActionType | "all">("all");
   const [urgencyFilter, setUrgencyFilter] = useState<"all" | "overdue" | "this_week" | "this_month">("all");
-  const [bandFilter, setBandFilter] = useState<Band | "all">("all");
-  const [sortKey, setSortKey] = useState<"priority" | "dueDate" | "band" | "decay" | "pci">("priority");
+  const [conditionFilter, setConditionFilter] = useState<"all" | "Critical" | "Poor" | "Fair" | "Good">("all");
+  const [sortKey, setSortKey] = useState<"priority" | "dueDate" | "cibil" | "decay" | "pci">("priority");
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [page, setPage] = useState(0);
@@ -1436,7 +1539,7 @@ export default function InspectionScheduler({ roads }: Props) {
     }
     if (priorityFilter !== "all") list = list.filter((s) => s.priority === priorityFilter);
     if (actionFilter !== "all") list = list.filter((s) => s.action === actionFilter);
-    if (bandFilter !== "all") list = list.filter((s) => s.road.healthScore.band === bandFilter);
+    if (conditionFilter !== "all") list = list.filter((s) => s.conditionCategory === conditionFilter);
     if (urgencyFilter === "overdue") list = list.filter((s) => s.isOverdue);
     else if (urgencyFilter === "this_week") list = list.filter((s) => s.isOverdue || s.daysUntilDue <= 7);
     else if (urgencyFilter === "this_month") list = list.filter((s) => s.isOverdue || s.daysUntilDue <= 30);
@@ -1447,17 +1550,14 @@ export default function InspectionScheduler({ roads }: Props) {
       switch (sortKey) {
         case "priority": cmp = b.priorityScore - a.priorityScore; break;
         case "dueDate": cmp = a.daysUntilDue - b.daysUntilDue; break;
-        case "band": {
-          const order: Band[] = ["E", "D", "C", "B", "A", "A+"];
-          cmp = order.indexOf(a.road.healthScore.band) - order.indexOf(b.road.healthScore.band); break;
-        }
+        case "cibil": cmp = a.finalCibilScore - b.finalCibilScore; break;
         case "decay": cmp = b.decayRate - a.decayRate; break;
         case "pci": cmp = a.road.pci_score - b.road.pci_score; break;
       }
       return sortAsc ? -cmp : cmp;
     });
     return sorted;
-  }, [schedule, search, priorityFilter, actionFilter, bandFilter, urgencyFilter, sortKey, sortAsc]);
+  }, [schedule, search, priorityFilter, actionFilter, conditionFilter, urgencyFilter, sortKey, sortAsc]);
 
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -1514,15 +1614,17 @@ export default function InspectionScheduler({ roads }: Props) {
 
   // Export
   const handleExport = () => {
-    const headers = ["Road ID","Name","District","Band","PCI","IRI","Priority","Score","Last Inspection","Next Due","Days","Overdue","Action","Agency","Decay Rate","Risk Factors","Est Cost (₹L)"];
+    const headers = ["Road ID","Name","District","CIBIL Score","Condition","PDI","Priority Score","Priority","Last Inspection","Next Due","Days","Overdue","Action","Agency","Decay Rate","Trend Alert","Risk Factors","Est Cost (₹L)"];
     const rows = [headers.join(",")];
     filtered.forEach((s) => {
       rows.push([
-        s.road.road_id, `"${s.road.name}"`, s.road.district, s.road.healthScore.band,
-        s.road.pci_score, s.road.iri_value, s.priority, s.priorityScore,
+        s.road.road_id, `"${s.road.name}"`, s.road.district,
+        s.finalCibilScore.toFixed(1), s.conditionCategory, s.pdi.toFixed(1),
+        s.priorityScore.toFixed(0), s.priority,
         s.lastInspectionDate ? s.lastInspectionDate.toISOString().split("T")[0] : "Never",
         s.nextDueDate.toISOString().split("T")[0], s.daysUntilDue, s.isOverdue ? "Yes" : "No",
         ACTION_CFG[s.action].label, s.assignedAgency, s.decayRate.toFixed(4),
+        `"${s.trendAlert || "None"}"`,
         `"${s.riskFactors.join("; ")}"`, s.estimatedCostLakhs,
       ].join(","));
     });
@@ -1539,14 +1641,36 @@ export default function InspectionScheduler({ roads }: Props) {
       {toast && <RecalcToast {...toast} onClose={() => setToast(null)} />}
 
       {/* ═══ SUMMARY DASHBOARD ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        <StatCard label="Total Roads" value={summary.total.toLocaleString()} icon={<MapPin size={16} />} color="#2563eb" bg="#eff6ff" />
-        <StatCard label="Overdue" value={summary.overdue.toLocaleString()} sub="Need immediate action" icon={<XCircle size={16} />} color="#dc2626" bg="#fef2f2" />
-        <StatCard label="Due This Week" value={summary.dueThisWeek.toLocaleString()} icon={<Timer size={16} />} color="#ea580c" bg="#fff7ed" />
-        <StatCard label="Critical" value={summary.critical.toLocaleString()} icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
-        <StatCard label="High Priority" value={summary.high.toLocaleString()} icon={<Activity size={16} />} color="#c2410c" bg="#fff7ed" />
-        <StatCard label="Avg Decay" value={`${summary.avgDecayRate}/d`} sub="Score loss per day" icon={<TrendingDown size={16} />} color="#7c3aed" bg="#f5f3ff" />
-        <StatCard label="Est. Cost" value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard label="Total Roads"    value={summary.total.toLocaleString()}           icon={<MapPin size={16} />}       color="#2563eb" bg="#eff6ff" />
+        <StatCard label="Overdue"        value={summary.overdue.toLocaleString()}          sub="Need immediate action"  icon={<XCircle size={16} />}      color="#dc2626" bg="#fef2f2" />
+        <StatCard label="Due This Week"  value={summary.dueThisWeek.toLocaleString()}      icon={<Timer size={16} />}        color="#ea580c" bg="#fff7ed" />
+        <StatCard label="Avg CIBIL"      value={summary.avgCibilScore.toFixed(0)}          sub="Fleet health score"     icon={<Gauge size={16} />}         color={cibilColor(summary.avgCibilScore)} bg={cibilBg(summary.avgCibilScore)} />
+        <StatCard label="Critical + Poor" value={(( summary.byCondition["Critical"] || 0) + (summary.byCondition["Poor"] || 0)).toLocaleString()} sub="Need intervention" icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
+        <StatCard label="Est. Cost"      value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
+      </div>
+
+      {/* ═══ CIBIL CONDITION BREAKDOWN ═══ */}
+      <div className="grid grid-cols-4 gap-3">
+        {(["Critical","Poor","Fair","Good"] as const).map((cat) => {
+          const cfg = conditionCfg(cat);
+          const count = summary.byCondition[cat] || 0;
+          const pct = summary.total > 0 ? ((count / summary.total) * 100).toFixed(1) : "0";
+          return (
+            <div key={cat} className="rounded-2xl border-2 p-4 flex items-center gap-4 hover:shadow-md transition-all"
+              style={{ borderColor: cfg.border, background: cfg.bg }}>
+              <div className="flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: cfg.color }}>{cat}</p>
+                <p className="text-2xl font-extrabold tabular-nums" style={{ color: cfg.color }}>{count.toLocaleString()}</p>
+                <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{pct}% of fleet</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: `${cfg.color}18`, color: cfg.color }}>
+                {cat === "Critical" ? <Zap size={18} /> : cat === "Poor" ? <AlertTriangle size={18} /> : cat === "Fair" ? <Activity size={18} /> : <CheckCircle2 size={18} />}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ═══ ACTION BAR + MONSOON TOGGLE ═══ */}
@@ -1650,10 +1774,13 @@ export default function InspectionScheduler({ roads }: Props) {
             <option value="critical">Critical</option><option value="high">High</option>
             <option value="medium">Medium</option><option value="low">Low</option>
           </select>
-          <select value={bandFilter} onChange={(e) => { setBandFilter(e.target.value as Band | "all"); setPage(0); }}
+          <select value={conditionFilter} onChange={(e) => { setConditionFilter(e.target.value as typeof conditionFilter); setPage(0); }}
             className="h-9 px-3 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 bg-white focus:outline-none focus:border-orange-400">
-            <option value="all">All Bands</option>
-            {(["A+", "A", "B", "C", "D", "E"] as Band[]).map((b) => <option key={b} value={b}>{b}</option>)}
+            <option value="all">All Conditions</option>
+            <option value="Critical">🔴 Critical</option>
+            <option value="Poor">🟠 Poor</option>
+            <option value="Fair">🟡 Fair</option>
+            <option value="Good">🟢 Good</option>
           </select>
           <button onClick={handleExport}
             className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-gray-200 bg-white text-gray-500 text-[11px] font-medium hover:bg-gray-50 transition-all">
@@ -1673,12 +1800,10 @@ export default function InspectionScheduler({ roads }: Props) {
                 <th style={{ width: 32 }} />
                 <th>Road</th>
                 <th>District</th>
-                <th className="cursor-pointer select-none" onClick={() => toggleSort("band")}>
-                  <span className="inline-flex items-center gap-1">Band <ArrowUpDown size={10} className="text-gray-400" /></span>
+                <th className="cursor-pointer select-none" onClick={() => toggleSort("cibil")}>
+                  <span className="inline-flex items-center gap-1">CIBIL <ArrowUpDown size={10} className="text-gray-400" /></span>
                 </th>
-                <th className="cursor-pointer select-none" onClick={() => toggleSort("pci")}>
-                  <span className="inline-flex items-center gap-1">PCI <ArrowUpDown size={10} className="text-gray-400" /></span>
-                </th>
+                <th>Condition</th>
                 <th className="cursor-pointer select-none" onClick={() => toggleSort("priority")}>
                   <span className="inline-flex items-center gap-1">Priority <ArrowUpDown size={10} className="text-gray-400" /></span>
                 </th>
@@ -1721,12 +1846,18 @@ export default function InspectionScheduler({ roads }: Props) {
                       </td>
                       <td className="text-[11px] text-gray-600">{item.road.district}</td>
                       <td>
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-[10px] font-bold text-white"
-                          style={{ background: BAND_COLORS[item.road.healthScore.band] }}>{item.road.healthScore.band}</span>
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="text-[15px] font-extrabold tabular-nums leading-tight"
+                            style={{ color: cibilColor(item.finalCibilScore) }}>{item.finalCibilScore.toFixed(0)}</span>
+                          <span className="text-[9px] font-semibold text-gray-400">/ 100</span>
+                        </div>
                       </td>
-                      <td className="text-[12px] font-semibold tabular-nums"
-                        style={{ color: item.road.pci_score < 30 ? "#dc2626" : item.road.pci_score < 50 ? "#ea580c" : "#374151" }}>
-                        {item.road.pci_score}
+                      <td>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{ background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color,
+                            border: `1px solid ${conditionCfg(item.conditionCategory).border}` }}>
+                          {item.conditionCategory}
+                        </span>
                       </td>
                       <td>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"

@@ -1,14 +1,19 @@
 import { RoadWithScore, Band, InspectionRecord } from "./types";
-import { getInspectionInterval, estimateRepairCost, computeHealthScore } from "./scoring";
+import { getInspectionInterval, estimateRepairCost } from "./scoring";
 
 // ─── Scheduling Types ──────────────────────────────────────────
 
 export type InspectionPriority = "critical" | "high" | "medium" | "low";
+
 export type ActionType =
-  | "emergency_repair"
-  | "urgent_inspection"
-  | "routine_inspection"
+  | "emergency_reconstruction"
+  | "emergency_overlay"
+  | "priority_structural_repair"
+  | "structural_overlay"
+  | "major_repair"
+  | "preventive_risk_mitigation"
   | "preventive_maintenance"
+  | "routine_patching"
   | "monitoring_only";
 
 export type InspectionType = "full" | "quick" | "monsoon_special";
@@ -30,9 +35,17 @@ export interface ScheduledInspection {
   estimatedCostLakhs: number;
   assignedAgency: string;
   quarterLabel: string;
-  decayRate: number;            // condition score loss per day
+  decayRate: number;
   decayTrend: "accelerating" | "stable" | "improving";
-  distressSeverity: number;     // 0-100 composite distress score
+  distressSeverity: number;
+  // CIBIL-specific fields
+  finalCibilScore: number;
+  conditionCategory: string;
+  pdi: number;
+  pseudoCibil: number;
+  mlPredictedCibil: number;
+  trendAlert: string | null;
+  cibilDrivenDueDays: number;
   // Mutable scheduling state
   isScheduled: boolean;
   scheduledDate: Date | null;
@@ -51,7 +64,9 @@ export interface ScheduleSummary {
   low: number;
   totalEstimatedCost: number;
   avgDecayRate: number;
+  avgCibilScore: number;
   byAction: Record<ActionType, number>;
+  byCondition: Record<string, number>;
   byQuarter: Record<string, number>;
   byAgency: Record<string, number>;
 }
@@ -60,7 +75,88 @@ export interface ScheduleSummary {
 
 const TODAY = new Date(2026, 1, 19); // Feb 19, 2026
 
-const MONSOON_MONTHS = [5, 6, 7, 8]; // Jun–Sep (0-indexed)
+// CIBIL score tiers → base due days
+const CIBIL_DUE_DAYS: { maxScore: number; days: number }[] = [
+  { maxScore: 20,  days: 7   },
+  { maxScore: 30,  days: 14  },
+  { maxScore: 40,  days: 21  },
+  { maxScore: 50,  days: 30  },
+  { maxScore: 60,  days: 45  },
+  { maxScore: 70,  days: 60  },
+  { maxScore: 80,  days: 90  },
+  { maxScore: 90,  days: 180 },
+  { maxScore: 101, days: 365 },
+];
+
+// ─── CIBIL → Priority ─────────────────────────────────────────
+
+function cibilToPriority(score: number, isOverdue: boolean, overdueDays: number): InspectionPriority {
+  if (score < 25 || (isOverdue && overdueDays > 30)) return "critical";
+  if (score < 45 || (isOverdue && overdueDays > 7)) return "high";
+  if (score < 65 || isOverdue) return "medium";
+  return "low";
+}
+
+// ─── CIBIL → Action (9-tier fine-grained thresholds) ─────────
+
+function getCibilActionType(
+  finalCibilScore: number,
+  pdi: number,
+  riskFlags: { flood: boolean; landslide: boolean; ghat: boolean },
+): ActionType {
+  const highRisk = riskFlags.flood || riskFlags.landslide || riskFlags.ghat;
+  if (finalCibilScore < 15) return "emergency_reconstruction";
+  if (finalCibilScore < 25) return highRisk ? "emergency_reconstruction" : "emergency_overlay";
+  if (finalCibilScore < 35) return pdi < 25 ? "priority_structural_repair" : "emergency_overlay";
+  if (finalCibilScore < 45) return pdi < 40 ? "priority_structural_repair" : "structural_overlay";
+  if (finalCibilScore < 55) return highRisk ? "structural_overlay" : "major_repair";
+  if (finalCibilScore < 65) return highRisk ? "preventive_risk_mitigation" : "major_repair";
+  if (finalCibilScore < 75) return highRisk ? "preventive_risk_mitigation" : "preventive_maintenance";
+  if (finalCibilScore < 88) return pdi < 70 ? "routine_patching" : "preventive_maintenance";
+  return "monitoring_only";
+}
+
+// ─── CIBIL → Priority Score (0–100) ──────────────────────────
+
+function computeCibilPriorityScore(
+  cibilScore: number,
+  overdueDays: number,
+  riskFactorCount: number,
+  traffic: number,
+  decayRate: number,
+  distressSeverity: number,
+  pdi: number,
+  trendAlert: string | null,
+): number {
+  let score = Math.max(0, 100 - cibilScore) * 0.40;
+  score += Math.min(20, Math.max(0, overdueDays) * 0.4);
+  score += Math.min(10, riskFactorCount * 2.5);
+  score += Math.min(6, (traffic / 50000) * 6);
+  score += Math.min(10, decayRate * 150);
+  score += Math.min(10, distressSeverity * 0.10);
+  score += Math.min(6, Math.max(0, (50 - pdi) * 0.12));
+  if (trendAlert) score += 8;
+  return Math.min(100, Math.round(score * 10) / 10);
+}
+
+// ─── CIBIL → Base Due Days ────────────────────────────────────
+
+function getCibilBaseDueDays(cibilScore: number): number {
+  for (const tier of CIBIL_DUE_DAYS) {
+    if (cibilScore <= tier.maxScore) return tier.days;
+  }
+  return 365;
+}
+
+// ─── Trend Alert ──────────────────────────────────────────────
+
+function computeTrendAlert(pseudoCibil: number, mlPredictedCibil: number): string | null {
+  const gap = pseudoCibil - mlPredictedCibil;
+  if (gap > 25) return "Rapid deterioration: ML predicts " + gap.toFixed(0) + " pts lower than base score";
+  if (gap > 15) return "Deterioration alert: ML score " + gap.toFixed(0) + " pts below formula score";
+  if (gap < -15) return "Recovery signal: ML score " + Math.abs(gap).toFixed(0) + " pts above formula score";
+  return null;
+}
 
 // ─── Risk Factor Computation ───────────────────────────────────
 
@@ -68,77 +164,29 @@ function computeRiskFactors(road: RoadWithScore): { factors: string[]; multiplie
   const factors: string[] = [];
   let multiplier = 1.0;
 
-  if (road.flood_prone) {
-    factors.push("Flood-prone zone");
-    multiplier *= 0.7;
-  }
-  if (road.landslide_prone) {
-    factors.push("Landslide-prone area");
-    multiplier *= 0.7;
-  }
-  if (road.ghat_section_flag) {
-    factors.push("Ghat section");
-    multiplier *= 0.8;
-  }
-  if (road.monsoon_rainfall_category === "high") {
-    factors.push("High rainfall zone");
-    multiplier *= 0.8;
-  }
-  if (road.avg_daily_traffic > 30000) {
-    factors.push("Heavy traffic (ADT > 30k)");
-    multiplier *= 0.8;
-  }
-  if (road.truck_percentage > 30) {
-    factors.push("High truck % (> 30%)");
-    multiplier *= 0.85;
-  }
-  if (road.terrain_type === "steep") {
-    factors.push("Steep terrain");
-    multiplier *= 0.85;
-  }
+  if (road.flood_prone) { factors.push("Flood-prone zone"); multiplier *= 0.7; }
+  if (road.landslide_prone) { factors.push("Landslide-prone area"); multiplier *= 0.7; }
+  if (road.ghat_section_flag) { factors.push("Ghat section"); multiplier *= 0.8; }
+  if (road.monsoon_rainfall_category === "high") { factors.push("High rainfall zone"); multiplier *= 0.8; }
+  if (road.avg_daily_traffic > 30000) { factors.push("Heavy traffic (ADT > 30k)"); multiplier *= 0.8; }
+  if (road.truck_percentage > 30) { factors.push("High truck % (> 30%)"); multiplier *= 0.85; }
+  if (road.terrain_type === "steep") { factors.push("Steep terrain"); multiplier *= 0.85; }
   if (road.surface_type === "gravel" || road.surface_type === "earthen") {
-    factors.push("Unpaved surface");
-    multiplier *= 0.75;
+    factors.push("Unpaved surface"); multiplier *= 0.75;
   }
-  if (road.tourism_route_flag) {
-    factors.push("Tourism route");
-    multiplier *= 0.9;
-  }
+  if (road.tourism_route_flag) { factors.push("Tourism route"); multiplier *= 0.9; }
+  if (road.potholes_per_km > 15) { factors.push("High potholes (" + road.potholes_per_km + "/km)"); multiplier *= 0.7; }
+  if (road.alligator_cracking_pct > 20) { factors.push("Severe alligator cracking (" + road.alligator_cracking_pct + "%)"); multiplier *= 0.75; }
+  if (road.rutting_depth_mm > 20) { factors.push("Deep rutting (" + road.rutting_depth_mm + "mm)"); multiplier *= 0.8; }
+  if (road.iri_value > 8) { factors.push("Very rough ride (IRI " + road.iri_value + ")"); multiplier *= 0.8; }
 
-  // Distress-based risk
-  if (road.potholes_per_km > 15) {
-    factors.push(`High potholes (${road.potholes_per_km}/km)`);
-    multiplier *= 0.7;
-  }
-  if (road.alligator_cracking_pct > 20) {
-    factors.push(`Severe alligator cracking (${road.alligator_cracking_pct}%)`);
-    multiplier *= 0.75;
-  }
-  if (road.rutting_depth_mm > 20) {
-    factors.push(`Deep rutting (${road.rutting_depth_mm}mm)`);
-    multiplier *= 0.8;
-  }
-  if (road.iri_value > 8) {
-    factors.push(`Very rough ride (IRI ${road.iri_value})`);
-    multiplier *= 0.8;
-  }
-
-  // Age-based risk
   const age = 2026 - road.year_constructed;
-  const lifespan = { concrete: 30, bitumen: 20, gravel: 12, earthen: 8 }[road.surface_type] || 15;
-  if (age > lifespan * 0.8) {
-    factors.push("Near end of design life");
-    multiplier *= 0.75;
-  }
+  const lifespan = ({ concrete: 30, bitumen: 20, gravel: 12, earthen: 8 } as Record<string,number>)[road.surface_type] || 15;
+  if (age > lifespan * 0.8) { factors.push("Near end of design life"); multiplier *= 0.75; }
 
-  // Health score risk
-  if (road.healthScore.conditionScore < 25) {
-    factors.push("Critical health score");
-    multiplier *= 0.6;
-  } else if (road.healthScore.conditionScore < 40) {
-    factors.push("Poor health score");
-    multiplier *= 0.8;
-  }
+  const cibil = road.healthScore.finalCibilScore;
+  if (cibil < 25) { factors.push("Critical CIBIL score"); multiplier *= 0.6; }
+  else if (cibil < 40) { factors.push("Poor CIBIL score"); multiplier *= 0.8; }
 
   return { factors, multiplier: Math.max(multiplier, 0.15) };
 }
@@ -147,14 +195,12 @@ function computeRiskFactors(road: RoadWithScore): { factors: string[]; multiplie
 
 export function getMonsoonMultiplier(road: RoadWithScore, monsoonMode: boolean): number {
   if (!monsoonMode) return 1.0;
-
   let mult = 1.0;
   if (road.monsoon_rainfall_category === "high") mult *= 0.65;
   if (road.flood_prone) mult *= 0.75;
   if (road.landslide_prone) mult *= 0.7;
   if (road.ghat_section_flag) mult *= 0.75;
   if (road.region_type === "coastal") mult *= 0.85;
-
   return Math.max(mult, 0.3);
 }
 
@@ -166,29 +212,28 @@ function computeDecayRate(inspections: InspectionRecord[]): { rate: number; tren
   const sorted = [...inspections].sort(
     (a, b) => new Date(a.inspection_date).getTime() - new Date(b.inspection_date).getTime()
   );
-
   const first = sorted[0];
   const last = sorted[sorted.length - 1];
-  const daysBetween = (new Date(last.inspection_date).getTime() - new Date(first.inspection_date).getTime()) / (1000 * 60 * 60 * 24);
-
+  const daysBetween =
+    (new Date(last.inspection_date).getTime() - new Date(first.inspection_date).getTime()) /
+    (1000 * 60 * 60 * 24);
   if (daysBetween <= 0) return { rate: 0, trend: "stable" };
-
   const rate = Math.max(0, (first.condition_score - last.condition_score) / daysBetween);
 
-  // Trend: compare first-half decay vs second-half decay
   const mid = Math.floor(sorted.length / 2);
   if (mid > 0 && sorted.length > 2) {
     const midInsp = sorted[mid];
-    const firstHalfDays = (new Date(midInsp.inspection_date).getTime() - new Date(first.inspection_date).getTime()) / (1000 * 60 * 60 * 24);
-    const secondHalfDays = (new Date(last.inspection_date).getTime() - new Date(midInsp.inspection_date).getTime()) / (1000 * 60 * 60 * 24);
-
+    const firstHalfDays =
+      (new Date(midInsp.inspection_date).getTime() - new Date(first.inspection_date).getTime()) /
+      (1000 * 60 * 60 * 24);
+    const secondHalfDays =
+      (new Date(last.inspection_date).getTime() - new Date(midInsp.inspection_date).getTime()) /
+      (1000 * 60 * 60 * 24);
     const firstHalfRate = firstHalfDays > 0 ? (first.condition_score - midInsp.condition_score) / firstHalfDays : 0;
     const secondHalfRate = secondHalfDays > 0 ? (midInsp.condition_score - last.condition_score) / secondHalfDays : 0;
-
     if (secondHalfRate > firstHalfRate * 1.3) return { rate, trend: "accelerating" };
     if (secondHalfRate < firstHalfRate * 0.7) return { rate, trend: "improving" };
   }
-
   return { rate, trend: "stable" };
 }
 
@@ -205,51 +250,22 @@ function computeDistressSeverity(road: RoadWithScore): number {
     (road.raveling_pct / 50) * 7 +
     (road.edge_breaking_pct / 50) * 5 +
     (road.patches_per_km / 25) * 5;
-
   return Math.min(100, Math.round(score * 10) / 10);
 }
-
-// ─── Action & Priority ─────────────────────────────────────────
 
 function getLastInspection(inspections: InspectionRecord[]): InspectionRecord | null {
   if (!inspections.length) return null;
-  return inspections.reduce((latest, insp) => {
-    return new Date(insp.inspection_date) > new Date(latest.inspection_date) ? insp : latest;
-  });
-}
-
-function determineAction(band: Band, overdue: boolean, overdueDays: number, conditionScore: number, distressSeverity: number): ActionType {
-  if (band === "E" || (overdue && overdueDays > 30 && conditionScore < 25)) return "emergency_repair";
-  if (band === "D" || (overdue && overdueDays > 15) || distressSeverity > 70) return "urgent_inspection";
-  if (overdue || distressSeverity > 50) return "routine_inspection";
-  if (band === "B" || band === "C") return "preventive_maintenance";
-  return "monitoring_only";
-}
-
-function computePriorityScore(
-  band: Band,
-  overdueDays: number,
-  conditionScore: number,
-  riskFactorCount: number,
-  traffic: number,
-  decayRate: number,
-  distressSeverity: number,
-): number {
-  const bandWeights: Record<Band, number> = { E: 30, D: 24, C: 18, B: 12, A: 6, "A+": 0 };
-  let score = bandWeights[band];
-
-  score += Math.min(25, Math.max(0, overdueDays) * 0.5);
-  score += Math.max(0, (50 - conditionScore) * 0.3);
-  score += Math.min(10, riskFactorCount * 2.5);
-  score += Math.min(8, (traffic / 50000) * 8);
-  score += Math.min(12, decayRate * 200);
-  score += Math.min(15, distressSeverity * 0.15);
-
-  return Math.min(100, Math.round(score * 10) / 10);
+  return inspections.reduce((latest, insp) =>
+    new Date(insp.inspection_date) > new Date(latest.inspection_date) ? insp : latest
+  );
 }
 
 function assignAgency(road: RoadWithScore, action: ActionType): string {
-  if (action === "emergency_repair" || action === "urgent_inspection") {
+  if (action === "emergency_reconstruction" || action === "emergency_overlay") {
+    if (road.jurisdiction === "NHAI") return "NHAI Emergency Cell";
+    return "State PWD Emergency Response";
+  }
+  if (action === "priority_structural_repair") {
     if (road.jurisdiction === "NHAI") return "NHAI";
     return "State PWD";
   }
@@ -261,35 +277,44 @@ function assignAgency(road: RoadWithScore, action: ActionType): string {
 
 function getQuarterLabel(date: Date): string {
   const q = Math.ceil((date.getMonth() + 1) / 3);
-  return `Q${q}-${date.getFullYear()}`;
+  return "Q" + q + "-" + date.getFullYear();
 }
 
-// ─── Main Scheduler ────────────────────────────────────────────
+// ─── Main CIBIL-Driven Scheduler ─────────────────────────────
 
 export function generateInspectionSchedule(
   roads: RoadWithScore[],
   monsoonMode = false,
 ): ScheduledInspection[] {
   return roads.map((road) => {
+    const hs = road.healthScore;
+    const finalCibilScore = hs.finalCibilScore;
+    const conditionCategory = hs.conditionCategory;
+    const pdi = hs.pdi;
+    const pseudoCibil = hs.pseudoCibil;
+    const mlPredictedCibil = hs.mlPredictedCibil;
+
+    const trendAlert = computeTrendAlert(pseudoCibil, mlPredictedCibil);
+    const { factors, multiplier } = computeRiskFactors(road);
+    const monsoonMult = getMonsoonMultiplier(road, monsoonMode);
+    const { rate: decayRate, trend: decayTrend } = computeDecayRate(road.inspections);
+    const distressSeverity = computeDistressSeverity(road);
+
+    const cibilBaseDays = getCibilBaseDueDays(finalCibilScore);
+    const decayMultiplier = decayRate > 0.08 ? 0.7 : decayRate > 0.04 ? 0.85 : 1.0;
+    const adjustedInterval = Math.max(3, Math.round(cibilBaseDays * multiplier * monsoonMult * decayMultiplier));
+
     const lastInsp = getLastInspection(road.inspections);
     const lastDate = lastInsp ? new Date(lastInsp.inspection_date) : null;
 
-    const baseInterval = getInspectionInterval(road.healthScore.band);
-    const { factors, multiplier } = computeRiskFactors(road);
-    const monsoonMult = getMonsoonMultiplier(road, monsoonMode);
-    const adjustedInterval = Math.max(3, Math.round(baseInterval * multiplier * monsoonMult));
-
-    const { rate: decayRate, trend: decayTrend } = computeDecayRate(road.inspections);
-
-    // If decay is fast, further reduce interval
-    const decayMultiplier = decayRate > 0.08 ? 0.7 : decayRate > 0.04 ? 0.85 : 1.0;
-    const finalInterval = Math.max(3, Math.round(adjustedInterval * decayMultiplier));
-
     let nextDue: Date;
     if (lastDate) {
-      nextDue = new Date(lastDate.getTime() + finalInterval * 24 * 60 * 60 * 1000);
+      nextDue = new Date(lastDate.getTime() + adjustedInterval * 24 * 60 * 60 * 1000);
     } else {
-      nextDue = new Date(TODAY.getTime() - 7 * 24 * 60 * 60 * 1000);
+      // No inspection history — due date is based on road age + CIBIL tier
+      // Critical roads (low CIBIL) are due very soon; good roads are due later
+      const neverInspectedDays = Math.round(cibilBaseDays * 0.5 * multiplier * monsoonMult);
+      nextDue = new Date(TODAY.getTime() + Math.max(1, neverInspectedDays) * 24 * 60 * 60 * 1000);
     }
 
     const diffMs = nextDue.getTime() - TODAY.getTime();
@@ -297,35 +322,24 @@ export function generateInspectionSchedule(
     const isOverdue = daysUntilDue < 0;
     const overdueDays = isOverdue ? Math.abs(daysUntilDue) : 0;
 
-    const distressSeverity = computeDistressSeverity(road);
+    const priority = cibilToPriority(finalCibilScore, isOverdue, overdueDays);
+    const action = getCibilActionType(finalCibilScore, pdi, {
+      flood: road.flood_prone,
+      landslide: road.landslide_prone,
+      ghat: road.ghat_section_flag,
+    });
 
-    const priorityScore = computePriorityScore(
-      road.healthScore.band,
-      overdueDays,
-      road.healthScore.conditionScore,
-      factors.length,
-      road.avg_daily_traffic,
-      decayRate,
-      distressSeverity,
-    );
-
-    let priority: InspectionPriority;
-    if (priorityScore >= 60) priority = "critical";
-    else if (priorityScore >= 40) priority = "high";
-    else if (priorityScore >= 20) priority = "medium";
-    else priority = "low";
-
-    const action = determineAction(
-      road.healthScore.band, isOverdue, overdueDays,
-      road.healthScore.conditionScore, distressSeverity,
+    const priorityScore = computeCibilPriorityScore(
+      finalCibilScore, overdueDays, factors.length, road.avg_daily_traffic,
+      decayRate, distressSeverity, pdi, trendAlert,
     );
 
     return {
       road,
       lastInspection: lastInsp,
       lastInspectionDate: lastDate,
-      baseIntervalDays: baseInterval,
-      adjustedIntervalDays: finalInterval,
+      baseIntervalDays: cibilBaseDays,
+      adjustedIntervalDays: adjustedInterval,
       nextDueDate: nextDue,
       daysUntilDue,
       isOverdue,
@@ -334,12 +348,19 @@ export function generateInspectionSchedule(
       priorityScore,
       action,
       riskFactors: factors,
-      estimatedCostLakhs: estimateRepairCost(road),
+      estimatedCostLakhs: estimateRepairCost(road, conditionCategory),
       assignedAgency: assignAgency(road, action),
       quarterLabel: getQuarterLabel(nextDue),
       decayRate,
       decayTrend,
       distressSeverity,
+      finalCibilScore,
+      conditionCategory,
+      pdi,
+      pseudoCibil,
+      mlPredictedCibil,
+      trendAlert,
+      cibilDrivenDueDays: cibilBaseDays,
       isScheduled: false,
       scheduledDate: null,
       scheduledAgency: null,
@@ -352,15 +373,16 @@ export function generateInspectionSchedule(
 
 export function computeScheduleSummary(schedule: ScheduledInspection[]): ScheduleSummary {
   const byAction: Record<ActionType, number> = {
-    emergency_repair: 0, urgent_inspection: 0,
-    routine_inspection: 0, preventive_maintenance: 0, monitoring_only: 0,
+    emergency_reconstruction: 0, emergency_overlay: 0,
+    priority_structural_repair: 0, structural_overlay: 0, major_repair: 0,
+    preventive_risk_mitigation: 0, preventive_maintenance: 0, routine_patching: 0, monitoring_only: 0,
   };
+  const byCondition: Record<string, number> = { Critical: 0, Poor: 0, Fair: 0, Good: 0 };
   const byQuarter: Record<string, number> = {};
   const byAgency: Record<string, number> = {};
-
   let overdue = 0, dueSoon = 0, dueThisWeek = 0;
   let critical = 0, high = 0, medium = 0, low = 0;
-  let totalCost = 0, totalDecay = 0;
+  let totalCost = 0, totalDecay = 0, totalCibil = 0;
 
   for (const item of schedule) {
     if (item.isOverdue) overdue++;
@@ -370,10 +392,11 @@ export function computeScheduleSummary(schedule: ScheduledInspection[]): Schedul
     else if (item.priority === "high") high++;
     else if (item.priority === "medium") medium++;
     else low++;
-
     totalCost += item.estimatedCostLakhs;
     totalDecay += item.decayRate;
+    totalCibil += item.finalCibilScore;
     byAction[item.action]++;
+    byCondition[item.conditionCategory] = (byCondition[item.conditionCategory] || 0) + 1;
     byQuarter[item.quarterLabel] = (byQuarter[item.quarterLabel] || 0) + 1;
     byAgency[item.assignedAgency] = (byAgency[item.assignedAgency] || 0) + 1;
   }
@@ -384,7 +407,8 @@ export function computeScheduleSummary(schedule: ScheduledInspection[]): Schedul
     critical, high, medium, low,
     totalEstimatedCost: totalCost,
     avgDecayRate: schedule.length > 0 ? Math.round((totalDecay / schedule.length) * 1000) / 1000 : 0,
-    byAction, byQuarter, byAgency,
+    avgCibilScore: schedule.length > 0 ? Math.round((totalCibil / schedule.length) * 10) / 10 : 0,
+    byAction, byCondition, byQuarter, byAgency,
   };
 }
 
@@ -399,12 +423,11 @@ export function recalculateAfterInspection(
   newRemarks: string,
   agency: string,
 ): { updatedRoad: RoadWithScore; oldScore: number; newHealthScore: number; oldBand: Band; newBand: Band } {
-  const oldScore = road.healthScore.conditionScore;
+  const oldScore = road.healthScore.finalCibilScore;
   const oldBand = road.healthScore.band;
 
-  // Create a new inspection record
   const newInspection: InspectionRecord = {
-    inspection_id: `INSP-NEW-${Date.now()}`,
+    inspection_id: "INSP-NEW-" + Date.now(),
     road_id: road.road_id,
     inspection_date: TODAY.toISOString().split("T")[0],
     inspector_agency: agency,
@@ -415,26 +438,40 @@ export function recalculateAfterInspection(
     remarks: newRemarks,
   };
 
-  // Update road's PCI score based on new condition
   const updatedRoadRecord = {
     ...road,
     pci_score: newScore,
     inspections: [...road.inspections, newInspection],
   };
 
-  // Recompute health score
-  const newHealthScoreObj = computeHealthScore(updatedRoadRecord);
+  const getBandFromScore = (s: number): Band => {
+    if (s >= 90) return "A+";
+    if (s >= 75) return "A";
+    if (s >= 60) return "B";
+    if (s >= 45) return "C";
+    if (s >= 30) return "D";
+    return "E";
+  };
+
+  const newBand = getBandFromScore(newScore);
+  const newConditionCategory =
+    newScore >= 80 ? "Good" : newScore >= 60 ? "Fair" : newScore >= 40 ? "Poor" : "Critical";
+
+  const newHealthScoreObj = {
+    ...road.healthScore,
+    finalCibilScore: newScore,
+    conditionScore: newScore,
+    rating: newScore * 10,
+    band: newBand,
+    conditionCategory: newConditionCategory,
+    pseudoCibil: newScore,
+    mlPredictedCibil: newScore,
+  };
 
   const updatedRoad: RoadWithScore = {
     ...updatedRoadRecord,
     healthScore: newHealthScoreObj,
   };
 
-  return {
-    updatedRoad,
-    oldScore,
-    newHealthScore: newHealthScoreObj.conditionScore,
-    oldBand,
-    newBand: newHealthScoreObj.band,
-  };
+  return { updatedRoad, oldScore, newHealthScore: newHealthScoreObj.finalCibilScore, oldBand, newBand };
 }

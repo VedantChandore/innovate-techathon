@@ -1,9 +1,9 @@
 import Papa from "papaparse";
 import { RoadRecord, InspectionRecord, RoadWithScore } from "./types";
-import { computeHealthScore } from "./scoring";
+import { fallbackScore } from "./scoring";
 
 function parseBool(val: string): boolean {
-  return val === "TRUE" || val === "true" || val === "True" || val === "1";
+  return val === "TRUE" || val === "true" || val === "1";
 }
 
 function parseNum(val: string): number {
@@ -26,22 +26,21 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
   const registryText = await registryRes.text();
   const inspectionText = await inspectionRes.text();
 
-  // Parse road registry (ultimate_dataset.csv)
+  // Parse road registry
   const registryResult = Papa.parse(registryText, { header: true, skipEmptyLines: true });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roads: RoadRecord[] = registryResult.data.map((row: any) => ({
     // Identity
-    road_id: (row.road_id || "").trim(),
-    name: (row.name || "").trim(),
-    geojson_id: (row.geojson_id || "").trim(),
-    highway_ref: (row.highway_ref || "").trim(),
+    road_id: row.road_id || "",
+    name: row.name || "",
+    geojson_id: row.geojson_id || "",
+    highway_ref: row.highway_ref || row.nh_number || "",
     segment_number: parseNum(row.segment_number),
-    highway_type: (row.highway_type || "").trim(),
-    oneway: (row.oneway || "").trim(),
-    lanes: (row.lanes || "").trim(),
-    maxspeed: (row.maxspeed || "").trim(),
+    highway_type: row.highway_type || "secondary",
+    oneway: row.oneway || "no",
+    lanes: row.lanes || "2",
+    maxspeed: row.maxspeed || "60",
     condition: (row.condition || "average") as RoadRecord["condition"],
-
     // Geometry
     start_lat: parseNum(row.start_lat),
     start_lon: parseNum(row.start_lon),
@@ -49,38 +48,34 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
     end_lon: parseNum(row.end_lon),
     segment_start_km: parseNum(row.segment_start_km),
     segment_end_km: parseNum(row.segment_end_km),
-
     // Admin
-    jurisdiction: (row.jurisdiction || "").trim(),
-    category: (row.category || "").trim(),
+    jurisdiction: row.jurisdiction || "",
+    category: row.category || "",
     length_km: parseNum(row.length_km),
     lane_count: parseNum(row.lane_count),
     surface_type: (row.surface_type || "bitumen") as RoadRecord["surface_type"],
     year_constructed: parseNum(row.year_constructed),
     last_major_rehab_year: parseNullNum(row.last_major_rehab_year),
-    status: (row.status || "active").trim(),
-
+    status: row.status || "active",
     // Geography
-    state: (row.state || "Maharashtra").trim(),
-    district: (row.district || "").trim(),
-    taluka: (row.taluka || "").trim(),
-    region_type: (row.region_type || "").trim(),
-    terrain_type: (row.terrain_type || "plain").trim(),
-    slope_category: (row.slope_category || "flat").trim(),
+    state: row.state || "Maharashtra",
+    district: row.district || "",
+    taluka: row.taluka || "",
+    region_type: row.region_type || "",
+    terrain_type: row.terrain_type || "plain",
+    slope_category: row.slope_category || "flat",
     monsoon_rainfall_category: (row.monsoon_rainfall_category || "medium") as RoadRecord["monsoon_rainfall_category"],
     landslide_prone: parseBool(row.landslide_prone),
     flood_prone: parseBool(row.flood_prone),
     ghat_section_flag: parseBool(row.ghat_section_flag),
     tourism_route_flag: parseBool(row.tourism_route_flag),
     elevation_m: parseNum(row.elevation_m),
-
     // Traffic
     avg_daily_traffic: parseNum(row.avg_daily_traffic),
     truck_percentage: parseNum(row.truck_percentage),
     peak_hour_traffic: parseNum(row.peak_hour_traffic),
     traffic_weight: parseNum(row.traffic_weight),
     seasonal_variation: row.seasonal_variation || "",
-
     // Distress metrics
     potholes_per_km: parseNum(row.potholes_per_km),
     pothole_avg_depth_cm: parseNum(row.pothole_avg_depth_cm),
@@ -91,10 +86,9 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
     raveling_pct: parseNum(row.raveling_pct),
     edge_breaking_pct: parseNum(row.edge_breaking_pct),
     patches_per_km: parseNum(row.patches_per_km),
-
-    // Measured scores
-    iri_value: parseNum(row.iri_value),
-    pci_score: parseNum(row.pci_score),
+    // Measured condition
+    iri_value: parseNum(row.iri_value) || 3,
+    pci_score: parseNum(row.pci_score) || 60,
   }));
 
   // Parse inspection history
@@ -120,10 +114,12 @@ export async function loadRoadRegistry(): Promise<RoadWithScore[]> {
     inspectionMap.set(insp.road_id, existing);
   });
 
-  // Compute scores and attach inspections
+  // Score all roads instantly using deterministic fallback formula.
+  // The ML API (scoreRoad) is reserved for single-road detail views —
+  // calling it 16k times would take ~50 minutes.
   const roadsWithScores: RoadWithScore[] = roads.map((road) => ({
     ...road,
-    healthScore: computeHealthScore(road),
+    healthScore: fallbackScore(road),
     inspections: inspectionMap.get(road.road_id) || [],
   }));
 

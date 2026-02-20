@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { RoadRecord, RoadWithScore } from "@/lib/types";
-import { computeHealthScore } from "@/lib/scoring";
+import { scoreRoad } from "@/lib/scoring";
 import { X } from "lucide-react";
 
 interface AddRoadModalProps {
@@ -12,7 +12,7 @@ interface AddRoadModalProps {
 
 interface FormData {
   name: string;
-  highway_ref: string;
+  nh_number: string;
   segment_start_km: string;
   segment_end_km: string;
   jurisdiction: string;
@@ -35,11 +35,12 @@ interface FormData {
   elevation_m: string;
   avg_daily_traffic: string;
   truck_percentage: string;
+  notes: string;
 }
 
 const INITIAL: FormData = {
   name: "",
-  highway_ref: "",
+  nh_number: "",
   segment_start_km: "",
   segment_end_km: "",
   jurisdiction: "State PWD",
@@ -62,6 +63,7 @@ const INITIAL: FormData = {
   elevation_m: "",
   avg_daily_traffic: "",
   truck_percentage: "",
+  notes: "",
 };
 
 export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
@@ -83,8 +85,11 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (!validate()) return;
+    setSubmitting(true);
 
     const startKm = parseFloat(form.segment_start_km);
     const endKm = parseFloat(form.segment_end_km);
@@ -95,20 +100,23 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
     const road: RoadRecord = {
       road_id: newId,
       name: form.name,
-      geojson_id: "",
-      highway_ref: form.highway_ref || "N/A",
+      highway_ref: form.nh_number || "N/A",
+      // Identity defaults for newly added roads
+      geojson_id: newId,
       segment_number: 0,
-      highway_type: "secondary",
+      highway_type: "primary",
       oneway: "no",
-      lanes: form.lane_count,
-      maxspeed: "80",
+      lanes: String(parseInt(form.lane_count) || 2),
+      maxspeed: "60",
       condition: "average",
+      // Geometry (unknown for manually added roads)
       start_lat: 0,
       start_lon: 0,
       end_lat: 0,
       end_lon: 0,
       segment_start_km: startKm,
       segment_end_km: endKm,
+      // Admin
       jurisdiction: form.jurisdiction,
       category: form.category,
       length_km: lengthKm > 0 ? lengthKm : 1,
@@ -119,12 +127,13 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
         ? parseInt(form.last_major_rehab_year)
         : null,
       status: form.status as RoadRecord["status"],
+      // Geography
       state: "Maharashtra",
       district: form.district,
       taluka: form.taluka || form.district,
       region_type: form.region_type,
-      terrain_type: form.terrain_type,
-      slope_category: form.slope_category,
+      terrain_type: form.terrain_type as RoadRecord["terrain_type"],
+      slope_category: form.slope_category as RoadRecord["slope_category"],
       monsoon_rainfall_category:
         form.monsoon_rainfall_category as RoadRecord["monsoon_rainfall_category"],
       landslide_prone: form.landslide_prone,
@@ -132,11 +141,13 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
       ghat_section_flag: form.ghat_section_flag,
       tourism_route_flag: form.tourism_route_flag,
       elevation_m: parseFloat(form.elevation_m) || 100,
+      // Traffic
       avg_daily_traffic: parseInt(form.avg_daily_traffic) || 0,
       truck_percentage: parseFloat(form.truck_percentage) || 15,
       peak_hour_traffic: Math.round((parseInt(form.avg_daily_traffic) || 0) * 0.1),
       traffic_weight: 1,
       seasonal_variation: "",
+      // Distress metrics — default to zero for new roads
       potholes_per_km: 0,
       pothole_avg_depth_cm: 0,
       cracks_longitudinal_pct: 0,
@@ -146,16 +157,19 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
       raveling_pct: 0,
       edge_breaking_pct: 0,
       patches_per_km: 0,
-      iri_value: 3,
+      // Condition scores — defaults (will be overridden by scoreRoad)
+      iri_value: 2.5,
       pci_score: 70,
     };
 
+    const healthScore = await scoreRoad(road);
     const roadWithScore: RoadWithScore = {
       ...road,
-      healthScore: computeHealthScore(road),
+      healthScore,
       inspections: [],
     };
 
+    setSubmitting(false);
     onAdd(roadWithScore);
   };
 
@@ -196,11 +210,11 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
                   className={inputClass(errors.name)}
                 />
               </Field>
-              <Field label="Highway Ref">
+              <Field label="NH Number">
                 <input
                   type="text"
-                  value={form.highway_ref}
-                  onChange={(e) => set("highway_ref", e.target.value)}
+                  value={form.nh_number}
+                  onChange={(e) => set("nh_number", e.target.value)}
                   placeholder="e.g. NH48"
                   className={inputClass()}
                 />
@@ -377,8 +391,17 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
             </div>
           </Section>
 
-          {/* Notes removed — no longer in RoadRecord */}
-          </div>
+          {/* Notes */}
+          <Section title="Additional Notes">
+            <textarea
+              value={form.notes}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="Any additional information about this road segment..."
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
+            />
+          </Section>
+        </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
@@ -390,9 +413,10 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
           </button>
           <button
             onClick={handleSubmit}
-            className="px-5 h-9 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm shadow-blue-600/20 transition"
+            disabled={submitting}
+            className="px-5 h-9 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm shadow-blue-600/20 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Add Road Segment
+            {submitting ? "Scoring…" : "Add Road Segment"}
           </button>
         </div>
       </div>

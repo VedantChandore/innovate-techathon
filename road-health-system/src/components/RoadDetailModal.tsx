@@ -1,7 +1,8 @@
 "use client";
 
-import { RoadWithScore, Band } from "@/lib/types";
-import { estimateRepairCost, getInspectionInterval } from "@/lib/scoring";
+import { useEffect, useState } from "react";
+import { RoadWithScore, HealthScore, Band } from "@/lib/types";
+import { estimateRepairCost, getInspectionInterval, scoreRoad } from "@/lib/scoring";
 import {
   X,
   MapPin,
@@ -31,11 +32,23 @@ const BAND_COLORS: Record<Band, string> = {
 };
 
 export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps) {
-  const repairCost = estimateRepairCost(road);
-  const inspDays = getInspectionInterval(road.healthScore.band);
+  // Start with fallback score from bulk load; silently upgrade to ML score in background
+  const [liveScore, setLiveScore] = useState<HealthScore>(road.healthScore);
+  const [mlLoading, setMlLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    scoreRoad(road).then((score) => {
+      if (!cancelled) { setLiveScore(score); setMlLoading(false); }
+    });
+    return () => { cancelled = true; };
+  }, [road.road_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const repairCost = estimateRepairCost(road, liveScore.conditionCategory);
+  const inspDays = getInspectionInterval(liveScore.band);
   const roadAge = 2026 - road.year_constructed;
-  const { PCI, IRI, DISTRESS, RSL, DRN } = road.healthScore.parameters;
-  const bandColor = BAND_COLORS[road.healthScore.band];
+  const { PCI, IRI, DISTRESS, RSL, DRN } = liveScore.parameters;
+  const bandColor = BAND_COLORS[liveScore.band];
 
   const paramInfo = [
     { key: "PCI", label: "Pavement Condition", value: PCI, weight: "30%" },
@@ -84,32 +97,44 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
           <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Health Rating</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                  Health Rating
+                  {mlLoading && (
+                    <span className="inline-flex items-center gap-1 text-[9px] text-blue-500 font-medium animate-pulse">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />ML scoring…
+                    </span>
+                  )}
+                  {!mlLoading && liveScore.modelVersion !== "fallback" && (
+                    <span className="inline-flex items-center gap-1 text-[9px] text-emerald-600 font-medium">
+                      ✓ ML v{liveScore.modelVersion}
+                    </span>
+                  )}
+                </p>
                 <div className="flex items-baseline gap-1.5 mt-0.5">
                   <span className="text-3xl font-extrabold tabular-nums" style={{ color: bandColor }}>
-                    {road.healthScore.rating}
+                    {liveScore.rating}
                   </span>
                   <span className="text-sm text-gray-400 font-medium">/ 1000</span>
                 </div>
                 <p className="text-xs font-medium mt-0.5" style={{ color: bandColor }}>
-                  {road.healthScore.bandLabel}
+                  {liveScore.bandLabel}
                 </p>
               </div>
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shadow-sm"
                 style={{ background: bandColor }}
               >
-                {road.healthScore.band}
+                {liveScore.band}
               </div>
             </div>
 
             {/* Score gradient bar */}
             <div className="mt-3">
-              <div className="h-2 rounded-full bg-gradient-to-r from-red-800 via-red-500 via-orange-400 via-yellow-400 via-green-400 to-emerald-600 relative">
+              <div className="h-2 rounded-full relative" style={{ background: "linear-gradient(to right, #991b1b, #ef4444, #f97316, #eab308, #22c55e, #059669)" }}>
                 <div
                   className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 shadow-md"
                   style={{
-                    left: `${(road.healthScore.rating / 1000) * 100}%`,
+                    left: `${(liveScore.rating / 1000) * 100}%`,
                     borderColor: bandColor,
                     transform: "translate(-50%, -50%)",
                   }}
@@ -165,7 +190,7 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
               <DetailItem icon={<Calendar size={13} />} label="Constructed" value={String(road.year_constructed)} sub={`${roadAge} yrs old`} />
               <DetailItem icon={<Wrench size={13} />} label="Last Rehab" value={road.last_major_rehab_year ? String(road.last_major_rehab_year) : "Never"} sub={road.last_major_rehab_year ? `${2026 - road.last_major_rehab_year} yrs ago` : "—"} />
               <DetailItem icon={<Truck size={13} />} label="ADT" value={road.avg_daily_traffic.toLocaleString()} sub={`${road.truck_percentage}% trucks`} />
-              <DetailItem icon={<Clock size={13} />} label="Inspection" value={`Every ${inspDays}d`} sub={`Band ${road.healthScore.band}`} />
+              <DetailItem icon={<Clock size={13} />} label="Inspection" value={`Every ${inspDays}d`} sub={`Band ${liveScore.band}`} />
               <DetailItem icon={<IndianRupee size={13} />} label="Repair Cost" value={`₹${repairCost} L`} sub={road.surface_type} />
               <DetailItem icon={<MapPin size={13} />} label="Elevation" value={`${road.elevation_m}m`} sub={road.terrain_type} />
             </div>

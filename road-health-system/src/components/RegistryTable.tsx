@@ -101,8 +101,8 @@ export default function RegistryTable({ roads }: RegistryTableProps) {
     copy.sort((a, b) => {
       let va: string | number, vb: string | number;
       if (sortKey === "conditionScore") {
-        va = a.healthScore.conditionScore;
-        vb = b.healthScore.conditionScore;
+        va = a.healthScore.finalCibilScore;
+        vb = b.healthScore.finalCibilScore;
       } else if (sortKey === "band") {
         const order = { "A+": 6, A: 5, B: 4, C: 3, D: 2, E: 1 };
         va = order[a.healthScore.band] || 0;
@@ -155,7 +155,7 @@ export default function RegistryTable({ roads }: RegistryTableProps) {
     let critical = 0;
     roads.forEach((r) => {
       bandCounts[r.healthScore.band]++;
-      totalScore += r.healthScore.conditionScore;
+      totalScore += r.healthScore.finalCibilScore;
       if (r.healthScore.band === "D" || r.healthScore.band === "E") critical++;
     });
     return {
@@ -326,7 +326,7 @@ export default function RegistryTable({ roads }: RegistryTableProps) {
                   <ThSort label="Built" col="year_constructed" sortKey={sortKey} onSort={toggleSort} icon={<SortIcon col="year_constructed" />} />
                   <ThSort label="Jurisdiction" col="jurisdiction" sortKey={sortKey} onSort={toggleSort} icon={<SortIcon col="jurisdiction" />} />
                   <ThSort label="Band" col="band" sortKey={sortKey} onSort={toggleSort} icon={<SortIcon col="band" />} />
-                  <ThSort label="Score" col="conditionScore" sortKey={sortKey} onSort={toggleSort} icon={<SortIcon col="conditionScore" />} />
+                  <ThSort label="CIBIL Score" col="conditionScore" sortKey={sortKey} onSort={toggleSort} icon={<SortIcon col="conditionScore" />} />
                   <th className="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-slate-50 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 text-left border-b-2 border-gray-200/80">
                     Status
                   </th>
@@ -341,7 +341,8 @@ export default function RegistryTable({ roads }: RegistryTableProps) {
               <tbody>
                 {paginated.map((road, i) => {
                   const band = road.healthScore.band;
-                  const score = road.healthScore.conditionScore;
+                  const score = road.healthScore.finalCibilScore;
+                  const conditionCategory = road.healthScore.conditionCategory;
                   const surf = SURFACE_STYLES[road.surface_type] || {
                     bg: "#f3f4f6",
                     text: "#6b7280",
@@ -413,21 +414,28 @@ export default function RegistryTable({ roads }: RegistryTableProps) {
                           </span>
                         </td>
                         <td className="px-3 py-2.5 border-b border-gray-50">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 rounded-full bg-gray-100 overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${score}%`,
-                                  background: `linear-gradient(90deg, ${BAND_COLORS[band]}cc, ${BAND_COLORS[band]})`,
-                                }}
-                              />
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-14 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{
+                                    width: `${score}%`,
+                                    background: `linear-gradient(90deg, ${BAND_COLORS[band]}cc, ${BAND_COLORS[band]})`,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-[13px] font-extrabold tabular-nums" style={{ color: BAND_COLORS[band] }}>
+                                {score}
+                              </span>
                             </div>
-                            <span
-                              className="text-[12px] font-bold tabular-nums"
-                              style={{ color: BAND_COLORS[band] }}
-                            >
-                              {score}
+                            <span className="text-[10px] font-semibold" style={{
+                              color: conditionCategory === "Good" ? "#15803d"
+                                   : conditionCategory === "Fair" ? "#a16207"
+                                   : conditionCategory === "Poor" ? "#c2410c"
+                                   : "#b91c1c"
+                            }}>
+                              {conditionCategory}
                             </span>
                           </div>
                         </td>
@@ -550,14 +558,23 @@ function RoadCard({
   onClick: () => void;
 }) {
   const band = road.healthScore.band;
-  const score = road.healthScore.conditionScore;
+  const score = road.healthScore.finalCibilScore;
+  const conditionCategory = road.healthScore.conditionCategory;
+  const pdi = Math.round(road.healthScore.pdi);
+  const pseudoCibil = Math.round(road.healthScore.pseudoCibil);
+  const mlCibil = Math.round(road.healthScore.mlPredictedCibil);
   const bandColor = BAND_COLORS[band];
   const surf = SURFACE_STYLES[road.surface_type] || {
-    bg: "#f3f4f6",
-    text: "#6b7280",
-    border: "#d1d5db",
+    bg: "#f3f4f6", text: "#6b7280", border: "#d1d5db",
   };
-  const { PCI, IRI, DISTRESS, RSL, DRN } = road.healthScore.parameters;
+
+  const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
+    Good:     { bg: "#dcfce7", text: "#15803d", border: "#86efac" },
+    Fair:     { bg: "#fef9c3", text: "#a16207", border: "#fde047" },
+    Poor:     { bg: "#ffedd5", text: "#c2410c", border: "#fdba74" },
+    Critical: { bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5" },
+  };
+  const catStyle = categoryColors[conditionCategory] ?? { bg: "#f3f4f6", text: "#6b7280", border: "#d1d5db" };
 
   return (
     <div
@@ -601,14 +618,22 @@ function RoadCard({
           </div>
         </div>
 
-        {/* Score bar */}
+        {/* CIBIL Score + Condition */}
         <div>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-[10px] font-medium text-gray-400">Health Score</span>
-            <span className="text-[13px] font-extrabold tabular-nums" style={{ color: bandColor }}>
-              {score}
-              <span className="text-[10px] text-gray-400 font-normal">/100</span>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Road CIBIL Score</span>
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+              style={{ background: catStyle.bg, color: catStyle.text, borderColor: catStyle.border }}
+            >
+              {conditionCategory}
             </span>
+          </div>
+          <div className="flex items-baseline gap-1.5 mb-1.5">
+            <span className="text-[22px] font-extrabold tabular-nums leading-none" style={{ color: bandColor }}>
+              {score}
+            </span>
+            <span className="text-[11px] text-gray-400 font-normal">/100</span>
           </div>
           <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
             <div
@@ -621,22 +646,22 @@ function RoadCard({
           </div>
         </div>
 
-        {/* Mini params */}
-        <div className="grid grid-cols-5 gap-1">
-          {[
-            { key: "PCI", val: PCI },
-            { key: "IRI", val: IRI },
-            { key: "DST", val: DISTRESS },
-            { key: "RSL", val: RSL },
-            { key: "DRN", val: DRN },
-          ].map((p) => (
-            <div key={p.key} className="text-center">
-              <div className="text-[8px] font-bold text-gray-400 mb-0.5">{p.key}</div>
-              <div className="text-[11px] font-bold tabular-nums" style={{ color: getColor(p.val) }}>
-                {p.val}
-              </div>
+        {/* PDI + Score breakdown */}
+        <div className="grid grid-cols-3 gap-1.5 text-center">
+          <div className="bg-gray-50 rounded-xl py-1.5 px-1">
+            <div className="text-[8px] font-bold text-gray-400 mb-0.5">PDI</div>
+            <div className="text-[12px] font-bold tabular-nums" style={{ color: pdi > 60 ? "#ef4444" : pdi > 30 ? "#f97316" : "#22c55e" }}>
+              {pdi}
             </div>
-          ))}
+          </div>
+          <div className="bg-gray-50 rounded-xl py-1.5 px-1">
+            <div className="text-[8px] font-bold text-gray-400 mb-0.5">PDI-CIBIL</div>
+            <div className="text-[12px] font-bold tabular-nums text-blue-600">{pseudoCibil}</div>
+          </div>
+          <div className="bg-gray-50 rounded-xl py-1.5 px-1">
+            <div className="text-[8px] font-bold text-gray-400 mb-0.5">ML-CIBIL</div>
+            <div className="text-[12px] font-bold tabular-nums text-purple-600">{mlCibil}</div>
+          </div>
         </div>
 
         {/* Details row */}
@@ -677,10 +702,23 @@ function InlineDetailCard({
 }) {
   const band = road.healthScore.band;
   const bandColor = BAND_COLORS[band];
+  const finalCibil = road.healthScore.finalCibilScore;
+  const conditionCategory = road.healthScore.conditionCategory;
+  const pdi = Math.round(road.healthScore.pdi);
+  const pseudoCibil = Math.round(road.healthScore.pseudoCibil);
+  const mlCibil = Math.round(road.healthScore.mlPredictedCibil);
   const { PCI, IRI, DISTRESS, RSL, DRN } = road.healthScore.parameters;
-  const repairCost = estimateRepairCost(road);
+  const repairCost = estimateRepairCost(road, conditionCategory);
   const inspDays = getInspectionInterval(road.healthScore.band);
   const roadAge = 2026 - road.year_constructed;
+
+  const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
+    Good:     { bg: "#dcfce7", text: "#15803d", border: "#86efac" },
+    Fair:     { bg: "#fef9c3", text: "#a16207", border: "#fde047" },
+    Poor:     { bg: "#ffedd5", text: "#c2410c", border: "#fdba74" },
+    Critical: { bg: "#fee2e2", text: "#b91c1c", border: "#fca5a5" },
+  };
+  const catStyle = categoryColors[conditionCategory] ?? { bg: "#f3f4f6", text: "#6b7280", border: "#d1d5db" };
 
   const params = [
     { key: "PCI", label: "Pavement Condition Index", value: PCI, weight: "30%" },
@@ -747,7 +785,9 @@ function InlineDetailCard({
               <Gauge size={13} className="text-blue-600" />
               Health Assessment
             </h4>
-            <div className="flex items-center gap-4 mb-4">
+
+            {/* CIBIL Score + Band + Condition */}
+            <div className="flex items-center gap-4 mb-3">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-sm"
                 style={{ background: bandColor }}
@@ -757,34 +797,58 @@ function InlineDetailCard({
               <div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-extrabold tabular-nums" style={{ color: bandColor }}>
-                    {road.healthScore.rating}
+                    {finalCibil}
                   </span>
-                  <span className="text-sm text-gray-400">/ 1000</span>
+                  <span className="text-sm text-gray-400">/ 100</span>
                 </div>
-                <p className="text-xs font-medium" style={{ color: bandColor }}>
-                  {road.healthScore.bandLabel}
-                </p>
+                <span
+                  className="inline-block text-[11px] font-bold px-2.5 py-0.5 rounded-full border mt-0.5"
+                  style={{ background: catStyle.bg, color: catStyle.text, borderColor: catStyle.border }}
+                >
+                  {conditionCategory}
+                </span>
               </div>
             </div>
 
-            {/* Score gradient bar */}
+            {/* CIBIL bar */}
             <div className="mb-4">
-              <div className="h-2.5 rounded-full bg-gradient-to-r from-red-800 via-red-500 via-orange-400 via-yellow-400 via-green-400 to-emerald-600 relative">
+              <div className="h-2.5 rounded-full relative" style={{ background: "linear-gradient(to right, #991b1b, #ef4444, #f97316, #eab308, #22c55e, #059669)" }}>
                 <div
                   className="absolute top-1/2 w-4 h-4 rounded-full bg-white border-2 shadow-md"
                   style={{
-                    left: `${(road.healthScore.rating / 1000) * 100}%`,
+                    left: `${finalCibil}%`,
                     borderColor: bandColor,
                     transform: "translate(-50%, -50%)",
                   }}
                 />
               </div>
               <div className="flex justify-between text-[9px] text-gray-400 mt-1 px-0.5">
-                <span>E</span><span>D</span><span>C</span><span>B</span><span>A</span><span>A+</span>
+                <span>Critical</span><span>Poor</span><span>Fair</span><span>Good</span>
               </div>
             </div>
 
-            {/* Parameters */}
+            {/* CIBIL score breakdown */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-gray-50 rounded-xl p-2 text-center">
+                <div className="text-[9px] font-bold text-gray-400 mb-0.5">PDI</div>
+                <div className="text-[14px] font-extrabold tabular-nums" style={{ color: pdi > 60 ? "#ef4444" : pdi > 30 ? "#f97316" : "#22c55e" }}>
+                  {pdi}
+                </div>
+                <div className="text-[8px] text-gray-400">Distress Index</div>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-2 text-center">
+                <div className="text-[9px] font-bold text-blue-400 mb-0.5">PDI-CIBIL</div>
+                <div className="text-[14px] font-extrabold tabular-nums text-blue-700">{pseudoCibil}</div>
+                <div className="text-[8px] text-blue-400">0.7× weight</div>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-2 text-center">
+                <div className="text-[9px] font-bold text-purple-400 mb-0.5">ML-CIBIL</div>
+                <div className="text-[14px] font-extrabold tabular-nums text-purple-700">{mlCibil}</div>
+                <div className="text-[8px] text-purple-400">0.3× weight</div>
+              </div>
+            </div>
+
+            {/* Sub-parameters */}
             <div className="space-y-2">
               {params.map((p) => {
                 const c = getColor(p.value);

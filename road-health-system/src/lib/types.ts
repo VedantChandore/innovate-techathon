@@ -82,21 +82,35 @@ export interface InspectionRecord {
 
 // ─── Scoring Types ─────────────────────────────────────────────
 
+/**
+ * ML backend response from POST /score (Road CIBIL API).
+ * All scoring authority lives here — no client-side computation.
+ */
 export interface ConditionParameters {
-  PCI: number;           // Pavement Condition Index (0-100) — from data
-  IRI: number;           // IRI normalized to 0-100 (lower IRI = higher score)
-  DISTRESS: number;      // Distress Index from 9 distress columns (0-100)
-  RSL: number;           // Remaining Structural Life (0-100) — modeled
-  DRN: number;           // Drainage Condition (0-100) — modeled
+  PCI: number;      // Pavement Condition Index (0-100) — from field data
+  IRI: number;      // IRI normalised to 0-100
+  DISTRESS: number; // Weighted distress index (0-100)
+  RSL: number;      // Remaining Structural Life (0-100)
+  DRN: number;      // Drainage Condition (0-100)
 }
 
 export interface HealthScore {
-  parameters: ConditionParameters;
-  conditionScore: number;   // 0-100
-  rating: number;           // 0-1000
-  band: Band;
-  bandLabel: string;
-  bandColor: string;
+  // ── ML hybrid outputs ──────────────────────────────────────
+  finalCibilScore:    number;   // 0-100  Hybrid = 0.7×Pseudo + 0.3×ML
+  conditionCategory:  string;   // "Good" | "Fair" | "Poor" | "Critical"
+  pdi:                number;   // Pavement Distress Index (0-100)
+  pseudoCibil:        number;   // Deterministic PDI-based score
+  mlPredictedCibil:   number;   // RandomForest prediction
+  modelVersion:       string;   // e.g. "v1.0"
+  latencyMs:          number;   // Inference latency
+
+  // ── Derived / display helpers ──────────────────────────────
+  parameters:       ConditionParameters; // kept for UI bar charts
+  conditionScore:   number;   // alias of finalCibilScore  (0-100)
+  rating:           number;   // 0-1000  = conditionScore × 10
+  band:             Band;     // A+ … E
+  bandLabel:        string;   // "Excellent" … "Critical"
+  bandColor:        string;   // hex colour for UI
 }
 
 export type Band = "A+" | "A" | "B" | "C" | "D" | "E";
