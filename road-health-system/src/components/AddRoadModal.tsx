@@ -100,9 +100,23 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
     const road: RoadRecord = {
       road_id: newId,
       name: form.name,
-      nh_number: form.nh_number || "N/A",
+      highway_ref: form.nh_number || "N/A",
+      // Identity defaults for newly added roads
+      geojson_id: newId,
+      segment_number: 0,
+      highway_type: "primary",
+      oneway: "no",
+      lanes: String(parseInt(form.lane_count) || 2),
+      maxspeed: "60",
+      condition: "average",
+      // Geometry (unknown for manually added roads)
+      start_lat: 0,
+      start_lon: 0,
+      end_lat: 0,
+      end_lon: 0,
       segment_start_km: startKm,
       segment_end_km: endKm,
+      // Admin
       jurisdiction: form.jurisdiction,
       category: form.category,
       length_km: lengthKm > 0 ? lengthKm : 1,
@@ -113,8 +127,7 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
         ? parseInt(form.last_major_rehab_year)
         : null,
       status: form.status as RoadRecord["status"],
-      geometry: "",
-      notes: form.notes,
+      // Geography
       state: "Maharashtra",
       district: form.district,
       taluka: form.taluka || form.district,
@@ -128,11 +141,25 @@ export default function AddRoadModal({ onClose, onAdd }: AddRoadModalProps) {
       ghat_section_flag: form.ghat_section_flag,
       tourism_route_flag: form.tourism_route_flag,
       elevation_m: parseFloat(form.elevation_m) || 100,
+      // Traffic
       avg_daily_traffic: parseInt(form.avg_daily_traffic) || 0,
       truck_percentage: parseFloat(form.truck_percentage) || 15,
       peak_hour_traffic: Math.round((parseInt(form.avg_daily_traffic) || 0) * 0.1),
       traffic_weight: 1,
       seasonal_variation: "",
+      // Distress metrics — default to zero for new roads
+      potholes_per_km: 0,
+      pothole_avg_depth_cm: 0,
+      cracks_longitudinal_pct: 0,
+      cracks_transverse_per_km: 0,
+      alligator_cracking_pct: 0,
+      rutting_depth_mm: 0,
+      raveling_pct: 0,
+      edge_breaking_pct: 0,
+      patches_per_km: 0,
+      // Condition scores — defaults (will be overridden by scoreRoad)
+      iri_value: 2.5,
+      pci_score: 70,
     };
 
     const healthScore = await scoreRoad(road);

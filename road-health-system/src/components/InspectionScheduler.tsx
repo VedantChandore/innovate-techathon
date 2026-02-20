@@ -1641,15 +1641,13 @@ export default function InspectionScheduler({ roads }: Props) {
       {toast && <RecalcToast {...toast} onClose={() => setToast(null)} />}
 
       {/* ═══ SUMMARY DASHBOARD ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        <StatCard label="Total Roads" value={summary.total.toLocaleString()} icon={<MapPin size={16} />} color="#2563eb" bg="#eff6ff" />
-        <StatCard label="Overdue" value={summary.overdue.toLocaleString()} sub="Need immediate action" icon={<XCircle size={16} />} color="#dc2626" bg="#fef2f2" />
-        <StatCard label="Due This Week" value={summary.dueThisWeek.toLocaleString()} icon={<Timer size={16} />} color="#ea580c" bg="#fff7ed" />
-        <StatCard label="Critical Roads" value={summary.critical.toLocaleString()} icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
-        <StatCard label="High Priority" value={summary.high.toLocaleString()} icon={<Activity size={16} />} color="#c2410c" bg="#fff7ed" />
-        <StatCard label="Avg CIBIL" value={summary.avgCibilScore.toFixed(0)} sub="Fleet health score" icon={<Gauge size={16} />} color={cibilColor(summary.avgCibilScore)} bg={cibilBg(summary.avgCibilScore)} />
-        <StatCard label="Avg Decay" value={`${summary.avgDecayRate}/d`} sub="Score loss per day" icon={<TrendingDown size={16} />} color="#7c3aed" bg="#f5f3ff" />
-        <StatCard label="Est. Cost" value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard label="Total Roads"    value={summary.total.toLocaleString()}           icon={<MapPin size={16} />}       color="#2563eb" bg="#eff6ff" />
+        <StatCard label="Overdue"        value={summary.overdue.toLocaleString()}          sub="Need immediate action"  icon={<XCircle size={16} />}      color="#dc2626" bg="#fef2f2" />
+        <StatCard label="Due This Week"  value={summary.dueThisWeek.toLocaleString()}      icon={<Timer size={16} />}        color="#ea580c" bg="#fff7ed" />
+        <StatCard label="Avg CIBIL"      value={summary.avgCibilScore.toFixed(0)}          sub="Fleet health score"     icon={<Gauge size={16} />}         color={cibilColor(summary.avgCibilScore)} bg={cibilBg(summary.avgCibilScore)} />
+        <StatCard label="Critical + Poor" value={(( summary.byCondition["Critical"] || 0) + (summary.byCondition["Poor"] || 0)).toLocaleString()} sub="Need intervention" icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
+        <StatCard label="Est. Cost"      value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
       </div>
 
       {/* ═══ CIBIL CONDITION BREAKDOWN ═══ */}

@@ -97,28 +97,23 @@ function cibilToPriority(score: number, isOverdue: boolean, overdueDays: number)
   return "low";
 }
 
-// ─── CIBIL → Action ──────────────────────────────────────────
+// ─── CIBIL → Action (9-tier fine-grained thresholds) ─────────
 
-function cibilToAction(
-  cibilScore: number,
-  conditionCategory: string,
+function getCibilActionType(
+  finalCibilScore: number,
   pdi: number,
-  hasHighRisk: boolean,
-  distressSeverity: number,
+  riskFlags: { flood: boolean; landslide: boolean; ghat: boolean },
 ): ActionType {
-  if (conditionCategory === "Critical" || cibilScore < 20) {
-    return hasHighRisk || distressSeverity > 65 ? "emergency_reconstruction" : "emergency_overlay";
-  }
-  if (conditionCategory === "Poor" || cibilScore < 40) {
-    return pdi < 30 ? "priority_structural_repair" : "structural_overlay";
-  }
-  if (conditionCategory === "Fair" || cibilScore < 60) {
-    return distressSeverity > 40 ? "major_repair" : "preventive_risk_mitigation";
-  }
-  if (cibilScore < 80) {
-    return "preventive_maintenance";
-  }
-  return distressSeverity > 20 ? "routine_patching" : "monitoring_only";
+  const highRisk = riskFlags.flood || riskFlags.landslide || riskFlags.ghat;
+  if (finalCibilScore < 15) return "emergency_reconstruction";
+  if (finalCibilScore < 25) return highRisk ? "emergency_reconstruction" : "emergency_overlay";
+  if (finalCibilScore < 35) return pdi < 25 ? "priority_structural_repair" : "emergency_overlay";
+  if (finalCibilScore < 45) return pdi < 40 ? "priority_structural_repair" : "structural_overlay";
+  if (finalCibilScore < 55) return highRisk ? "structural_overlay" : "major_repair";
+  if (finalCibilScore < 65) return highRisk ? "preventive_risk_mitigation" : "major_repair";
+  if (finalCibilScore < 75) return highRisk ? "preventive_risk_mitigation" : "preventive_maintenance";
+  if (finalCibilScore < 88) return pdi < 70 ? "routine_patching" : "preventive_maintenance";
+  return "monitoring_only";
 }
 
 // ─── CIBIL → Priority Score (0–100) ──────────────────────────
@@ -316,7 +311,10 @@ export function generateInspectionSchedule(
     if (lastDate) {
       nextDue = new Date(lastDate.getTime() + adjustedInterval * 24 * 60 * 60 * 1000);
     } else {
-      nextDue = new Date(TODAY.getTime() - 7 * 24 * 60 * 60 * 1000);
+      // No inspection history — due date is based on road age + CIBIL tier
+      // Critical roads (low CIBIL) are due very soon; good roads are due later
+      const neverInspectedDays = Math.round(cibilBaseDays * 0.5 * multiplier * monsoonMult);
+      nextDue = new Date(TODAY.getTime() + Math.max(1, neverInspectedDays) * 24 * 60 * 60 * 1000);
     }
 
     const diffMs = nextDue.getTime() - TODAY.getTime();
@@ -325,8 +323,11 @@ export function generateInspectionSchedule(
     const overdueDays = isOverdue ? Math.abs(daysUntilDue) : 0;
 
     const priority = cibilToPriority(finalCibilScore, isOverdue, overdueDays);
-    const hasHighRisk = factors.length >= 3 || road.flood_prone || road.landslide_prone;
-    const action = cibilToAction(finalCibilScore, conditionCategory, pdi, hasHighRisk, distressSeverity);
+    const action = getCibilActionType(finalCibilScore, pdi, {
+      flood: road.flood_prone,
+      landslide: road.landslide_prone,
+      ghat: road.ghat_section_flag,
+    });
 
     const priorityScore = computeCibilPriorityScore(
       finalCibilScore, overdueDays, factors.length, road.avg_daily_traffic,

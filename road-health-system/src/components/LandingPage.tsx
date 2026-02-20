@@ -829,7 +829,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="mt-8 text-lg md:text-xl text-white/55 max-w-2xl mx-auto leading-[1.8] font-light mt-2 mb-4 px-3 py-1"
+            className="mt-2 text-lg md:text-xl text-white/55 max-w-2xl mx-auto leading-[1.8] font-light mb-4 px-3 py-1"
           >
             Digital road condition management — monitoring, scoring & healing
           </motion.p>
@@ -1572,7 +1572,7 @@ export default function LandingPage({ onOpenRegistry }: LandingPageProps) {
                   </div>
 
                   {/* Band scale */}
-                  <div className="h-4 rounded-full overflow-hidden bg-gradient-to-r from-red-800 via-red-500 via-orange-400 via-yellow-400 via-green-400 to-emerald-600 relative">
+                  <div className="h-4 rounded-full overflow-hidden relative" style={{ background: "linear-gradient(to right, #991b1b, #ef4444, #f97316, #eab308, #22c55e, #059669)" }}>
                     <motion.div
                       className="absolute top-1/2 w-5 h-5 rounded-full bg-white border-[3px] border-green-500 shadow-lg"
                       style={{ transform: "translate(-50%, -50%)" }}

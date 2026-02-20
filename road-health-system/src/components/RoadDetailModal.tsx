@@ -130,7 +130,7 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
 
             {/* Score gradient bar */}
             <div className="mt-3">
-              <div className="h-2 rounded-full bg-gradient-to-r from-red-800 via-red-500 via-orange-400 via-yellow-400 via-green-400 to-emerald-600 relative">
+              <div className="h-2 rounded-full relative" style={{ background: "linear-gradient(to right, #991b1b, #ef4444, #f97316, #eab308, #22c55e, #059669)" }}>
                 <div
                   className="absolute top-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 shadow-md"
                   style={{

@@ -85,7 +85,13 @@ export function fallbackScore(road: RoadRecord): HealthScore {
     Math.min(1, (road.edge_breaking_pct         ?? 0) / 50) * 5  +
     Math.min(1, (road.patches_per_km            ?? 0) / 25) * 5;
   const distress = Math.max(0, Math.min(100, 100 - deductions));
-  const score    = Math.round(0.30 * pciRaw + 0.20 * iriNorm + 0.20 * distress + 0.30 * 60);
+  // Weighted formula — no hardcoded bias so scores spread naturally
+  // PCI(30%) + IRI(25%) + Distress(25%) + Surface/Age factor(20%)
+  const age = 2026 - (road.year_constructed ?? 2000);
+  const lifespan: Record<string, number> = { concrete: 30, bitumen: 20, gravel: 12, earthen: 8 };
+  const designLife = lifespan[road.surface_type ?? "bitumen"] ?? 15;
+  const ageScore = Math.max(0, Math.min(100, 100 - (age / designLife) * 100));
+  const score = Math.round(0.30 * pciRaw + 0.25 * iriNorm + 0.25 * distress + 0.20 * ageScore);
   const { band, bandLabel, bandColor } = getBandFromScore(score);
 
   return {
