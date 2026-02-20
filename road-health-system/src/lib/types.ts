@@ -131,3 +131,54 @@ export interface RegistryFilters {
   status: string;
   band: string;
 }
+
+// ─── Citizen Complaint Hotline Types ───────────────────────────
+
+export type ComplaintType =
+  | "pothole"
+  | "crack"
+  | "waterlogging"
+  | "debris"
+  | "missing_signage"
+  | "guardrail_damage"
+  | "road_collapse"
+  | "other";
+
+export type ComplaintSeverity = "low" | "medium" | "high" | "critical";
+export type ComplaintStatus = "new" | "acknowledged" | "in-progress" | "resolved" | "closed";
+export type ComplaintSource = "ivr_voice" | "ivr_keypad" | "web_form" | "telegram" | "twilio_ivr" | "browser_voice";
+
+export interface Complaint {
+  id: string;
+  timestamp: string;
+
+  // Location
+  road_id?: string;
+  road_name?: string;
+  highway_ref?: string;
+  district: string;
+  taluka?: string;
+  location_description: string;
+  lat?: number;
+  lon?: number;
+
+  // Issue
+  complaint_type: ComplaintType;
+  severity: ComplaintSeverity;
+  description: string;
+
+  // Citizen
+  citizen_name: string;
+  citizen_phone: string;
+  citizen_language?: "en" | "hi" | "mr";
+
+  // Source & tracking
+  source: ComplaintSource;
+  status: ComplaintStatus;
+  assigned_to?: string;
+  resolution_notes?: string;
+  resolved_at?: string;
+
+  // Audio (for IVR calls)
+  voice_transcript?: string;
+}
