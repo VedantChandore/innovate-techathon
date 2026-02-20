@@ -218,8 +218,13 @@ function computeDecayRate(inspections: InspectionRecord[]): { rate: number; tren
     (new Date(last.inspection_date).getTime() - new Date(first.inspection_date).getTime()) /
     (1000 * 60 * 60 * 24);
   if (daysBetween <= 0) return { rate: 0, trend: "stable" };
-  const rate = Math.max(0, (first.condition_score - last.condition_score) / daysBetween);
 
+  // Net deterioration: positive = getting worse, negative = improving
+  // Do NOT clamp to 0 — if scores went up, rate is genuinely low/zero but direction matters
+  const netChange = first.condition_score - last.condition_score;
+  const rate = Math.max(0, netChange / daysBetween);
+
+  // Trend: compare first-half vs second-half deterioration rates
   const mid = Math.floor(sorted.length / 2);
   if (mid > 0 && sorted.length > 2) {
     const midInsp = sorted[mid];
@@ -235,6 +240,34 @@ function computeDecayRate(inspections: InspectionRecord[]): { rate: number; tren
     if (secondHalfRate < firstHalfRate * 0.7) return { rate, trend: "improving" };
   }
   return { rate, trend: "stable" };
+}
+
+// ─── Synthetic Decay Rate (for roads with no inspection history) ──────────────
+// Estimates daily deterioration rate from distress metrics + age + surface type.
+// Formula derived from the relationship: score drops ~(100 - pci) / design_life_days
+function syntheticDecayRate(road: RoadWithScore): number {
+  const pci = road.pci_score ?? 60;
+  const iri = road.iri_value ?? 3;
+  const age = 2026 - (road.year_constructed ?? 2010);
+  const lifespan: Record<string, number> = { concrete: 30, bitumen: 20, gravel: 12, earthen: 8 };
+  const designLife = lifespan[road.surface_type ?? "bitumen"] ?? 15;
+
+  // Base rate: how much the road has lost per day of its life
+  const ageDecay = age > 0 ? (100 - pci) / (age * 365) : 0;
+
+  // IRI contribution: higher roughness = faster ongoing decay
+  const iriDecay = Math.max(0, (iri - 2) * 0.00015);
+
+  // Distress contribution
+  const distressDecay =
+    ((road.potholes_per_km ?? 0) / 30) * 0.0002 +
+    ((road.alligator_cracking_pct ?? 0) / 50) * 0.00015 +
+    ((road.rutting_depth_mm ?? 0) / 40) * 0.0001;
+
+  // Overdue multiplier: road past design life decays faster
+  const overdueMultiplier = age > designLife ? 1.5 : 1.0;
+
+  return Math.min(0.25, Math.round((ageDecay + iriDecay + distressDecay) * overdueMultiplier * 10000) / 10000);
 }
 
 // ─── Distress Severity Score ───────────────────────────────────
@@ -297,7 +330,18 @@ export function generateInspectionSchedule(
     const trendAlert = computeTrendAlert(pseudoCibil, mlPredictedCibil);
     const { factors, multiplier } = computeRiskFactors(road);
     const monsoonMult = getMonsoonMultiplier(road, monsoonMode);
-    const { rate: decayRate, trend: decayTrend } = computeDecayRate(road.inspections);
+    const { rate: inspectionDecayRate, trend: inspectionDecayTrend } = computeDecayRate(road.inspections);
+    // If no inspection history (or all scores improved), fall back to synthetic estimate from road properties
+    const decayRate = inspectionDecayRate > 0 ? inspectionDecayRate : syntheticDecayRate(road);
+    // Derive trend: use inspection-based trend if available, else estimate from synthetic rate
+    const decayTrend: "accelerating" | "stable" | "improving" =
+      inspectionDecayRate > 0
+        ? inspectionDecayTrend
+        : decayRate > 0.05
+        ? "accelerating"
+        : decayRate > 0.015
+        ? "stable"
+        : "improving";
     const distressSeverity = computeDistressSeverity(road);
 
     const cibilBaseDays = getCibilBaseDueDays(finalCibilScore);

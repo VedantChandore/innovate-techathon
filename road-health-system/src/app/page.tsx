@@ -11,6 +11,7 @@ import RegistryTable from "@/components/RegistryTable";
 import AddRoadModal from "@/components/AddRoadModal";
 import InspectionScheduler from "@/components/InspectionScheduler";
 import GeoView from "@/components/GeoView";
+import ReportsPage from "@/components/ReportsPage";
 import { Loader2, Plus, Download, Upload, Database, CalendarClock } from "lucide-react";
 
 const BAND_ORDER: Band[] = ["A+", "A", "B", "C", "D", "E"];
@@ -26,7 +27,7 @@ const EMPTY_FILTERS: RegistryFilters = {
 };
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState<"landing" | "registry" | "scheduling" | "geoview">("landing");
+  const [currentPage, setCurrentPage] = useState<"landing" | "registry" | "scheduling" | "geoview" | "reports">("landing");
   const [roads, setRoads] = useState<RoadWithScore[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export default function Home() {
     }
   }, [currentPage, roads.length, loading]);
 
-  const navigate = (page: "landing" | "registry" | "scheduling" | "geoview") => {
+  const navigate = (page: "landing" | "registry" | "scheduling" | "geoview" | "reports") => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -156,6 +157,20 @@ export default function Home() {
         <Navbar currentPage="geoview" onNavigate={navigate} />
         <div style={{ position: "fixed", inset: 0, overflow: "hidden", background: "#ffffff", zIndex: 0 }}>
           <GeoView />
+        </div>
+      </>
+    );
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     REPORTS PAGE
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  if (currentPage === "reports") {
+    return (
+      <>
+        <Navbar currentPage="reports" onNavigate={navigate} />
+        <div style={{ paddingTop: 67, minHeight: "100vh" }}>
+          <ReportsPage />
         </div>
       </>
     );
