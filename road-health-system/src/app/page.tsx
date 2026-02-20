@@ -12,7 +12,9 @@ import AddRoadModal from "@/components/AddRoadModal";
 import InspectionScheduler from "@/components/InspectionScheduler";
 import GeoView from "@/components/GeoView";
 import ReportsPage from "@/components/ReportsPage";
-import { Loader2, Plus, Download, Upload, Database, CalendarClock } from "lucide-react";
+import CitizenIVR from "@/components/CitizenIVR";
+import ComplaintsDashboard from "@/components/ComplaintsDashboard";
+import { Loader2, Plus, Download, Upload, Database, CalendarClock, Megaphone } from "lucide-react";
 
 const BAND_ORDER: Band[] = ["A+", "A", "B", "C", "D", "E"];
 
@@ -27,12 +29,13 @@ const EMPTY_FILTERS: RegistryFilters = {
 };
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState<"landing" | "registry" | "scheduling" | "geoview" | "reports">("landing");
+  const [currentPage, setCurrentPage] = useState<"landing" | "registry" | "scheduling" | "geoview" | "reports" | "complaints">("landing");
   const [roads, setRoads] = useState<RoadWithScore[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<RegistryFilters>(EMPTY_FILTERS);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [complaintRefresh, setComplaintRefresh] = useState(0);
 
   // Load data when switching to registry or scheduling
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function Home() {
     }
   }, [currentPage, roads.length, loading]);
 
-  const navigate = (page: "landing" | "registry" | "scheduling" | "geoview" | "reports") => {
+  const navigate = (page: "landing" | "registry" | "scheduling" | "geoview" | "reports" | "complaints") => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -157,8 +160,42 @@ export default function Home() {
         <Navbar currentPage="geoview" onNavigate={navigate} />
         <div style={{ paddingTop: 67, height: "100vh", background: "#0a0e1a", overflow: "hidden" }}>
           <GeoView />
-        </div>
+        </div>        <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />
       </>
+    );
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     COMPLAINTS PAGE
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  if (currentPage === "complaints") {
+    return (
+      <>
+        <Navbar currentPage="complaints" onNavigate={navigate} />
+        <main className="min-h-screen pt-[67px]" style={{ background: "var(--bg)" }}>
+          <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
+            <div className="max-w-[1600px] mx-auto flex items-center justify-between h-14 px-6">
+              <div>
+                <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">
+                  📞 Citizen Complaint Hotline
+                </h1>
+                <p className="text-[11px] text-gray-400">
+                  IVR-powered road complaint system • Voice & keypad enabled
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-[11px] font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  IVR Active
+                </span>
+              </div>
+            </div>
+          </header>
+          <div className="max-w-[1600px] mx-auto px-6 py-6">
+            <ComplaintsDashboard refreshTrigger={complaintRefresh} />
+          </div>
+        </main>
+        <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />      </>
     );
   }
 
@@ -219,7 +256,7 @@ export default function Home() {
       <>
         <Navbar currentPage="scheduling" onNavigate={navigate} />
         <main className="min-h-screen pt-[67px]" style={{ background: "var(--bg)" }}>
-          <header className="sticky top-[67px] z-30 glass border-b border-gray-200/60">
+          <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
             <div className="max-w-[1600px] mx-auto flex items-center justify-between h-14 px-6">
               <div>
                 <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">
@@ -235,6 +272,7 @@ export default function Home() {
             <InspectionScheduler roads={roads} />
           </div>
         </main>
+        <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />
       </>
     );
   }
@@ -283,7 +321,7 @@ export default function Home() {
 
       <main className="min-h-screen pt-[67px]" style={{ background: "var(--bg)" }}>
         {/* ── Registry Header ───────────────────── */}
-        <header className="sticky top-[67px] z-30 glass border-b border-gray-200/60">
+        <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between h-14 px-6">
             <div className="flex items-center gap-4">
               <div>
@@ -339,6 +377,7 @@ export default function Home() {
       {showAddModal && (
         <AddRoadModal onClose={() => setShowAddModal(false)} onAdd={handleAddRoad} />
       )}
-    </>
+      {/* ── IVR Widget (floating) ───────── */}
+      <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />    </>
   );
 }

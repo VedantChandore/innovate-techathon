@@ -180,3 +180,36 @@ body {
 .animate-fade-up {
   animation: fadeSlideUp 0.3s ease-out;
 }
+
+/* ─── Notification Toast Animations ──────────────── */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out;
+}
+
+.notification-toast {
+  transition: all 0.3s cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+
+.notification-toast:hover {
+  transform: translateX(-4px);
+}

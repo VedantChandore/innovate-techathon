@@ -996,74 +996,95 @@ function InspectorDetailCard({
   const aCfg = ACTION_CFG[item.action];
 
   return (
-    <div className="rounded-2xl bg-white border-2 border-orange-200 shadow-xl overflow-hidden" style={{ animation: "fadeSlideUp 0.35s ease-out" }}>
-      {/* ── Card Header ── */}
-      <div className="relative" style={{ background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)" }}>
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url('data:image/svg+xml,...')" }} />
-        <div className="relative px-6 py-5">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-[11px] font-bold text-white shadow-lg"
-                  style={{ background: BAND_COLORS[road.healthScore.band] }}>{road.healthScore.band}</span>
-                <div>
-                  <h2 className="text-[17px] font-bold text-white leading-tight">{road.name}</h2>
-                  <p className="text-[11px] text-gray-400">{road.road_id} • {road.highway_ref} • {road.district}, {road.taluka}</p>
+    <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ animation: "fadeSlideUp 0.35s ease-out", border: "1px solid rgba(249,115,22,0.18)" }}>
+      {/* ── Card Header — Premium Glass ── */}
+      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%)" }}>
+        {/* Decorative mesh */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #f97316 1px, transparent 1px), radial-gradient(circle at 80% 20%, #3b82f6 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-[0.06]" style={{ background: "radial-gradient(circle, #f97316, transparent 70%)" }} />
+
+        <div className="relative px-7 pt-6 pb-5">
+          {/* Top row — Badge + Title + Actions */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5 flex-1 min-w-0">
+              {/* Band badge */}
+              <div className="relative shrink-0">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-[15px] font-black text-white shadow-lg ring-2 ring-white/10"
+                  style={{ background: `linear-gradient(135deg, ${BAND_COLORS[road.healthScore.band]}, ${BAND_COLORS[road.healthScore.band]}cc)` }}>
+                  {road.healthScore.band}
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-md"
+                  style={{ background: pCfg.color === "#991b1b" ? "#ef4444" : pCfg.color === "#c2410c" ? "#f97316" : pCfg.color === "#a16207" ? "#eab308" : "#22c55e" }}>
+                  {item.priorityScore.toFixed(0)}
                 </div>
               </div>
-              {/* Quick Metric Pills */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {[
-                  { label: "CIBIL Score", val: road.healthScore.finalCibilScore.toFixed(0) + "/100", color: cibilColor(road.healthScore.finalCibilScore) },
-                  { label: "Condition", val: item.conditionCategory, color: conditionCfg(item.conditionCategory).color },
-                  { label: "PDI", val: item.pdi.toFixed(0), color: item.pdi < 30 ? "#ef4444" : "#e2e8f0" },
-                  { label: "Trend", val: item.trendAlert ? "⚡ Alert" : "Stable", color: item.trendAlert ? "#dc2626" : "#059669" },
-                  { label: "Priority", val: `${item.priorityScore.toFixed(0)} ${pCfg.label}`, color: pCfg.color },
-                  { label: "Decay", val: `${item.decayRate.toFixed(3)}/d`, color: item.decayRate > 0.05 ? "#ef4444" : "#94a3b8" },
-                ].map((m) => (
-                  <div key={m.label} className="px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.08)" }}>
-                    <p className="text-[9px] font-semibold text-gray-400 uppercase">{m.label}</p>
-                    <p className="text-[14px] font-bold" style={{ color: m.color }}>{m.val}</p>
-                  </div>
-                ))}
+              {/* Title block */}
+              <div className="min-w-0">
+                <h2 className="text-[18px] font-extrabold text-white leading-tight tracking-tight truncate">{road.name}</h2>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-orange-300" style={{ background: "rgba(249,115,22,0.15)" }}>{road.road_id}</span>
+                  <span className="text-[10px] text-gray-500">•</span>
+                  <span className="text-[11px] font-medium text-gray-400">{road.highway_ref}</span>
+                  <span className="text-[10px] text-gray-500">•</span>
+                  <span className="text-[11px] text-gray-400">{road.district}, {road.taluka}</span>
+                </div>
+              </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
               <button onClick={() => onRecord(item)}
-                className="px-3 py-2 rounded-lg text-[11px] font-semibold transition-all hover:shadow-lg"
-                style={{ background: "#059669", color: "white" }}>
-                <ClipboardCheck size={13} className="inline mr-1 -mt-0.5" />Record Result
+                className="group px-4 py-2.5 rounded-xl text-[11px] font-bold text-white transition-all hover:scale-[1.03] hover:shadow-xl"
+                style={{ background: "linear-gradient(135deg, #059669, #047857)" }}>
+                <ClipboardCheck size={13} className="inline mr-1.5 -mt-0.5 group-hover:rotate-6 transition-transform" />Record Result
               </button>
               <button onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/10 transition text-gray-400 hover:text-white">
+                className="p-2.5 rounded-xl hover:bg-white/10 transition text-gray-500 hover:text-white">
                 <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Status Bar */}
-          <div className="flex items-center gap-3 mt-4 pt-3 border-t border-white/10">
-            <div className="flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: aCfg.color }}>  
-                {aCfg.icon}{aCfg.label}
-              </span>
+          {/* Quick Metric Pills — Glass cards */}
+          <div className="flex flex-wrap gap-2.5 mt-5">
+            {[
+              { label: "CIBIL", val: road.healthScore.finalCibilScore.toFixed(0) + "/100", color: cibilColor(road.healthScore.finalCibilScore), glow: road.healthScore.finalCibilScore < 40 },
+              { label: "Condition", val: item.conditionCategory, color: conditionCfg(item.conditionCategory).color, glow: false },
+              { label: "PDI", val: item.pdi.toFixed(0), color: item.pdi < 30 ? "#ef4444" : "#22c55e", glow: item.pdi < 30 },
+              { label: "Trend", val: item.trendAlert ? "⚡ Alert" : "Stable", color: item.trendAlert ? "#fca5a5" : "#6ee7b7", glow: !!item.trendAlert },
+              { label: "Priority", val: `${item.priorityScore.toFixed(0)} ${pCfg.label}`, color: pCfg.color === "#991b1b" ? "#fca5a5" : pCfg.color === "#c2410c" ? "#fdba74" : "#fde68a", glow: false },
+              { label: "Decay", val: `${item.decayRate.toFixed(3)}/d`, color: item.decayRate > 0.05 ? "#ef4444" : "#9ca3af", glow: item.decayRate > 0.05 },
+            ].map((m) => (
+              <div key={m.label} className="relative px-3.5 py-2 rounded-xl backdrop-blur-sm transition-all hover:scale-[1.04]"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: m.glow ? `0 0 12px ${m.color}25` : "none" }}>
+                <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">{m.label}</p>
+                <p className="text-[15px] font-extrabold tabular-nums" style={{ color: m.color }}>{m.val}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Status Bar — Pill row */}
+          <div className="flex items-center gap-2.5 mt-5 pt-4 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold" style={{ color: aCfg.color, background: `${aCfg.color}15` }}>
+              {aCfg.icon}{aCfg.label}
+            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium text-gray-400" style={{ background: "rgba(255,255,255,0.04)" }}>
+              <Clock size={10} />Last: <strong className="text-gray-300">{fmt(item.lastInspectionDate)}</strong>
             </div>
-            <div className="w-px h-3 bg-white/20" />
-            <span className="text-[10px] text-gray-400">Last: <strong className="text-gray-300">{fmt(item.lastInspectionDate)}</strong></span>
-            <div className="w-px h-3 bg-white/20" />
-            <span className="text-[10px] text-gray-400">Next Due: <strong className={item.isOverdue ? "text-red-400" : "text-gray-300"}>{fmt(item.nextDueDate)}</strong></span>
-            <div className="w-px h-3 bg-white/20" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium text-gray-400" style={{ background: "rgba(255,255,255,0.04)" }}>
+              <Calendar size={10} />Due: <strong className={item.isOverdue ? "text-red-400" : "text-gray-300"}>{fmt(item.nextDueDate)}</strong>
+            </div>
             {item.isOverdue ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-[10px] font-bold text-red-400">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-red-400" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.2)" }}>
                 <XCircle size={10} />{item.overdueDays}d overdue
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-[10px] font-bold text-green-400">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-emerald-400" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.2)" }}>
                 <CheckCircle2 size={10} />{item.daysUntilDue}d remaining
               </span>
             )}
             {item.isScheduled && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/20 text-[10px] font-bold text-cyan-400">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-cyan-400" style={{ background: "rgba(6,182,212,0.12)", border: "1px solid rgba(6,182,212,0.2)" }}>
                 <Calendar size={10} />Scheduled: {fmt(item.scheduledDate)}
               </span>
             )}
@@ -1071,60 +1092,70 @@ function InspectorDetailCard({
         </div>
       </div>
 
-      {/* ── Tab Bar ── */}
-      <div className="px-6 pt-3 pb-0 border-b border-gray-200" style={{ background: "#fafafa" }}>
-        <div className="flex gap-1">
+      {/* ── Tab Bar — Modern Pill Style ── */}
+      <div className="px-7 pt-4 pb-0 border-b border-gray-100" style={{ background: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)" }}>
+        <div className="flex gap-1.5">
           {tabs.map((t) => (
             <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-[12px] font-semibold transition-all ${
+              className={`relative flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-[12px] font-semibold transition-all ${
                 activeTab === t.key
-                  ? "text-orange-700 bg-white border border-b-0 border-gray-200 -mb-px"
-                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100/50"
+                  ? "text-orange-700 bg-white border border-b-0 border-gray-200 -mb-px shadow-sm"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-white/60"
               }`}>
-              {t.icon}{t.label}
+              <span className={activeTab === t.key ? "text-orange-500" : ""}>{t.icon}</span>
+              {t.label}
+              {activeTab === t.key && <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full" style={{ background: "linear-gradient(90deg, #f97316, #fb923c)" }} />}
             </button>
           ))}
         </div>
       </div>
 
       {/* ── Tab Content ── */}
-      <div className="p-6">
+      <div className="p-7">
         {/* Overview Tab */}
         {activeTab === "overview" && (
-          <div className="space-y-5">
+          <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Scheduling Info */}
-              <div className="rounded-xl border border-gray-200 p-4 bg-white">
-                <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-3 flex items-center gap-1.5">
-                  <CalendarClock size={12} className="text-blue-500" />Scheduling
-                </h4>
-                <div className="space-y-2.5 text-[12px]">
-                  <div className="flex justify-between"><span className="text-gray-400">Base Interval</span><span className="font-semibold text-gray-700">{item.baseIntervalDays} days</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Adjusted</span><span className="font-semibold text-gray-700">{item.adjustedIntervalDays} days</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Last Inspection</span><span className="font-semibold text-gray-700">{fmt(item.lastInspectionDate)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Agency</span><span className="font-semibold text-gray-700">{item.assignedAgency}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Quarter</span><span className="font-semibold text-gray-700">{item.quarterLabel}</span></div>
+              <div className="group rounded-2xl border border-blue-100 overflow-hidden bg-white hover:shadow-lg transition-all duration-300">
+                <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #3b82f6, #60a5fa)" }} />
+                <div className="p-4">
+                  <h4 className="text-[11px] font-bold uppercase text-blue-500 tracking-wider mb-3.5 flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#eff6ff" }}><CalendarClock size={13} className="text-blue-500" /></div>
+                    Scheduling
+                  </h4>
+                  <div className="space-y-2.5 text-[12px]">
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Base Interval</span><span className="font-bold text-gray-800 bg-gray-50 px-2 py-0.5 rounded-md">{item.baseIntervalDays} days</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Adjusted</span><span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">{item.adjustedIntervalDays} days</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Last Inspection</span><span className="font-semibold text-gray-700">{fmt(item.lastInspectionDate)}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Agency</span><span className="font-semibold text-gray-700">{item.assignedAgency}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Quarter</span><span className="font-semibold text-gray-700">{item.quarterLabel}</span></div>
+                  </div>
                 </div>
               </div>
               {/* Condition Info */}
-              <div className="rounded-xl border border-gray-200 p-4 bg-white">
-                <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-3 flex items-center gap-1.5">
-                  <Activity size={12} className="text-green-500" />CIBIL Breakdown
-                </h4>
-                <div className="space-y-2.5 text-[12px]">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Final CIBIL</span>
-                    <span className="font-bold text-lg" style={{ color: cibilColor(item.finalCibilScore) }}>{item.finalCibilScore.toFixed(0)}</span>
+              <div className="group rounded-2xl border border-emerald-100 overflow-hidden bg-white hover:shadow-lg transition-all duration-300">
+                <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #10b981, #34d399)" }} />
+                <div className="p-4">
+                  <h4 className="text-[11px] font-bold uppercase text-emerald-600 tracking-wider mb-3.5 flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#ecfdf5" }}><Activity size={13} className="text-emerald-500" /></div>
+                    CIBIL Breakdown
+                  </h4>
+                  <div className="space-y-2.5 text-[12px]">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Final CIBIL</span>
+                      <span className="font-bold text-lg px-2 py-0.5 rounded-md" style={{ color: cibilColor(item.finalCibilScore), background: `${cibilColor(item.finalCibilScore)}12` }}>{item.finalCibilScore.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Condition</span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold"
+                        style={{ background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color }}>
+                        {item.conditionCategory}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">PDI-CIBIL (0.7×)</span><span className="font-bold text-gray-800 bg-gray-50 px-2 py-0.5 rounded-md">{item.pseudoCibil.toFixed(1)}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">ML-CIBIL (0.3×)</span><span className="font-bold text-gray-800 bg-gray-50 px-2 py-0.5 rounded-md">{item.mlPredictedCibil.toFixed(1)}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">PDI</span><span className="font-semibold text-gray-700">{item.pdi.toFixed(1)}</span></div>
                   </div>
-                  <div className="flex justify-between"><span className="text-gray-400">Condition</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                      style={{ background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color }}>
-                      {item.conditionCategory}
-                    </span>
-                  </div>
-                  <div className="flex justify-between"><span className="text-gray-400">PDI-CIBIL (0.7×)</span><span className="font-semibold text-gray-700">{item.pseudoCibil.toFixed(1)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">ML-CIBIL (0.3×)</span><span className="font-semibold text-gray-700">{item.mlPredictedCibil.toFixed(1)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">PDI</span><span className="font-semibold text-gray-700">{item.pdi.toFixed(1)}</span></div>
                 </div>
                 {item.trendAlert && (
                   <div className="mt-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
@@ -1133,47 +1164,57 @@ function InspectorDetailCard({
                 )}
               </div>
               {/* Road Info */}
-              <div className="rounded-xl border border-gray-200 p-4 bg-white">
-                <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-3 flex items-center gap-1.5">
-                  <Navigation size={12} className="text-indigo-500" />Road Info
-                </h4>
-                <div className="space-y-2.5 text-[12px]">
-                  <div className="flex justify-between"><span className="text-gray-400">Hwy Ref</span><span className="font-semibold text-gray-700">{road.highway_ref}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Surface</span><span className="font-semibold text-gray-700 capitalize">{road.surface_type}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Lanes</span><span className="font-semibold text-gray-700">{road.lane_count}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Terrain</span><span className="font-semibold text-gray-700 capitalize">{road.terrain_type} / {road.slope_category}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Built</span><span className="font-semibold text-gray-700">{road.year_constructed} ({2026 - road.year_constructed}yr)</span></div>
+              <div className="group rounded-2xl border border-violet-100 overflow-hidden bg-white hover:shadow-lg transition-all duration-300">
+                <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #8b5cf6, #a78bfa)" }} />
+                <div className="p-4">
+                  <h4 className="text-[11px] font-bold uppercase text-violet-600 tracking-wider mb-3.5 flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#f5f3ff" }}><Navigation size={13} className="text-violet-500" /></div>
+                    Road Info
+                  </h4>
+                  <div className="space-y-2.5 text-[12px]">
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Hwy Ref</span><span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md">{road.highway_ref}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Surface</span><span className="font-semibold text-gray-700 capitalize">{road.surface_type}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Lanes</span><span className="font-semibold text-gray-700">{road.lane_count}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Terrain</span><span className="font-semibold text-gray-700 capitalize">{road.terrain_type} / {road.slope_category}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Built</span><span className="font-semibold text-gray-700">{road.year_constructed} ({2026 - road.year_constructed}yr)</span></div>
+                  </div>
                 </div>
               </div>
               {/* Traffic & Environment */}
-              <div className="rounded-xl border border-gray-200 p-4 bg-white">
-                <h4 className="text-[11px] font-bold uppercase text-gray-400 tracking-wider mb-3 flex items-center gap-1.5">
-                  <Truck size={12} className="text-amber-500" />Traffic & Env.
-                </h4>
-                <div className="space-y-2.5 text-[12px]">
-                  <div className="flex justify-between"><span className="text-gray-400">Avg Daily</span><span className="font-semibold text-gray-700">{road.avg_daily_traffic.toLocaleString()}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Trucks</span><span className="font-semibold text-gray-700">{road.truck_percentage}%</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Rainfall</span><span className="font-semibold text-gray-700 capitalize">{road.monsoon_rainfall_category}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Tourism</span><span className="font-semibold text-gray-700">{road.tourism_route_flag ? "Yes" : "No"}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Est. Cost</span><span className="font-semibold text-orange-600">{"\u20B9"}{item.estimatedCostLakhs}L</span></div>
+              <div className="group rounded-2xl border border-amber-100 overflow-hidden bg-white hover:shadow-lg transition-all duration-300">
+                <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #f59e0b, #fbbf24)" }} />
+                <div className="p-4">
+                  <h4 className="text-[11px] font-bold uppercase text-amber-600 tracking-wider mb-3.5 flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#fffbeb" }}><Truck size={13} className="text-amber-500" /></div>
+                    Traffic & Env.
+                  </h4>
+                  <div className="space-y-2.5 text-[12px]">
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Avg Daily</span><span className="font-bold text-gray-800 bg-gray-50 px-2 py-0.5 rounded-md">{road.avg_daily_traffic.toLocaleString()}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Trucks</span><span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">{road.truck_percentage}%</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Rainfall</span><span className="font-semibold text-gray-700 capitalize">{road.monsoon_rainfall_category}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Tourism</span><span className="font-semibold text-gray-700">{road.tourism_route_flag ? "Yes" : "No"}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-gray-400">Est. Cost</span><span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md">{"\u20B9"}{item.estimatedCostLakhs}L</span></div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Geographic & Flags */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            {/* Geographic & Flags — Vibrant mini-cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { label: "Flood Prone", val: road.flood_prone, icon: <Droplets size={14} />, color: "#3b82f6" },
-                { label: "Landslide", val: road.landslide_prone, icon: <Mountain size={14} />, color: "#f59e0b" },
-                { label: "Ghat Section", val: road.ghat_section_flag, icon: <Globe size={14} />, color: "#8b5cf6" },
-                { label: "Tourism Route", val: road.tourism_route_flag, icon: <MapPin size={14} />, color: "#ec4899" },
-                { label: "Region", val: road.region_type, icon: <LocateFixed size={14} />, color: "#0891b2" },
-                { label: "Elevation", val: `${road.elevation_m}m`, icon: <Thermometer size={14} />, color: "#059669" },
+                { label: "Flood Prone", val: road.flood_prone, icon: <Droplets size={16} />, color: "#3b82f6", bg: "#eff6ff", borderColor: "#bfdbfe" },
+                { label: "Landslide", val: road.landslide_prone, icon: <Mountain size={16} />, color: "#f59e0b", bg: "#fffbeb", borderColor: "#fde68a" },
+                { label: "Ghat Section", val: road.ghat_section_flag, icon: <Globe size={16} />, color: "#8b5cf6", bg: "#f5f3ff", borderColor: "#ddd6fe" },
+                { label: "Tourism Route", val: road.tourism_route_flag, icon: <MapPin size={16} />, color: "#ec4899", bg: "#fdf2f8", borderColor: "#fbcfe8" },
+                { label: "Region", val: road.region_type, icon: <LocateFixed size={16} />, color: "#0891b2", bg: "#ecfeff", borderColor: "#a5f3fc" },
+                { label: "Elevation", val: `${road.elevation_m}m`, icon: <Thermometer size={16} />, color: "#059669", bg: "#ecfdf5", borderColor: "#a7f3d0" },
               ].map((f) => (
-                <div key={f.label} className="rounded-xl border border-gray-200 p-3 text-center bg-white hover:shadow-sm transition-all">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5" style={{ background: `${f.color}12`, color: f.color }}>{f.icon}</div>
-                  <p className="text-[10px] font-semibold text-gray-400 uppercase">{f.label}</p>
-                  <p className="text-[13px] font-bold capitalize" style={{ color: typeof f.val === "boolean" ? (f.val ? "#dc2626" : "#22c55e") : "#374151" }}>
+                <div key={f.label} className="group rounded-2xl p-3.5 text-center transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+                  style={{ background: f.bg, border: `1.5px solid ${f.borderColor}` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm transition-transform group-hover:scale-110"
+                    style={{ background: "white", color: f.color }}>{f.icon}</div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: f.color }}>{f.label}</p>
+                  <p className="text-[14px] font-extrabold capitalize mt-0.5" style={{ color: typeof f.val === "boolean" ? (f.val ? "#dc2626" : "#22c55e") : "#1e293b" }}>
                     {typeof f.val === "boolean" ? (f.val ? "Yes" : "No") : f.val}
                   </p>
                 </div>
@@ -1184,38 +1225,56 @@ function InspectorDetailCard({
 
         {/* Distress Tab */}
         {activeTab === "distress" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[13px] font-bold text-gray-700">Distress Severity: <span style={{ color: item.distressSeverity > 50 ? "#dc2626" : item.distressSeverity > 30 ? "#ea580c" : "#22c55e" }}>{item.distressSeverity.toFixed(1)}%</span></p>
-              <p className="text-[11px] text-gray-400">Threshold values trigger accelerated scheduling</p>
+          <div className="space-y-5">
+            {/* Header with severity gauge */}
+            <div className="flex items-center justify-between p-4 rounded-2xl" style={{ background: item.distressSeverity > 50 ? "linear-gradient(135deg, #fef2f2, #fff1f2)" : item.distressSeverity > 30 ? "linear-gradient(135deg, #fffbeb, #fff7ed)" : "linear-gradient(135deg, #ecfdf5, #f0fdf4)", border: `1.5px solid ${item.distressSeverity > 50 ? "#fecaca" : item.distressSeverity > 30 ? "#fed7aa" : "#a7f3d0"}` }}>
+              <div>
+                <p className="text-[14px] font-bold text-gray-800">Distress Severity Index</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">Threshold values trigger accelerated scheduling</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-[28px] font-black tabular-nums leading-none" style={{ color: item.distressSeverity > 50 ? "#dc2626" : item.distressSeverity > 30 ? "#ea580c" : "#22c55e" }}>{item.distressSeverity.toFixed(1)}%</p>
+                  <p className="text-[10px] font-semibold mt-1" style={{ color: item.distressSeverity > 50 ? "#dc2626" : item.distressSeverity > 30 ? "#ea580c" : "#22c55e" }}>{item.distressSeverity > 50 ? "SEVERE" : item.distressSeverity > 30 ? "MODERATE" : "LOW"}</p>
+                </div>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
-                { label: "Potholes /km", val: road.potholes_per_km, max: 30, critical: 15, icon: <FileWarning size={14} className="text-red-500" /> },
-                { label: "Pothole Depth (cm)", val: road.pothole_avg_depth_cm, max: 20, critical: 10, icon: <Ruler size={14} className="text-orange-500" /> },
-                { label: "Longitudinal Cracks %", val: road.cracks_longitudinal_pct, max: 50, critical: 25, icon: <Layers size={14} className="text-yellow-600" /> },
-                { label: "Transverse Cracks /km", val: road.cracks_transverse_per_km, max: 30, critical: 15, icon: <Layers size={14} className="text-yellow-600" /> },
-                { label: "Alligator Cracking %", val: road.alligator_cracking_pct, max: 50, critical: 20, icon: <AlertTriangle size={14} className="text-red-600" /> },
-                { label: "Rutting Depth (mm)", val: road.rutting_depth_mm, max: 40, critical: 20, icon: <Gauge size={14} className="text-red-500" /> },
-                { label: "Raveling %", val: road.raveling_pct, max: 50, critical: 25, icon: <Activity size={14} className="text-purple-500" /> },
-                { label: "Edge Breaking %", val: road.edge_breaking_pct, max: 50, critical: 25, icon: <Mountain size={14} className="text-amber-600" /> },
-                { label: "Patches /km", val: road.patches_per_km, max: 25, critical: 12, icon: <Wrench size={14} className="text-blue-500" /> },
+                { label: "Potholes /km", val: road.potholes_per_km, max: 30, critical: 15, icon: <FileWarning size={15} className="text-red-500" />, accent: "#ef4444" },
+                { label: "Pothole Depth (cm)", val: road.pothole_avg_depth_cm, max: 20, critical: 10, icon: <Ruler size={15} className="text-orange-500" />, accent: "#f97316" },
+                { label: "Longitudinal Cracks %", val: road.cracks_longitudinal_pct, max: 50, critical: 25, icon: <Layers size={15} className="text-yellow-600" />, accent: "#eab308" },
+                { label: "Transverse Cracks /km", val: road.cracks_transverse_per_km, max: 30, critical: 15, icon: <Layers size={15} className="text-yellow-600" />, accent: "#eab308" },
+                { label: "Alligator Cracking %", val: road.alligator_cracking_pct, max: 50, critical: 20, icon: <AlertTriangle size={15} className="text-red-600" />, accent: "#dc2626" },
+                { label: "Rutting Depth (mm)", val: road.rutting_depth_mm, max: 40, critical: 20, icon: <Gauge size={15} className="text-red-500" />, accent: "#ef4444" },
+                { label: "Raveling %", val: road.raveling_pct, max: 50, critical: 25, icon: <Activity size={15} className="text-purple-500" />, accent: "#8b5cf6" },
+                { label: "Edge Breaking %", val: road.edge_breaking_pct, max: 50, critical: 25, icon: <Mountain size={15} className="text-amber-600" />, accent: "#d97706" },
+                { label: "Patches /km", val: road.patches_per_km, max: 25, critical: 12, icon: <Wrench size={15} className="text-blue-500" />, accent: "#3b82f6" },
               ].map((d) => {
                 const pct = (d.val / d.max) * 100;
                 const isCritical = d.val >= d.critical;
                 return (
-                  <div key={d.label} className="rounded-xl border p-4 transition-all hover:shadow-sm"
-                    style={{ borderColor: isCritical ? "#fecaca" : "#e5e7eb", background: isCritical ? "#fef2f2" : "white" }}>
-                    <div className="flex items-center gap-2 mb-2">{d.icon}
-                      <span className="text-[11px] font-semibold text-gray-600">{d.label}</span>
-                      {isCritical && <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700">CRITICAL</span>}
+                  <div key={d.label} className="group rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                    style={{ borderColor: isCritical ? "#fecaca" : "#e5e7eb", background: isCritical ? "linear-gradient(135deg, #fff5f5, #fef2f2)" : "white" }}>
+                    {isCritical && <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${d.accent}, ${d.accent}88)` }} />}
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm" style={{ background: isCritical ? "#fef2f2" : "#f8fafc" }}>{d.icon}</div>
+                          <span className="text-[11px] font-bold text-gray-700">{d.label}</span>
+                        </div>
+                        {isCritical && <span className="px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider text-red-700" style={{ background: "linear-gradient(135deg, #fecaca, #fee2e2)" }}>CRITICAL</span>}
+                      </div>
+                      <p className="text-[26px] font-black tabular-nums leading-none" style={{ color: isCritical ? "#dc2626" : "#1e293b" }}>{d.val}</p>
+                      <div className="mt-3 h-3 rounded-full overflow-hidden shadow-inner" style={{ background: "#e5e7eb" }}>
+                        <div className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${Math.min(100, pct)}%`, background: pct > 70 ? "linear-gradient(90deg, #dc2626, #ef4444)" : pct > 40 ? "linear-gradient(90deg, #ea580c, #f97316)" : "linear-gradient(90deg, #16a34a, #22c55e)" }} />
+                      </div>
+                      <div className="flex justify-between mt-1.5">
+                        <p className="text-[9px] font-semibold text-gray-400">Threshold: {d.critical}</p>
+                        <p className="text-[9px] font-semibold text-gray-400">Max: {d.max}</p>
+                      </div>
                     </div>
-                    <p className="text-[22px] font-bold tabular-nums" style={{ color: isCritical ? "#dc2626" : "#374151" }}>{d.val}</p>
-                    <div className="mt-2 h-2.5 rounded-full overflow-hidden" style={{ background: "#e5e7eb" }}>
-                      <div className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, pct)}%`, background: pct > 70 ? "#dc2626" : pct > 40 ? "#ea580c" : "#22c55e" }} />
-                    </div>
-                    <p className="text-[9px] text-gray-400 mt-1">Threshold: {d.critical} | Max: {d.max}</p>
                   </div>
                 );
               })}
@@ -1228,38 +1287,59 @@ function InspectorDetailCard({
           <div className="space-y-5">
             {item.riskFactors.length > 0 ? (
               <>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {item.riskFactors.map((rf) => {
-                    let icon = <AlertTriangle size={13} className="text-orange-500" />;
-                    let bg = "#fff7ed"; let border = "#fed7aa";
-                    if (rf.includes("Flood")) { icon = <Droplets size={13} className="text-blue-500" />; bg = "#eff6ff"; border = "#bfdbfe"; }
-                    if (rf.includes("Landslide") || rf.includes("Ghat")) { icon = <Mountain size={13} className="text-amber-600" />; bg = "#fffbeb"; border = "#fde68a"; }
-                    if (rf.includes("rainfall")) { icon = <CloudRain size={13} className="text-indigo-500" />; bg = "#eef2ff"; border = "#c7d2fe"; }
-                    if (rf.includes("pothole") || rf.includes("crack")) { icon = <FileWarning size={13} className="text-red-500" />; bg = "#fef2f2"; border = "#fecaca"; }
-                    if (rf.includes("truck") || rf.includes("traffic")) { icon = <Truck size={13} className="text-gray-600" />; bg = "#f8fafc"; border = "#e2e8f0"; }
+                    let icon = <AlertTriangle size={14} className="text-orange-500" />;
+                    let bg = "linear-gradient(135deg, #fff7ed, #fffbeb)"; let border = "#fed7aa";
+                    if (rf.includes("Flood")) { icon = <Droplets size={14} className="text-blue-500" />; bg = "linear-gradient(135deg, #eff6ff, #dbeafe)"; border = "#bfdbfe"; }
+                    if (rf.includes("Landslide") || rf.includes("Ghat")) { icon = <Mountain size={14} className="text-amber-600" />; bg = "linear-gradient(135deg, #fffbeb, #fef3c7)"; border = "#fde68a"; }
+                    if (rf.includes("rainfall")) { icon = <CloudRain size={14} className="text-indigo-500" />; bg = "linear-gradient(135deg, #eef2ff, #e0e7ff)"; border = "#c7d2fe"; }
+                    if (rf.includes("pothole") || rf.includes("crack")) { icon = <FileWarning size={14} className="text-red-500" />; bg = "linear-gradient(135deg, #fef2f2, #fee2e2)"; border = "#fecaca"; }
+                    if (rf.includes("truck") || rf.includes("traffic")) { icon = <Truck size={14} className="text-gray-600" />; bg = "linear-gradient(135deg, #f8fafc, #f1f5f9)"; border = "#e2e8f0"; }
                     return (
-                      <div key={rf} className="flex items-center gap-2 px-3 py-2.5 rounded-xl border text-[12px] font-medium"
+                      <div key={rf} className="flex items-center gap-2.5 px-4 py-3 rounded-xl border text-[12px] font-semibold shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
                         style={{ background: bg, borderColor: border }}>
-                        {icon}<span className="text-gray-700">{rf}</span>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/80 shadow-sm">{icon}</div>
+                        <span className="text-gray-700">{rf}</span>
                       </div>
                     );
                   })}
                 </div>
-                <div className="rounded-xl border border-gray-200 p-5 bg-white">
-                  <p className="text-[11px] font-bold text-gray-400 uppercase mb-3">Risk Impact on Schedule</p>
-                  <div className="text-[12px] text-gray-600 space-y-2">
-                    <p>{"\u2022"} Base interval: <strong>{item.baseIntervalDays} days</strong></p>
-                    <p>{"\u2022"} Adjusted interval: <strong>{item.adjustedIntervalDays} days</strong> ({Math.round((1 - item.adjustedIntervalDays / item.baseIntervalDays) * 100)}% reduction)</p>
-                    <p>{"\u2022"} Decay rate: <strong>{item.decayRate.toFixed(4)}/day</strong> (<span className={`font-semibold ${item.decayTrend === "accelerating" ? "text-red-600" : item.decayTrend === "improving" ? "text-green-600" : "text-gray-600"}`}>{item.decayTrend}</span>)</p>
-                    <p>{"\u2022"} Priority score: <strong>{item.priorityScore.toFixed(1)}</strong> ({pCfg.label})</p>
+                <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+                  <div className="px-5 py-3" style={{ background: "linear-gradient(135deg, #f8fafc, #f1f5f9)", borderBottom: "1px solid #e2e8f0" }}>
+                    <p className="text-[12px] font-bold text-gray-700 flex items-center gap-2">
+                      <Shield size={14} className="text-orange-500" />Risk Impact on Schedule
+                    </p>
+                  </div>
+                  <div className="p-5">
+                    <div className="text-[12px] text-gray-600 space-y-3">
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                        <div className="w-2 h-2 rounded-full bg-blue-400" />
+                        <span>Base interval: <strong className="text-gray-900">{item.baseIntervalDays} days</strong></span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "linear-gradient(135deg, #fff7ed, #fffbeb)" }}>
+                        <div className="w-2 h-2 rounded-full bg-orange-400" />
+                        <span>Adjusted interval: <strong className="text-orange-700">{item.adjustedIntervalDays} days</strong> <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold text-orange-600 bg-orange-100">{Math.round((1 - item.adjustedIntervalDays / item.baseIntervalDays) * 100)}% reduction</span></span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                        <div className="w-2 h-2 rounded-full" style={{ background: item.decayTrend === "accelerating" ? "#ef4444" : item.decayTrend === "improving" ? "#22c55e" : "#9ca3af" }} />
+                        <span>Decay rate: <strong>{item.decayRate.toFixed(4)}/day</strong> (<span className={`font-bold ${item.decayTrend === "accelerating" ? "text-red-600" : item.decayTrend === "improving" ? "text-green-600" : "text-gray-600"}`}>{item.decayTrend}</span>)</span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+                        <div className="w-2 h-2 rounded-full" style={{ background: pCfg.color }} />
+                        <span>Priority score: <strong>{item.priorityScore.toFixed(1)}</strong> <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold" style={{ color: pCfg.color, background: pCfg.bg }}>{pCfg.label}</span></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="text-center py-10">
-                <Shield size={36} className="text-green-300 mx-auto mb-2" />
-                <p className="text-[13px] text-gray-400">No additional risk factors identified.</p>
-                <p className="text-[11px] text-gray-300 mt-1">This road has standard scheduling parameters.</p>
+              <div className="text-center py-14">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: "#ecfdf5" }}>
+                  <Shield size={32} className="text-green-400" />
+                </div>
+                <p className="text-[14px] font-bold text-gray-600">No Additional Risk Factors</p>
+                <p className="text-[12px] text-gray-400 mt-1">This road has standard scheduling parameters.</p>
               </div>
             )}
           </div>
@@ -1269,43 +1349,50 @@ function InspectorDetailCard({
         {activeTab === "history" && (
           <div>
             {road.inspections.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
-                  <thead>
-                    <tr className="border-b-2 border-gray-200">
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Date</th>
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Agency</th>
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Score</th>
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Damage %</th>
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Drainage</th>
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Water</th>
-                      <th className="text-left py-3 px-3 font-bold text-gray-500 uppercase text-[10px]">Remarks</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {road.inspections
-                      .sort((a, b) => new Date(b.inspection_date).getTime() - new Date(a.inspection_date).getTime())
-                      .map((insp) => (
-                        <tr key={insp.inspection_id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                          <td className="py-3 px-3 font-medium">{new Date(insp.inspection_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
-                          <td className="py-3 px-3">{insp.inspector_agency}</td>
-                          <td className="py-3 px-3 font-bold" style={{ color: insp.condition_score < 30 ? "#dc2626" : insp.condition_score < 50 ? "#ea580c" : "#22c55e" }}>
-                            {insp.condition_score}
-                          </td>
-                          <td className="py-3 px-3">{insp.surface_damage_pct}%</td>
-                          <td className="py-3 px-3 capitalize">{insp.drainage_status}</td>
-                          <td className="py-3 px-3">{insp.waterlogging_flag ? "\ud83d\udd34 Yes" : "\ud83d\udfe2 No"}</td>
-                          <td className="py-3 px-3 text-gray-500 max-w-[250px] truncate">{insp.remarks}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+              <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr style={{ background: "linear-gradient(135deg, #f8fafc, #f1f5f9)" }}>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Date</th>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Agency</th>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Score</th>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Damage %</th>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Drainage</th>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Water</th>
+                        <th className="text-left py-3.5 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {road.inspections
+                        .sort((a, b) => new Date(b.inspection_date).getTime() - new Date(a.inspection_date).getTime())
+                        .map((insp, idx) => (
+                          <tr key={insp.inspection_id} className="border-b border-gray-100 hover:bg-orange-50/40 transition-all"
+                            style={idx % 2 === 0 ? { background: "white" } : { background: "#fafafa" }}>
+                            <td className="py-3.5 px-4 font-semibold text-gray-800">{new Date(insp.inspection_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                            <td className="py-3.5 px-4"><span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-blue-700 bg-blue-50">{insp.inspector_agency}</span></td>
+                            <td className="py-3.5 px-4">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-black" style={{ color: insp.condition_score < 30 ? "#dc2626" : insp.condition_score < 50 ? "#ea580c" : "#22c55e", background: insp.condition_score < 30 ? "#fef2f2" : insp.condition_score < 50 ? "#fff7ed" : "#f0fdf4" }}>
+                                {insp.condition_score}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 font-medium text-gray-600">{insp.surface_damage_pct}%</td>
+                            <td className="py-3.5 px-4 capitalize text-gray-600">{insp.drainage_status}</td>
+                            <td className="py-3.5 px-4">{insp.waterlogging_flag ? <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-red-700 bg-red-50">Yes</span> : <span className="px-2 py-0.5 rounded-md text-[10px] font-bold text-green-700 bg-green-50">No</span>}</td>
+                            <td className="py-3.5 px-4 text-gray-500 max-w-62.5 truncate">{insp.remarks}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <History size={40} className="text-gray-300 mx-auto mb-3" />
-                <p className="text-[14px] font-semibold text-gray-500">No Previous Inspections</p>
-                <p className="text-[12px] text-gray-400 mt-1">Click \"Record Result\" to enter the first inspection data.</p>
+              <div className="text-center py-14">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: "#f1f5f9" }}>
+                  <History size={32} className="text-gray-300" />
+                </div>
+                <p className="text-[15px] font-bold text-gray-600">No Previous Inspections</p>
+                <p className="text-[12px] text-gray-400 mt-1">Click &quot;Record Result&quot; to enter the first inspection data.</p>
               </div>
             )}
           </div>
@@ -1315,174 +1402,207 @@ function InspectorDetailCard({
         {activeTab === "schedule" && (
           <div className="space-y-6">
             {schedSubmitted ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 size={32} className="text-green-600" />
+              <div className="text-center py-14">
+                <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-lg" style={{ background: "linear-gradient(135deg, #ecfdf5, #d1fae5)" }}>
+                  <CheckCircle2 size={40} className="text-green-600" />
                 </div>
-                <h3 className="text-[18px] font-bold text-gray-900">Inspection Scheduled Successfully!</h3>
-                <p className="text-[13px] text-gray-500 mt-2">Road: {road.name}</p>
-                <p className="text-[12px] text-gray-400 mt-1">Date: {new Date(schedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} | Agency: {schedAgency} | Type: {schedType}</p>
+                <h3 className="text-[20px] font-black text-gray-900">Inspection Scheduled Successfully!</h3>
+                <p className="text-[13px] text-gray-500 mt-2">{road.name}</p>
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <span className="px-3 py-1 rounded-lg text-[11px] font-bold text-blue-700 bg-blue-50">{new Date(schedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}</span>
+                  <span className="px-3 py-1 rounded-lg text-[11px] font-bold text-violet-700 bg-violet-50">{schedAgency}</span>
+                  <span className="px-3 py-1 rounded-lg text-[11px] font-bold text-orange-700 bg-orange-50">{schedType === "full" ? "Full Inspection" : schedType === "quick" ? "Quick Check" : "Monsoon Special"}</span>
+                </div>
                 <button onClick={() => { setSchedSubmitted(false); setActiveTab("overview"); }}
-                  className="mt-5 px-5 py-2.5 rounded-xl text-[13px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 transition">
+                  className="mt-6 px-6 py-3 rounded-xl text-[13px] font-bold text-orange-600 hover:text-white hover:shadow-lg transition-all"
+                  style={{ background: "linear-gradient(135deg, #fff7ed, #ffedd5)", border: "1.5px solid #fed7aa" }}>
                   Back to Overview
                 </button>
               </div>
             ) : (
               <>
                 {/* AI Recommendation Banner */}
-                <div className="rounded-xl border-2 border-orange-200 p-5" style={{ background: "linear-gradient(135deg, #fffbeb, #fff7ed)" }}>
-                  <p className="text-[12px] font-bold text-orange-800 mb-2 flex items-center gap-1.5">
-                    <Zap size={14} className="text-orange-500" /> CIBIL-Driven Scheduling Recommendation
-                  </p>
-                  <p className="text-[13px] text-orange-900 leading-relaxed">
-                    {item.isOverdue
-                      ? `⚠️ This road is ${item.overdueDays} days overdue. CIBIL: ${item.finalCibilScore.toFixed(0)} (${item.conditionCategory}). PDI: ${item.pdi.toFixed(0)}. Recommend immediate inspection within 1-2 days.${item.decayRate > 0.05 ? ` Deteriorating at ${item.decayRate.toFixed(3)}/day — delay risks structural failure.` : ""}`
-                      : item.daysUntilDue <= 7
-                        ? `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. Schedule this week to maintain compliance.`
-                        : `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} — ${item.conditionCategory}. CIBIL-tier interval: ${item.cibilDrivenDueDays} days.`
-                    }
-                  </p>
-                  {item.trendAlert && (
-                    <div className="mt-2 px-3 py-2 rounded-lg bg-red-100 border border-red-300">
-                      <p className="text-[11px] font-bold text-red-800">⚡ Trend Alert: {item.trendAlert}</p>
-                    </div>
-                  )}
-                  {item.riskFactors.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {item.riskFactors.slice(0, 4).map((rf) => (
-                        <span key={rf} className="px-2 py-1 rounded-md bg-orange-100 border border-orange-200 text-[10px] font-medium text-orange-700">{rf}</span>
-                      ))}
-                    </div>
-                  )}
+                <div className="rounded-2xl overflow-hidden shadow-md" style={{ border: "1.5px solid #fed7aa" }}>
+                  <div className="px-5 py-3 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                    <Zap size={15} className="text-white" />
+                    <p className="text-[12px] font-bold text-white">CIBIL-Driven Scheduling Recommendation</p>
+                  </div>
+                  <div className="p-5" style={{ background: "linear-gradient(135deg, #fffbeb, #fff7ed)" }}>
+                    <p className="text-[13px] text-gray-800 leading-relaxed">
+                      {item.isOverdue
+                        ? `\u26A0\uFE0F This road is ${item.overdueDays} days overdue. CIBIL: ${item.finalCibilScore.toFixed(0)} (${item.conditionCategory}). PDI: ${item.pdi.toFixed(0)}. Recommend immediate inspection within 1-2 days.${item.decayRate > 0.05 ? ` Deteriorating at ${item.decayRate.toFixed(3)}/day \u2014 delay risks structural failure.` : ""}`
+                        : item.daysUntilDue <= 7
+                          ? `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} \u2014 ${item.conditionCategory}. Schedule this week to maintain compliance.`
+                          : `Due in ${item.daysUntilDue} days. CIBIL ${item.finalCibilScore.toFixed(0)} \u2014 ${item.conditionCategory}. CIBIL-tier interval: ${item.cibilDrivenDueDays} days.`
+                      }
+                    </p>
+                    {item.trendAlert && (
+                      <div className="mt-2.5 px-3 py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                        <p className="text-[11px] font-bold text-red-700">\u26A1 Trend Alert: {item.trendAlert}</p>
+                      </div>
+                    )}
+                    {item.riskFactors.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {item.riskFactors.slice(0, 4).map((rf) => (
+                          <span key={rf} className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-orange-800" style={{ background: "rgba(249,115,22,0.12)", border: "1px solid rgba(249,115,22,0.2)" }}>{rf}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 </div>
 
                 {/* Equipment Needed */}
-                <div className="rounded-xl border border-blue-200 p-4" style={{ background: "#eff6ff" }}>
-                  <p className="text-[12px] font-bold text-blue-700 mb-2 flex items-center gap-1.5">
-                    <Wrench size={13} /> Recommended Equipment
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {equipmentNeeded.map((eq) => (
-                      <span key={eq} className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-[11px] font-medium text-blue-700 shadow-sm">{eq}</span>
-                    ))}
+                <div className="rounded-2xl overflow-hidden shadow-sm" style={{ border: "1.5px solid #bfdbfe" }}>
+                  <div className="px-5 py-3 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}>
+                    <Wrench size={14} className="text-white" />
+                    <p className="text-[12px] font-bold text-white">Recommended Equipment</p>
+                  </div>
+                  <div className="p-5" style={{ background: "linear-gradient(135deg, #eff6ff, #dbeafe)" }}>
+                    <div className="flex flex-wrap gap-2">
+                      {equipmentNeeded.map((eq) => (
+                        <span key={eq} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-blue-200 text-[11px] font-bold text-blue-700 shadow-sm hover:shadow-md transition-all">{eq}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Inspector Details Form */}
-                <div className="rounded-xl border border-gray-200 p-5 bg-white">
-                  <h4 className="text-[13px] font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <User size={15} className="text-orange-500" /> Inspector / Engineer Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Team Lead Name *</label>
-                      <div className="relative">
-                        <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input type="text" value={schedTeamLead} onChange={(e) => setSchedTeamLead(e.target.value)}
-                          placeholder="e.g. Eng. Rajesh Patil"
-                          className="w-full h-11 pl-9 pr-3 rounded-xl border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition" />
-                      </div>
+                <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+                  <div className="px-5 py-3.5 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #f8fafc, #f1f5f9)", borderBottom: "1px solid #e2e8f0" }}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#fff7ed" }}>
+                      <User size={15} className="text-orange-500" />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Contact Number</label>
-                      <div className="relative">
-                        <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input type="tel" value={schedContact} onChange={(e) => setSchedContact(e.target.value)}
-                          placeholder="e.g. +91 98765 43210"
-                          className="w-full h-11 pl-9 pr-3 rounded-xl border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition" />
+                    <h4 className="text-[13px] font-bold text-gray-800">Inspector / Engineer Details</h4>
+                  </div>
+                  <div className="p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Team Lead Name *</label>
+                        <div className="relative group">
+                          <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition" />
+                          <input type="text" value={schedTeamLead} onChange={(e) => setSchedTeamLead(e.target.value)}
+                            placeholder="e.g. Eng. Rajesh Patil"
+                            className="w-full h-12 pl-10 pr-4 rounded-xl border-2 border-gray-200 text-[13px] font-medium focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all" />
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Assign Agency *</label>
-                      <div className="relative">
-                        <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <select value={schedAgency} onChange={(e) => setSchedAgency(e.target.value)}
-                          className="w-full h-11 pl-9 pr-3 rounded-xl border border-gray-200 text-[13px] bg-white focus:outline-none focus:border-orange-400 appearance-none cursor-pointer">
-                          <option>NHAI</option><option>State PWD</option><option>Municipality</option><option>PMGSY</option><option>ThirdParty</option>
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Contact Number</label>
+                        <div className="relative group">
+                          <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition" />
+                          <input type="tel" value={schedContact} onChange={(e) => setSchedContact(e.target.value)}
+                            placeholder="e.g. +91 98765 43210"
+                            className="w-full h-12 pl-10 pr-4 rounded-xl border-2 border-gray-200 text-[13px] font-medium focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Assign Agency *</label>
+                        <div className="relative group">
+                          <Building2 size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition" />
+                          <select value={schedAgency} onChange={(e) => setSchedAgency(e.target.value)}
+                            className="w-full h-12 pl-10 pr-4 rounded-xl border-2 border-gray-200 text-[13px] font-medium bg-white focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 appearance-none cursor-pointer transition-all">
+                            <option>NHAI</option><option>State PWD</option><option>Municipality</option><option>PMGSY</option><option>ThirdParty</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Team Size</label>
+                        <select value={schedTeamSize} onChange={(e) => setSchedTeamSize(e.target.value)}
+                          className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 text-[13px] font-medium bg-white focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 appearance-none cursor-pointer transition-all">
+                          {[2, 3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n}>{n} members</option>)}
                         </select>
                       </div>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Team Size</label>
-                      <select value={schedTeamSize} onChange={(e) => setSchedTeamSize(e.target.value)}
-                        className="w-full h-11 px-3 rounded-xl border border-gray-200 text-[13px] bg-white focus:outline-none focus:border-orange-400 appearance-none cursor-pointer">
-                        {[2, 3, 4, 5, 6, 8, 10].map((n) => <option key={n} value={n}>{n} members</option>)}
-                      </select>
                     </div>
                   </div>
                 </div>
 
                 {/* Schedule Details Form */}
-                <div className="rounded-xl border border-gray-200 p-5 bg-white">
-                  <h4 className="text-[13px] font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Calendar size={15} className="text-blue-500" /> Schedule Details
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Inspection Date *</label>
-                      <input type="date" value={schedDate} onChange={(e) => setSchedDate(e.target.value)}
-                        className="w-full h-11 px-3 rounded-xl border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition" />
+                <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+                  <div className="px-5 py-3.5 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #f8fafc, #f1f5f9)", borderBottom: "1px solid #e2e8f0" }}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#eff6ff" }}>
+                      <Calendar size={15} className="text-blue-500" />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Estimated Duration</label>
-                      <select className="w-full h-11 px-3 rounded-xl border border-gray-200 text-[13px] bg-white focus:outline-none focus:border-orange-400">
-                        <option>Half Day (4 hours)</option><option>Full Day (8 hours)</option><option>2 Days</option><option>3+ Days</option>
-                      </select>
-                    </div>
+                    <h4 className="text-[13px] font-bold text-gray-800">Schedule Details</h4>
                   </div>
-
-                  {/* Inspection Type Selection */}
-                  <div className="mb-4">
-                    <label className="text-[11px] font-semibold text-gray-500 mb-2 block">Inspection Type *</label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {([
-                        { key: "full" as InspectionType, label: "Full Inspection", desc: "Complete survey with all equipment. All 9 distress metrics measured.", icon: <Clipboard size={18} /> },
-                        { key: "quick" as InspectionType, label: "Quick Check", desc: "Visual inspection + PCI & IRI. Key metrics only.", icon: <Eye size={18} /> },
-                        { key: "monsoon_special" as InspectionType, label: "Monsoon Special", desc: "Drainage, waterlogging & flood damage focus.", icon: <CloudRain size={18} /> },
-                      ]).map((t) => (
-                        <button key={t.key} onClick={() => setSchedType(t.key)}
-                          className={`p-4 rounded-xl text-left border-2 transition-all ${schedType === t.key ? "border-orange-400 shadow-md" : "border-gray-200 hover:border-gray-300 hover:shadow-sm"}`}
-                          style={schedType === t.key ? { background: "#fff7ed" } : undefined}>
-                          <div className={`mb-2 ${schedType === t.key ? "text-orange-500" : "text-gray-400"}`}>{t.icon}</div>
-                          <p className={`text-[12px] font-bold ${schedType === t.key ? "text-orange-700" : "text-gray-600"}`}>{t.label}</p>
-                          <p className="text-[10px] text-gray-400 mt-1 leading-relaxed">{t.desc}</p>
-                        </button>
-                      ))}
+                  <div className="p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Inspection Date *</label>
+                        <input type="date" value={schedDate} onChange={(e) => setSchedDate(e.target.value)}
+                          className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 text-[13px] font-medium focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all" />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Estimated Duration</label>
+                        <select className="w-full h-12 px-4 rounded-xl border-2 border-gray-200 text-[13px] font-medium bg-white focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 appearance-none cursor-pointer transition-all">
+                          <option>Half Day (4 hours)</option><option>Full Day (8 hours)</option><option>2 Days</option><option>3+ Days</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Notes */}
-                  <div>
-                    <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block">Special Instructions / Notes</label>
-                    <textarea value={schedNotes} onChange={(e) => setSchedNotes(e.target.value)} rows={3}
-                      placeholder="Any special instructions for the inspection team, access routes, safety precautions, or specific areas to focus on..."
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 resize-none transition" />
+                    {/* Inspection Type Selection — Enhanced cards */}
+                    <div className="mb-5">
+                      <label className="text-[11px] font-bold text-gray-500 mb-3 block uppercase tracking-wider">Inspection Type *</label>
+                      <div className="grid grid-cols-3 gap-4">
+                        {([
+                          { key: "full" as InspectionType, label: "Full Inspection", desc: "Complete survey with all equipment. All 9 distress metrics measured.", icon: <Clipboard size={22} />, gradient: "linear-gradient(135deg, #f97316, #ea580c)", lightBg: "#fff7ed", accentBorder: "#fed7aa" },
+                          { key: "quick" as InspectionType, label: "Quick Check", desc: "Visual inspection + PCI & IRI. Key metrics only.", icon: <Eye size={22} />, gradient: "linear-gradient(135deg, #3b82f6, #2563eb)", lightBg: "#eff6ff", accentBorder: "#bfdbfe" },
+                          { key: "monsoon_special" as InspectionType, label: "Monsoon Special", desc: "Drainage, waterlogging & flood damage focus.", icon: <CloudRain size={22} />, gradient: "linear-gradient(135deg, #8b5cf6, #7c3aed)", lightBg: "#f5f3ff", accentBorder: "#ddd6fe" },
+                        ]).map((t) => (
+                          <button key={t.key} onClick={() => setSchedType(t.key)}
+                            className={`relative p-5 rounded-2xl text-left transition-all duration-300 overflow-hidden ${schedType === t.key ? "shadow-lg scale-[1.02]" : "hover:shadow-md hover:-translate-y-0.5"}`}
+                            style={{ border: `2px solid ${schedType === t.key ? t.accentBorder : "#e5e7eb"}`, background: schedType === t.key ? t.lightBg : "white" }}>
+                            {schedType === t.key && <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: t.gradient }} />}
+                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-sm transition-all ${schedType === t.key ? "text-white" : "text-gray-400"}`}
+                              style={schedType === t.key ? { background: t.gradient } : { background: "#f1f5f9" }}>
+                              {t.icon}
+                            </div>
+                            <p className={`text-[13px] font-bold ${schedType === t.key ? "text-gray-900" : "text-gray-600"}`}>{t.label}</p>
+                            <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">{t.desc}</p>
+                            {schedType === t.key && (
+                              <div className="absolute top-3 right-3">
+                                <CheckCircle2 size={16} style={{ color: t.accentBorder === "#fed7aa" ? "#f97316" : t.accentBorder === "#bfdbfe" ? "#3b82f6" : "#8b5cf6" }} />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 mb-2 block uppercase tracking-wider">Special Instructions / Notes</label>
+                      <textarea value={schedNotes} onChange={(e) => setSchedNotes(e.target.value)} rows={3}
+                        placeholder="Any special instructions for the inspection team, access routes, safety precautions, or specific areas to focus on..."
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 resize-none transition-all" />
+                    </div>
                   </div>
                 </div>
 
-                {/* Summary & Submit */}
-                <div className="rounded-xl border-2 border-orange-200 p-5" style={{ background: "#fffbeb" }}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-[13px] font-bold text-gray-800 mb-3">Schedule Summary</h4>
-                      <div className="text-[12px] text-gray-600 space-y-1.5">
-                        <p><strong>Road:</strong> {road.name} ({road.road_id})</p>
-                        <p><strong>Date:</strong> {new Date(schedDate).toLocaleDateString("en-IN", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
-                        <p><strong>Type:</strong> {schedType === "full" ? "Full Inspection" : schedType === "quick" ? "Quick Check" : "Monsoon Special"}</p>
-                        <p><strong>Agency:</strong> {schedAgency} | <strong>Team:</strong> {schedTeamLead || "TBD"} ({schedTeamSize} members)</p>
-                        <p><strong>Est. Cost:</strong> {"\u20B9"}{item.estimatedCostLakhs}L</p>
+                {/* Summary & Submit — Premium card */}
+                <div className="rounded-2xl overflow-hidden shadow-lg" style={{ border: "2px solid #fed7aa" }}>
+                  <div className="px-5 py-3" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                    <h4 className="text-[13px] font-bold text-white">Schedule Summary</h4>
+                  </div>
+                  <div className="p-5" style={{ background: "linear-gradient(135deg, #fffbeb, #fff7ed)" }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="text-[12px] text-gray-700 space-y-2">
+                        <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-orange-400" /><strong>Road:</strong> {road.name} <span className="text-gray-400">({road.road_id})</span></p>
+                        <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-400" /><strong>Date:</strong> {new Date(schedDate).toLocaleDateString("en-IN", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
+                        <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-violet-400" /><strong>Type:</strong> {schedType === "full" ? "Full Inspection" : schedType === "quick" ? "Quick Check" : "Monsoon Special"}</p>
+                        <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /><strong>Agency:</strong> {schedAgency} | <strong>Team:</strong> {schedTeamLead || "TBD"} ({schedTeamSize} members)</p>
+                        <p className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /><strong>Est. Cost:</strong> <span className="font-bold text-orange-700">{"\u20B9"}{item.estimatedCostLakhs}L</span></p>
                       </div>
+                      <button
+                        onClick={() => {
+                          onSchedule(item, schedDate, schedAgency, schedType);
+                          setSchedSubmitted(true);
+                        }}
+                        className="group px-7 py-3.5 rounded-xl text-[14px] font-black text-white shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300"
+                        style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                        <Send size={15} className="inline mr-2 -mt-0.5 group-hover:translate-x-0.5 transition-transform" />
+                        Confirm & Schedule
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        onSchedule(item, schedDate, schedAgency, schedType);
-                        setSchedSubmitted(true);
-                      }}
-                      className="px-6 py-3 rounded-xl text-[14px] font-bold text-white shadow-lg hover:shadow-xl transition-all"
-                      style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
-                      <Send size={15} className="inline mr-2 -mt-0.5" />
-                      Confirm & Schedule
-                    </button>
                   </div>
                 </div>
               </>
@@ -1962,12 +2082,12 @@ export default function InspectionScheduler({ roads }: Props) {
       {/* ═══ INSPECTOR DETAIL CARD ═══ */}
       {selectedItem && (
         <div ref={detailCardRef} className="scroll-mt-24">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#fff7ed" }}>
-              <User size={18} className="text-orange-500" />
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+              <User size={20} className="text-white" />
             </div>
             <div>
-              <h2 className="text-[15px] font-bold text-gray-900">Inspector / Engineer Panel</h2>
+              <h2 className="text-[16px] font-extrabold text-gray-900 tracking-tight">Inspector / Engineer Panel</h2>
               <p className="text-[11px] text-gray-400">Select a road from the table above to view details and schedule inspection</p>
             </div>
           </div>
