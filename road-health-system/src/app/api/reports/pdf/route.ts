@@ -636,20 +636,8 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
 <!-- CONTENT START -->
 <div class="content">
 
-  <!-- ═══ SECTION A — KPI EXECUTIVE SUMMARY ═══ -->
-  ${kpiCards(summary)}
-
-  <hr class="div"/>
-
-  <!-- ═══ SECTION B — AI NARRATIVE ═══ -->
-  <div>
-    ${mdToHtml(narrative)}
-  </div>
-
-  <hr class="div"/>
-
   <!-- ═══════════════════════════════════════════════════ -->
-  <!--     SECTION C — ANALYSIS DASHBOARD (CHARTS)        -->
+  <!--     SECTION A — ANALYSIS DASHBOARD (CHARTS)        -->
   <!-- ═══════════════════════════════════════════════════ -->
 
   <h2 class="sh sh-dashboard">Analysis Dashboard &mdash; Visual Analytics</h2>
@@ -700,6 +688,18 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
       ${surfSvg}
     </div>
   </div>` : ""}
+
+  <hr class="div"/>
+
+  <!-- ═══ SECTION B — KPI EXECUTIVE SUMMARY ═══ -->
+  ${kpiCards(summary)}
+
+  <hr class="div"/>
+
+  <!-- ═══ SECTION C — AI NARRATIVE ═══ -->
+  <div>
+    ${mdToHtml(narrative)}
+  </div>
 
   <hr class="div"/>
 
