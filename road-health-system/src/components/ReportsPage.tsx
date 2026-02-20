@@ -281,24 +281,60 @@ export default function ReportsPage() {
 
       document.body.removeChild(iframe);
 
-      // Build PDF – slice canvas into A4 pages
+      // Build PDF – smart page slicing that avoids cutting through content
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-      // How many pixels correspond to one A4 page height
+      // How many canvas pixels = one A4 page (at 2× scale, canvas.width = 794*2 = 1588)
       const pageHeightPx = Math.round((A4_MM_HEIGHT / A4_MM_WIDTH) * canvas.width);
 
-      const totalPages = Math.ceil(canvas.height / pageHeightPx);
+      /**
+       * Find the best Y cut-point near `idealY` by scanning up to 60px upward
+       * for a row of mostly-white pixels (a natural gap between content blocks).
+       * Falls back to idealY if no whitespace gap found.
+       */
+      function findBestCut(ctx2d: CanvasRenderingContext2D, idealY: number, canvasWidth: number): number {
+        const scanRange = Math.min(60, Math.floor(pageHeightPx * 0.06)); // up to 60px look-back
+        for (let dy = 0; dy <= scanRange; dy++) {
+          const y = idealY - dy;
+          if (y <= 0) break;
+          const row = ctx2d.getImageData(0, y, canvasWidth, 1).data;
+          let whitePixels = 0;
+          for (let x = 0; x < row.length; x += 4) {
+            const r = row[x], g = row[x + 1], b = row[x + 2];
+            if (r > 240 && g > 240 && b > 240) whitePixels++;
+          }
+          const whitePct = whitePixels / (canvasWidth);
+          if (whitePct > 0.92) return y; // found a natural whitespace row
+        }
+        return idealY; // no gap found, cut at ideal position
+      }
 
-      for (let page = 0; page < totalPages; page++) {
-        if (page > 0) pdf.addPage();
+      // Build a scratch canvas to sample pixel rows for cut detection
+      const scratchCtx = (() => {
+        const sc = document.createElement("canvas");
+        sc.width = canvas.width; sc.height = canvas.height;
+        sc.getContext("2d")!.drawImage(canvas, 0, 0);
+        return sc.getContext("2d")!;
+      })();
 
-        // Crop the canvas to one page slice
-        const srcY = page * pageHeightPx;
-        const srcH = Math.min(pageHeightPx, canvas.height - srcY);
+      const cuts: number[] = [0]; // start positions for each page (in canvas px)
+      while (true) {
+        const last = cuts[cuts.length - 1];
+        const next = last + pageHeightPx;
+        if (next >= canvas.height) break;
+        cuts.push(findBestCut(scratchCtx, next, canvas.width));
+      }
+      cuts.push(canvas.height); // sentinel end
+
+      for (let i = 0; i < cuts.length - 1; i++) {
+        if (i > 0) pdf.addPage();
+
+        const srcY = cuts[i];
+        const srcH = cuts[i + 1] - srcY;
 
         const pageCanvas = document.createElement("canvas");
         pageCanvas.width = canvas.width;
-        pageCanvas.height = pageHeightPx; // always full page height (blank at bottom if last page)
+        pageCanvas.height = pageHeightPx; // always full A4 height
         const ctx = pageCanvas.getContext("2d")!;
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);

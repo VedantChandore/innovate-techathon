@@ -563,6 +563,7 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
   border-left: 4px solid #c0392b; border-radius: 4px;
   padding: 9px 13px; margin-top: 20px;
   font-size: 8px; color: #7f1d1d; line-height: 1.65;
+  page-break-inside: avoid;
 }
 
 /* FOOTER */
@@ -570,13 +571,23 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
   background: #1a1a2e; color: rgba(255,255,255,0.55);
   padding: 8px 34px; display: flex; justify-content: space-between;
   align-items: center; font-size: 7.5px; letter-spacing: 0.3px;
+  page-break-inside: avoid;
 }
 .footer-center { text-align: center; font-size: 7.5px; color: rgba(255,255,255,0.38); }
 
+/* PAGE BREAK HELPERS */
+.page-break { page-break-before: always; break-before: page; }
+.no-break {
+  page-break-inside: avoid; break-inside: avoid;
+  display: block;
+}
+.tricolor { page-break-inside: avoid; break-inside: avoid; }
+
 @media print {
   html, body { width: 210mm; }
-  .sh, .ssh { page-break-after: avoid; }
-  .tbl-wrap, .chart-grid-2, .chart-grid-1, .kpi-grid, .split-2 { page-break-inside: avoid; }
+  .sh, .ssh { page-break-after: avoid; break-after: avoid; }
+  .tbl-wrap, .chart-grid-2, .chart-grid-1, .kpi-grid, .split-2 { page-break-inside: avoid; break-inside: avoid; }
+  .disclaimer, .gov-footer, .tricolor { page-break-inside: avoid; break-inside: avoid; }
 }
 </style>
 </head>
@@ -637,7 +648,62 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
 
   <hr class="div"/>
 
-  <!-- ═══ SECTION C — STATISTICAL TABLES ═══ -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!--     SECTION C — ANALYSIS DASHBOARD (CHARTS)        -->
+  <!-- ═══════════════════════════════════════════════════ -->
+
+  <h2 class="sh sh-dashboard">Analysis Dashboard &mdash; Visual Analytics</h2>
+  <p class="bt">
+    The following charts provide a comprehensive visual overview of the road network covering
+    condition distribution, maintenance priorities, inspection compliance, budget allocation${hasDistricts ? ", district-level performance," : ""}
+    and surface type composition.
+  </p>
+
+  <!-- Figure 1 + 2: Condition Donut & Priority Bars -->
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-label">Figure 1 &mdash; Condition Distribution</div>
+      ${donutSvg(summary)}
+    </div>
+    <div class="chart-box">
+      <div class="chart-label">Figure 2 &mdash; Priority Level Breakdown</div>
+      ${priorityBarSvg(summary)}
+    </div>
+  </div>
+
+  <!-- Figure 3 + 4: Inspection Compliance & Budget Pie -->
+  <div class="chart-grid-2">
+    <div class="chart-box">
+      <div class="chart-label">Figure 3 &mdash; Inspection Compliance Status</div>
+      ${inspectionBarSvg(summary)}
+    </div>
+    <div class="chart-box">
+      <div class="chart-label">Figure 4 &mdash; Budget Allocation by Condition Tier</div>
+      ${budgetPieSvg(summary)}
+    </div>
+  </div>
+
+  <!-- Figure 5: District PCI (if multi-district) -->
+  ${distSvg ? `
+  <div class="chart-grid-1">
+    <div class="chart-box">
+      <div class="chart-label">Figure 5 &mdash; Average PCI Score by District (top 9)</div>
+      ${distSvg}
+    </div>
+  </div>` : ""}
+
+  <!-- Figure 5/6: Surface Type Distribution -->
+  ${surfSvg ? `
+  <div class="chart-grid-1">
+    <div class="chart-box">
+      <div class="chart-label">Figure ${distSvg ? 6 : 5} &mdash; Road Segment Count by Surface Type</div>
+      ${surfSvg}
+    </div>
+  </div>` : ""}
+
+  <hr class="div"/>
+
+  <!-- ═══ SECTION D — STATISTICAL TABLES ═══ -->
   <h2 class="sh">Statistical Breakdown</h2>
 
   <div class="split-2">
@@ -720,61 +786,6 @@ hr.div { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
       <tr><td>High Traffic (&gt; 10,000 ADT)</td><td style="text-align:right;font-weight:700;color:#e67e22">${fmt(summary.highTrafficCount)}</td><td>Accelerated wear; prioritise resurfacing</td></tr>
     </tbody>
   </table>
-
-  <hr class="div"/>
-
-  <!-- ═══════════════════════════════════════════════════ -->
-  <!--     SECTION D — ANALYSIS DASHBOARD (CHARTS)        -->
-  <!-- ═══════════════════════════════════════════════════ -->
-
-  <h2 class="sh sh-dashboard">Analysis Dashboard &mdash; Visual Analytics</h2>
-  <p class="bt">
-    The following charts provide a comprehensive visual overview of the road network covering
-    condition distribution, maintenance priorities, inspection compliance, budget allocation${hasDistricts ? ", district-level performance," : ""}
-    and surface type composition.
-  </p>
-
-  <!-- Figure 1 + 2: Condition Donut & Priority Bars -->
-  <div class="chart-grid-2">
-    <div class="chart-box">
-      <div class="chart-label">Figure 1 &mdash; Condition Distribution</div>
-      ${donutSvg(summary)}
-    </div>
-    <div class="chart-box">
-      <div class="chart-label">Figure 2 &mdash; Priority Level Breakdown</div>
-      ${priorityBarSvg(summary)}
-    </div>
-  </div>
-
-  <!-- Figure 3 + 4: Inspection Compliance & Budget Pie -->
-  <div class="chart-grid-2">
-    <div class="chart-box">
-      <div class="chart-label">Figure 3 &mdash; Inspection Compliance Status</div>
-      ${inspectionBarSvg(summary)}
-    </div>
-    <div class="chart-box">
-      <div class="chart-label">Figure 4 &mdash; Budget Allocation by Condition Tier</div>
-      ${budgetPieSvg(summary)}
-    </div>
-  </div>
-
-  <!-- Figure 5: District PCI (if multi-district) -->
-  ${distSvg ? `
-  <div class="chart-grid-1">
-    <div class="chart-box">
-      <div class="chart-label">Figure 5 &mdash; Average PCI Score by District (top 9)</div>
-      ${distSvg}
-    </div>
-  </div>` : ""}
-
-  <!-- Figure 5/6: Surface Type Distribution -->
-  ${surfSvg ? `
-  <div class="chart-grid-1">
-    <div class="chart-box">
-      <div class="chart-label">Figure ${distSvg ? 6 : 5} &mdash; Road Segment Count by Surface Type</div>
-      ${surfSvg}
-    </div>
-  </div>` : ""}
 
   <hr class="div"/>
 
