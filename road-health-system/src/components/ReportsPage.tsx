@@ -387,65 +387,70 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen" style={{ background: "#f8f9fc" }}>
 
-      {/* ── Page Header ─────────────────────────────────── */}
+      {/* ── Page Header (light, matching Scheduler) ──────────── */}
       <motion.div
-        initial={{ opacity: 0, y: -12 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #1d3557 100%)", padding: "36px 40px 32px" }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="px-8 pt-6 pb-5"
       >
-        {/* Decorative mesh */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #f97316 1px, transparent 1px), radial-gradient(circle at 80% 20%, #3b82f6 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: "radial-gradient(circle, #f97316, transparent 70%)" }} />
-        <div className="absolute bottom-0 left-1/3 w-60 h-60 rounded-full opacity-[0.05]" style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)" }} />
-
-        <div className="relative flex items-center gap-4">
-          <motion.div
-            whileHover={{ scale: 1.08, rotate: 3 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-white/10"
-            style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}
-          >
-            <Sparkles size={26} className="text-white" />
-          </motion.div>
-          <div>
-            <h1 className="text-white font-extrabold text-[26px] tracking-tight leading-tight">AI-Powered Reports</h1>
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold text-orange-300" style={{ background: "rgba(249,115,22,0.15)" }}>Gemini AI</span>
-              <span className="text-[10px] text-gray-500">•</span>
-              <span className="text-[12px] text-gray-400 font-medium">Maharashtra Road Health System</span>
-              <span className="text-[10px] text-gray-500">•</span>
-              <span className="px-2 py-0.5 rounded-lg text-[10px] font-semibold text-cyan-300" style={{ background: "rgba(6,182,212,0.12)" }}>v1.0</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <motion.div
+              whileHover={{ scale: 1.06, rotate: 2 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20"
+              style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}
+            >
+              <Sparkles size={22} className="text-white" />
+            </motion.div>
+            <div>
+              <h1 className="text-[22px] font-extrabold text-gray-900 tracking-tight leading-tight">AI-Powered Reports</h1>
+              <p className="text-[13px] text-gray-400 mt-0.5">
+                Generate professional governance reports with Gemini AI
+                <span className="ml-2 px-2 py-0.5 rounded-md text-[10px] font-bold text-orange-600" style={{ background: "rgba(249,115,22,0.1)" }}>Gemini AI</span>
+                <span className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold text-cyan-600" style={{ background: "rgba(6,182,212,0.1)" }}>v1.0</span>
+              </p>
             </div>
           </div>
+
+          {/* Download button (visible when report is ready) */}
+          {step === "done" && htmlContent && (
+            <motion.button
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={downloading ? {} : { scale: 1.03 }}
+              whileTap={downloading ? {} : { scale: 0.97 }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold text-white border-none transition-all"
+              style={{
+                cursor: downloading ? "not-allowed" : "pointer",
+                background: downloading ? "#94a3b8" : "linear-gradient(135deg, #0f172a, #1d3557)",
+                boxShadow: downloading ? "none" : "0 4px 15px rgba(29,53,87,0.25)",
+              }}
+            >
+              {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+              {downloading ? "Preparing PDF…" : "Download PDF"}
+            </motion.button>
+          )}
         </div>
       </motion.div>
 
-      <div className="flex gap-0" style={{ minHeight: "calc(100vh - 120px)" }}>
-
-        {/* ── LEFT PANEL: Config ──────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          style={{
-            width: 400, flexShrink: 0, borderRight: "1px solid #e2e8f0",
-            background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)", padding: "28px 24px", overflowY: "auto",
-            maxHeight: "calc(100vh - 120px)", position: "sticky", top: 0,
-          }}
-        >
-
-          {/* Basic Filters */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #f97316, #ea580c)" }} />
-                <h3 className="text-[12px] font-bold uppercase tracking-widest text-gray-500">
-                  Filters
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
+      {/* ── Horizontal Filter Bar (matching Registry/Scheduler) ─ */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="mx-8 mb-5 rounded-2xl bg-white border border-gray-200/60 shadow-sm overflow-hidden"
+      >
+        <div className="px-5 py-4">
+          {/* Top row: filters + generate button */}
+          <div className="flex items-end gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-4 rounded-full" style={{ background: "linear-gradient(180deg, #f97316, #ea580c)" }} />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Filters</span>
                 {activeFilterCount > 0 && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ background: "linear-gradient(135deg, #3b82f6, #2563eb)" }}>
                     {activeFilterCount} active
@@ -457,39 +462,54 @@ export default function ReportsPage() {
                   </button>
                 )}
               </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                <FilterSelect label="District" value={filters.district} onChange={v => setFilters(f => ({ ...f, district: v }))}
+                  options={["Dhule", "Kolhapur", "Nagpur", "Nashik", "Pune", "Raigad", "Satara", "Sindhudurg", "Solapur"]} />
+                <FilterInput label="Highway Ref" placeholder="e.g. NH60, NH 61" value={filters.highway}
+                  onChange={v => setFilters(f => ({ ...f, highway: v }))} />
+                <FilterSelect label="Condition Band" value={filters.conditionBand} onChange={v => setFilters(f => ({ ...f, conditionBand: v }))}
+                  options={["Critical", "Poor", "Fair", "Good"]} />
+                <FilterSelect label="Priority Level" value={filters.priorityLevel} onChange={v => setFilters(f => ({ ...f, priorityLevel: v }))}
+                  options={["Critical", "High", "Medium", "Low"]} />
+                <FilterSelect label="Inspection Status" value={filters.inspectionStatus} onChange={v => setFilters(f => ({ ...f, inspectionStatus: v }))}
+                  options={[
+                    { value: "overdue", label: "Overdue / Never" },
+                    { value: "due_soon", label: "Due Soon" },
+                    { value: "recently_inspected", label: "Recently Inspected" },
+                  ]} />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2.5">
-              <FilterSelect label="District" value={filters.district} onChange={v => setFilters(f => ({ ...f, district: v }))}
-                options={["Dhule", "Kolhapur", "Nagpur", "Nashik", "Pune", "Raigad", "Satara", "Sindhudurg", "Solapur"]} />
+            {/* Generate button in filter bar */}
+            <motion.button
+              onClick={handleGenerate}
+              disabled={isLoading}
+              whileHover={isLoading ? {} : { scale: 1.03, boxShadow: "0 8px 25px rgba(249,115,22,0.35)" }}
+              whileTap={isLoading ? {} : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl text-[13px] font-bold text-white border-none transition-all"
+              style={{
+                cursor: isLoading ? "not-allowed" : "pointer",
+                background: isLoading ? "#94a3b8" : "linear-gradient(135deg, #f97316, #ea580c)",
+                boxShadow: isLoading ? "none" : "0 4px 20px rgba(249,115,22,0.3)",
+              }}
+            >
+              {isLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {isLoading ? "Generating…" : "Generate Report"}
+            </motion.button>
+          </div>
 
-              <FilterInput label="Highway Ref" placeholder="e.g. NH60, NH 61, NH130D" value={filters.highway}
-                onChange={v => setFilters(f => ({ ...f, highway: v }))} />
-
-              <FilterSelect label="Condition Band" value={filters.conditionBand} onChange={v => setFilters(f => ({ ...f, conditionBand: v }))}
-                options={["Critical", "Poor", "Fair", "Good"]} />
-
-              <FilterSelect label="Priority Level" value={filters.priorityLevel} onChange={v => setFilters(f => ({ ...f, priorityLevel: v }))}
-                options={["Critical", "High", "Medium", "Low"]} />
-
-              <FilterSelect label="Inspection Status" value={filters.inspectionStatus} onChange={v => setFilters(f => ({ ...f, inspectionStatus: v }))}
-                options={[
-                  { value: "overdue", label: "Overdue / Never Inspected" },
-                  { value: "due_soon", label: "Due Soon (6–12 months)" },
-                  { value: "recently_inspected", label: "Recently Inspected" },
-                ]} />
-            </div>
-
-            {/* Advanced Filters Toggle */}
+          {/* Advanced filters toggle */}
+          <div className="mt-3 pt-2 border-t border-gray-100">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="group flex items-center gap-2 mt-4 px-3 py-2 rounded-xl text-[12px] font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all"
-              style={{ background: "none", border: "1px solid #e2e8f0", cursor: "pointer", width: "100%" }}
+              className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all"
+              style={{ background: "none", border: "none", cursor: "pointer" }}
             >
-              <Filter size={13} className="text-gray-400 group-hover:text-orange-500 transition-colors" />
+              <Filter size={12} className="text-gray-300 group-hover:text-orange-500 transition-colors" />
               Advanced Filters
-              <motion.span animate={{ rotate: showAdvanced ? 180 : 0 }} transition={{ duration: 0.2 }} className="ml-auto">
-                <ChevronDown size={13} />
+              <motion.span animate={{ rotate: showAdvanced ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown size={12} />
               </motion.span>
             </button>
 
@@ -502,15 +522,11 @@ export default function ReportsPage() {
                   transition={{ duration: 0.25, ease: "easeInOut" }}
                   style={{ overflow: "hidden" }}
                 >
-                  <div className="flex flex-col gap-2.5 mt-3 p-4 rounded-xl" style={{ background: "linear-gradient(135deg, #f8fafc, #f1f5f9)", border: "1px solid #e2e8f0" }}>
-                    <div className="flex gap-2">
-                      <FilterInput label="CIBIL Min" placeholder="0" type="number" value={filters.cibilMin} onChange={v => setFilters(f => ({ ...f, cibilMin: v }))} />
-                      <FilterInput label="CIBIL Max" placeholder="100" type="number" value={filters.cibilMax} onChange={v => setFilters(f => ({ ...f, cibilMax: v }))} />
-                    </div>
-                    <div className="flex gap-2">
-                      <FilterInput label="Built From" placeholder="2000" type="number" value={filters.constructionYearMin} onChange={v => setFilters(f => ({ ...f, constructionYearMin: v }))} />
-                      <FilterInput label="Built To" placeholder="2024" type="number" value={filters.constructionYearMax} onChange={v => setFilters(f => ({ ...f, constructionYearMax: v }))} />
-                    </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-2.5 p-3 rounded-xl" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <FilterInput label="CIBIL Min" placeholder="0" type="number" value={filters.cibilMin} onChange={v => setFilters(f => ({ ...f, cibilMin: v }))} />
+                    <FilterInput label="CIBIL Max" placeholder="100" type="number" value={filters.cibilMax} onChange={v => setFilters(f => ({ ...f, cibilMax: v }))} />
+                    <FilterInput label="Built From" placeholder="2000" type="number" value={filters.constructionYearMin} onChange={v => setFilters(f => ({ ...f, constructionYearMin: v }))} />
+                    <FilterInput label="Built To" placeholder="2024" type="number" value={filters.constructionYearMax} onChange={v => setFilters(f => ({ ...f, constructionYearMax: v }))} />
                     <FilterInput label="Inspection From" type="date" value={filters.inspectionDateFrom} onChange={v => setFilters(f => ({ ...f, inspectionDateFrom: v }))} />
                     <FilterInput label="Inspection To" type="date" value={filters.inspectionDateTo} onChange={v => setFilters(f => ({ ...f, inspectionDateTo: v }))} />
                   </div>
@@ -518,33 +534,18 @@ export default function ReportsPage() {
               )}
             </AnimatePresence>
           </div>
+        </div>
 
-          {/* Generate Button */}
-          <motion.button
-            onClick={handleGenerate}
-            disabled={isLoading}
-            whileHover={isLoading ? {} : { scale: 1.02, boxShadow: "0 8px 25px rgba(37,99,235,0.4)" }}
-            whileTap={isLoading ? {} : { scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            style={{
-              width: "100%", padding: "14px", borderRadius: 14,
-              background: isLoading ? "#94a3b8" : "linear-gradient(135deg, #0f172a, #1d3557, #2563eb)",
-              color: "#fff", fontWeight: 700, fontSize: 14,
-              border: "none", cursor: isLoading ? "not-allowed" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: isLoading ? "none" : "0 4px 20px rgba(37,99,235,0.3)",
-              marginTop: 10,
-            }}
-          >
-            {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-            {isLoading ? "Generating…" : "Generate Report"}
-          </motion.button>
-
-          {/* Progress Steps */}
+        {/* Progress bar (shows inside filter bar when loading) */}
+        <AnimatePresence>
           {isLoading && (
-            <div style={{ marginTop: 14, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 16px" }}>
-              {/* Step dots */}
-              <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="px-5 pb-4"
+            >
+              <div className="flex items-center gap-3 mb-2">
                 {[
                   { key: "aggregating", num: 1, label: "Data" },
                   { key: "generating", num: 2, label: "AI" },
@@ -553,478 +554,365 @@ export default function ReportsPage() {
                   const done = (step === "generating" && i === 0) || (step === "building_pdf" && i <= 1);
                   const active = step === s.key;
                   return (
-                    <div key={s.key} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : "none" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-                        <div style={{
-                          width: 26, height: 26, borderRadius: "50%",
-                          background: done ? "#22c55e" : active ? "linear-gradient(135deg,#2563eb,#7c3aed)" : "#e2e8f0",
+                    <div key={s.key} className="flex items-center" style={{ flex: i < 2 ? 1 : "none" }}>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all" style={{
+                          background: done ? "#22c55e" : active ? "linear-gradient(135deg,#f97316,#ea580c)" : "#e2e8f0",
                           color: done || active ? "#fff" : "#94a3b8",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 11, fontWeight: 700,
-                          boxShadow: active ? "0 0 0 3px rgba(37,99,235,0.2)" : "none",
-                          transition: "all 0.3s ease",
+                          boxShadow: active ? "0 0 0 3px rgba(249,115,22,0.2)" : "none",
                         }}>
                           {done ? "✓" : s.num}
                         </div>
-                        <span style={{ fontSize: 9, fontWeight: 600, color: active ? "#2563eb" : done ? "#16a34a" : "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                          {s.label}
-                        </span>
+                        <span className="text-[10px] font-semibold" style={{ color: active ? "#f97316" : done ? "#16a34a" : "#94a3b8" }}>{s.label}</span>
                       </div>
-                      {i < 2 && (
-                        <div style={{ flex: 1, height: 2, margin: "0 4px", marginBottom: 14, background: done ? "#22c55e" : "#e2e8f0", transition: "background 0.4s ease", borderRadius: 1 }} />
-                      )}
+                      {i < 2 && <div className="flex-1 h-0.5 mx-2 rounded-full transition-all" style={{ background: done ? "#22c55e" : "#e2e8f0" }} />}
                     </div>
                   );
                 })}
               </div>
-              {/* Animated bar */}
-              <div style={{ height: 5, background: "#e2e8f0", borderRadius: 10, overflow: "hidden" }}>
-                <div style={{
-                  height: "100%", borderRadius: 10,
-                  background: "linear-gradient(90deg, #2563eb, #7c3aed, #06b6d4)",
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{
+                  background: "linear-gradient(90deg, #f97316, #ea580c, #dc2626)",
                   backgroundSize: "200% 100%",
                   width: step === "aggregating" ? "30%" : step === "generating" ? "65%" : "92%",
                   transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)",
                   animation: "shimmer 1.5s linear infinite",
                 }} />
               </div>
-              <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
-              <p style={{ fontSize: 10, color: "#64748b", marginTop: 7, textAlign: "center", fontWeight: 500 }}>{stepLabel}</p>
+              <p className="text-[10px] text-gray-400 mt-1.5 text-center font-medium">{stepLabel}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error/Success inline feedback */}
+        {step === "error" && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-5 mb-4 p-3 rounded-xl flex gap-2.5 items-start" style={{ background: "linear-gradient(135deg, #fef2f2, #fff1f2)", border: "1.5px solid #fecaca" }}>
+            <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+            <div className="text-[11px] text-red-600 leading-relaxed">{errorMsg}</div>
+          </motion.div>
+        )}
+        {step === "done" && summary && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mx-5 mb-4 p-3 rounded-xl flex items-center justify-between" style={{ background: "linear-gradient(135deg, #f0fdf4, #ecfdf5)", border: "1.5px solid #bbf7d0" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#22c55e" }}><CheckCircle2 size={11} className="text-white" /></div>
+              <span className="text-[11px] font-bold text-green-800">Report ready{usedFallback ? " (template)" : " (AI)"}</span>
+              <span className="text-[10px] text-green-600 ml-1">{summary.totalFilteredRoads.toLocaleString()} roads • {summary.coveragePercent}% coverage</span>
             </div>
-          )}
+            <button onClick={handleGenerate} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-green-700 hover:bg-green-100 transition-all" style={{ background: "none", border: "1px solid #bbf7d0", cursor: "pointer" }}>
+              <RefreshCw size={10} /> Regenerate
+            </button>
+          </motion.div>
+        )}
+      </motion.div>
 
-          {/* Error */}
-          {step === "error" && (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-3 p-3.5 rounded-xl flex gap-2.5 items-start" style={{ background: "linear-gradient(135deg, #fef2f2, #fff1f2)", border: "1.5px solid #fecaca" }}>
-              <AlertCircle size={14} style={{ color: "#dc2626", flexShrink: 0, marginTop: 1 }} />
-              <div style={{ fontSize: 11, color: "#dc2626", lineHeight: 1.5 }}>{errorMsg}</div>
-            </motion.div>
-          )}
+      {/* ── FULL-WIDTH Content Area ──────────────────────── */}
+      <div className="px-8 pb-8">
 
-          {/* Success stats */}
-          {step === "done" && summary && (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-3 p-3.5 rounded-xl" style={{ background: "linear-gradient(135deg, #f0fdf4, #ecfdf5)", border: "1.5px solid #bbf7d0" }}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#22c55e" }}>
-                  <CheckCircle2 size={11} className="text-white" />
-                </div>
-                <span className="text-[11px] font-bold text-green-800">Report ready{usedFallback ? " (template)" : " (AI)"}</span>
-              </div>
-              <div className="text-[10px] text-green-600 leading-relaxed">
-                {summary.totalFilteredRoads.toLocaleString()} roads analysed &nbsp;•&nbsp;
-                {summary.coveragePercent}% network coverage<br />
-                Avg CIBIL: {summary.avgCibilScore} &nbsp;•&nbsp; Avg PCI: {summary.avgPciScore}
-              </div>
-              <button
-                onClick={handleGenerate}
-                className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-green-700 hover:bg-green-100 transition-all"
-                style={{ background: "none", border: "1px solid #bbf7d0", cursor: "pointer" }}
-              >
-                <RefreshCw size={10} /> Regenerate
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* ── RIGHT PANEL: Preview ────────────────────── */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
-
-          {/* Preview toolbar */}
-          {step === "done" && htmlContent && (
+        {/* Idle state */}
+        {step === "idle" && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                position: "sticky", top: 0, zIndex: 10,
-                background: "rgba(255,255,255,0.85)", backdropFilter: "blur(12px)",
-                borderBottom: "1px solid #e2e8f0",
-                padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg mb-6"
+              style={{ background: "linear-gradient(135deg, #fff7ed, #ffedd5)", border: "1.5px solid #fed7aa" }}
             >
-              <div className="h-[3px] absolute top-0 left-0 right-0" style={{ background: "linear-gradient(90deg, #f97316, #2563eb, #7c3aed)" }} />
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #eff6ff, #dbeafe)" }}>
-                  <FileText size={15} className="text-blue-600" />
-                </div>
-                <div>
-                  <span className="text-[13px] font-bold text-gray-900">{reportTitle}</span>
-                  <span className="text-[11px] text-gray-400 ml-2">— Preview</span>
-                </div>
-              </div>
-              <motion.button
-                onClick={handleDownloadPdf}
-                disabled={downloading}
-                whileHover={downloading ? {} : { scale: 1.03 }}
-                whileTap={downloading ? {} : { scale: 0.97 }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold text-white border-none transition-all"
-                style={{
-                  cursor: downloading ? "not-allowed" : "pointer",
-                  background: downloading ? "#94a3b8" : "linear-gradient(135deg, #0f172a, #1d3557)",
-                  boxShadow: downloading ? "none" : "0 4px 15px rgba(29,53,87,0.3)",
-                }}
-              >
-                {downloading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-                {downloading ? "Preparing PDF…" : "Download PDF"}
-              </motion.button>
+              <FileText size={36} className="text-orange-400" />
             </motion.div>
-          )}
 
-          {/* Idle state */}
-          {step === "idle" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex flex-col items-center justify-center gap-5"
-              style={{ height: "calc(100vh - 200px)", padding: 40 }}
-            >
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg"
-                style={{ background: "linear-gradient(135deg, #f1f5f9, #e2e8f0)", border: "1.5px solid #e2e8f0" }}
-              >
-                <FileText size={36} className="text-gray-400" />
-              </motion.div>
-              <div className="text-center">
-                <h2 className="text-[20px] font-extrabold text-gray-900 tracking-tight">No Report Generated Yet</h2>
-                <p className="text-[13px] text-gray-400 mt-2 max-w-[420px] leading-relaxed">
-                  Select a report type, apply optional filters, then click &quot;Generate Report&quot; to create a professional AI-written governance report.
-                </p>
+            <h2 className="text-[22px] font-extrabold text-gray-900 tracking-tight mb-2">Generate Your First Report</h2>
+            <p className="text-[13px] text-gray-400 max-w-[480px] text-center leading-relaxed mb-6">
+              Apply optional filters above, then click &quot;Generate Report&quot; to create a professional AI-written governance report with charts, tables, and analysis.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg w-full">
+              {[
+                { icon: Sparkles, label: "AI Narrative", desc: "Gemini-written analysis", color: "#f97316" },
+                { icon: ClipboardList, label: "Data Tables", desc: "Verified from backend", color: "#2563eb" },
+                { icon: Download, label: "PDF Export", desc: "Government-style format", color: "#059669" },
+              ].map((feat, i) => (
+                <motion.div
+                  key={feat.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="flex items-center gap-3 p-3.5 rounded-xl bg-white border border-gray-200/60 shadow-sm"
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${feat.color}12` }}>
+                    <feat.icon size={15} style={{ color: feat.color }} />
+                  </div>
+                  <div>
+                    <div className="text-[12px] font-bold text-gray-800">{feat.label}</div>
+                    <div className="text-[10px] text-gray-400">{feat.desc}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Loading state */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
+            <div className="relative mb-8">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+                <Sparkles size={34} className="text-white" />
               </div>
-              <div className="flex gap-2 flex-wrap justify-center mt-2">
-                {["AI-generated narrative", "Structured tables", "Professional PDF", "No hallucinated numbers"].map((tag, i) => (
-                  <motion.span
-                    key={tag}
-                    initial={{ opacity: 0, y: 10 }}
+              <div className="absolute inset-0 -m-1.5 rounded-3xl border-2 border-orange-300/30 animate-pulse" />
+              <div className="absolute inset-0 -m-3 rounded-3xl border-2 border-orange-200/15 animate-pulse" style={{ animationDelay: "0.5s" }} />
+            </div>
+            <h2 className="text-[18px] font-bold text-gray-900 mb-1.5">
+              {step === "aggregating" && "Crunching Road Data"}
+              {step === "generating" && "Writing AI Report"}
+              {step === "building_pdf" && "Assembling Document"}
+            </h2>
+            <p className="text-[13px] text-gray-400 text-center mb-8 max-w-md">
+              {step === "aggregating" && "Computing statistics across the Maharashtra road network…"}
+              {step === "generating" && "Gemini AI is crafting your formal governance report…"}
+              {step === "building_pdf" && "Styling charts, tables and government header…"}
+            </p>
+
+            <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200/60 shadow-sm p-5">
+              {[
+                { key: "aggregating", icon: "📊", title: "Data Aggregation", desc: "Computing PCI, CIBIL, inspection metrics" },
+                { key: "generating", icon: "✨", title: "AI Narrative", desc: "Gemini generating formal analysis text" },
+                { key: "building_pdf", icon: "📄", title: "Report Assembly", desc: "Building styled government PDF document" },
+              ].map((s, i) => {
+                const done = (i === 0 && (step === "generating" || step === "building_pdf")) || (i === 1 && step === "building_pdf");
+                const active = step === s.key;
+                const waiting = !done && !active;
+                return (
+                  <div key={s.key} className="flex items-start gap-3 mb-3 last:mb-0 relative">
+                    {i < 2 && <div className="absolute left-4 top-9 w-0.5 h-4 transition-colors" style={{ background: done ? "#22c55e" : "#e2e8f0" }} />}
+                    <div className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-sm transition-all" style={{
+                      background: done ? "#f0fdf4" : active ? "#fff7ed" : "#f8fafc",
+                      border: `2px solid ${done ? "#22c55e" : active ? "#f97316" : "#e2e8f0"}`,
+                      boxShadow: active ? "0 0 0 4px rgba(249,115,22,0.1)" : "none",
+                    }}>
+                      {done ? "✓" : s.icon}
+                    </div>
+                    <div className="pt-1">
+                      <div className="text-[12px] font-semibold transition-colors" style={{ color: done ? "#16a34a" : active ? "#ea580c" : "#94a3b8" }}>
+                        {s.title}
+                        {active && <span className="ml-2 text-[9px] bg-orange-500 text-white rounded-full px-2 py-0.5 font-bold">RUNNING</span>}
+                        {done && <span className="ml-2 text-[9px] bg-emerald-500 text-white rounded-full px-2 py-0.5 font-bold">DONE</span>}
+                      </div>
+                      <div className="text-[11px] mt-0.5" style={{ color: waiting ? "#cbd5e1" : "#64748b" }}>{s.desc}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+          </motion.div>
+        )}
+
+        {/* Error state */}
+        {step === "error" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+              style={{ background: "linear-gradient(135deg, #fef2f2, #fff1f2)", border: "2px solid #fecaca" }}
+            >
+              <AlertCircle size={28} className="text-red-500" />
+            </motion.div>
+            <h2 className="text-[17px] font-bold text-gray-900">Generation Failed</h2>
+            <p className="text-[13px] text-gray-400 max-w-[400px] text-center leading-relaxed mt-1">{errorMsg}</p>
+          </motion.div>
+        )}
+
+        {/* Preview content */}
+        {step === "done" && (
+          <div ref={previewRef} style={{ padding: "24px 32px", maxWidth: 1100, margin: "0 auto" }}>
+
+            {/* Summary stat cards */}
+            {summary && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-7">
+                {[
+                  { label: "Roads Analysed", value: summary.totalFilteredRoads.toLocaleString(), from: "from-blue-500", to: "to-blue-600", shadow: "shadow-blue-500/20" },
+                  { label: "Network Coverage", value: `${summary.coveragePercent}%`, from: "from-violet-500", to: "to-purple-600", shadow: "shadow-violet-500/20" },
+                  { label: "Critical Roads", value: summary.conditionBreakdown.Critical.toLocaleString(), from: "from-red-500", to: "to-rose-600", shadow: "shadow-red-500/20" },
+                  { label: "Est. Repair Cost", value: `₹${summary.estimatedTotalCostCrores.toLocaleString()} Cr`, from: "from-amber-500", to: "to-orange-600", shadow: "shadow-amber-500/20" },
+                  { label: "Avg CIBIL Score", value: summary.avgCibilScore.toString(), from: "from-cyan-500", to: "to-teal-600", shadow: "shadow-cyan-500/20" },
+                  { label: "Avg PCI Score", value: summary.avgPciScore.toString(), from: "from-emerald-500", to: "to-green-600", shadow: "shadow-emerald-500/20" },
+                  { label: "Overdue Insp.", value: summary.inspection.overdueCount.toLocaleString(), from: "from-orange-500", to: "to-orange-600", shadow: "shadow-orange-500/20" },
+                  { label: "High Decay Roads", value: summary.highDecayCount.toLocaleString(), from: "from-rose-500", to: "to-red-600", shadow: "shadow-rose-500/20" },
+                ].map((card, i) => (
+                  <motion.div
+                    key={card.label}
+                    initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08 }}
-                    className="text-[11px] font-medium px-3.5 py-1.5 rounded-full border transition-all hover:shadow-sm hover:-translate-y-0.5"
-                    style={{ background: "#fff", color: "#475569", borderColor: "#e2e8f0" }}
-                  >{tag}</motion.span>
+                    transition={{ delay: i * 0.04, duration: 0.35, ease: "easeOut" }}
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.from} ${card.to} text-white shadow-lg ${card.shadow} cursor-default`}
+                  >
+                    <div className="relative z-10 px-4 py-4">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1">{card.label}</p>
+                      <p className="text-[22px] font-extrabold tabular-nums leading-none">{card.value}</p>
+                    </div>
+                    {/* Decorative watermark */}
+                    <div className="absolute -bottom-2 -right-2 text-white/[0.08]">
+                      <Sparkles size={48} strokeWidth={1.5} />
+                    </div>
+                  </motion.div>
                 ))}
               </div>
-            </motion.div>
-          )}
+            )}
 
-          {/* Loading state */}
-          {isLoading && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "calc(100vh - 200px)", gap: 0, padding: "0 48px" }}>
-
-              {/* Animated icon */}
-              <div style={{ position: "relative", marginBottom: 32 }}>
-                <div style={{
-                  width: 80, height: 80, borderRadius: 22,
-                  background: "linear-gradient(135deg, #1d3557 0%, #2563eb 60%, #7c3aed 100%)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 8px 32px rgba(37,99,235,0.35)",
-                }}>
-                  <Sparkles size={34} className="text-white" />
-                </div>
-                {/* Pulsing ring */}
-                <div style={{
-                  position: "absolute", inset: -6, borderRadius: 28,
-                  border: "2px solid rgba(37,99,235,0.25)",
-                  animation: "pulse-ring 2s ease-in-out infinite",
-                }} />
-                <div style={{
-                  position: "absolute", inset: -13, borderRadius: 34,
-                  border: "2px solid rgba(37,99,235,0.1)",
-                  animation: "pulse-ring 2s ease-in-out infinite 0.4s",
-                }} />
-              </div>
-
-              {/* Heading */}
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#1e293b", marginBottom: 6, textAlign: "center" }}>
-                {step === "aggregating" && "Crunching Road Data"}
-                {step === "generating" && "Writing AI Report"}
-                {step === "building_pdf" && "Assembling Document"}
-              </h2>
-              <p style={{ fontSize: 13, color: "#64748b", textAlign: "center", marginBottom: 36, lineHeight: 1.6 }}>
-                {step === "aggregating" && "Computing statistics across the Maharashtra road network…"}
-                {step === "generating" && "Gemini AI is crafting your formal governance report…"}
-                {step === "building_pdf" && "Styling charts, tables and government header…"}
-              </p>
-
-              {/* Step tracker */}
-              <div style={{ width: "100%", maxWidth: 420, background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "20px 24px", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
-                {[
-                  { key: "aggregating", icon: "📊", title: "Data Aggregation", desc: "Computing PCI, CIBIL, inspection metrics" },
-                  { key: "generating", icon: "✨", title: "AI Narrative", desc: "Gemini generating formal analysis text" },
-                  { key: "building_pdf", icon: "📄", title: "Report Assembly", desc: "Building styled government PDF document" },
-                ].map((s, i) => {
-                  const done = (i === 0 && (step === "generating" || step === "building_pdf"))
-                    || (i === 1 && step === "building_pdf");
-                  const active = step === s.key;
-                  const waiting = !done && !active;
-                  return (
-                    <div key={s.key} style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: i < 2 ? 16 : 0, position: "relative" }}>
-                      {/* Connector line */}
-                      {i < 2 && (
-                        <div style={{
-                          position: "absolute", left: 16, top: 36, width: 2, height: 16,
-                          background: done ? "#22c55e" : "#e2e8f0", transition: "background 0.4s",
-                        }} />
-                      )}
-                      {/* Circle */}
-                      <div style={{
-                        width: 34, height: 34, borderRadius: "50%", flexShrink: 0,
-                        background: done ? "#f0fdf4" : active ? "linear-gradient(135deg,#eff6ff,#f5f3ff)" : "#f8fafc",
-                        border: `2px solid ${done ? "#22c55e" : active ? "#2563eb" : "#e2e8f0"}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 15,
-                        boxShadow: active ? "0 0 0 4px rgba(37,99,235,0.12)" : "none",
-                        transition: "all 0.3s ease",
-                      }}>
-                        {done ? "✓" : s.icon}
-                      </div>
-                      {/* Text */}
-                      <div style={{ paddingTop: 4 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: done ? "#16a34a" : active ? "#1e40af" : "#94a3b8", transition: "color 0.3s" }}>
-                          {s.title}
-                          {active && <span style={{ marginLeft: 8, fontSize: 10, background: "linear-gradient(135deg,#2563eb,#7c3aed)", color: "#fff", borderRadius: 20, padding: "1px 8px", fontWeight: 700, verticalAlign: "middle" }}>RUNNING</span>}
-                          {done && <span style={{ marginLeft: 8, fontSize: 10, background: "#22c55e", color: "#fff", borderRadius: 20, padding: "1px 8px", fontWeight: 700, verticalAlign: "middle" }}>DONE</span>}
-                        </div>
-                        <div style={{ fontSize: 11, color: waiting ? "#cbd5e1" : "#64748b", marginTop: 1 }}>{s.desc}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Progress bar */}
-                <div style={{ marginTop: 20, height: 6, background: "#f1f5f9", borderRadius: 10, overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%", borderRadius: 10,
-                    background: "linear-gradient(90deg, #2563eb, #7c3aed, #06b6d4)",
-                    backgroundSize: "200% 100%",
-                    width: step === "aggregating" ? "30%" : step === "generating" ? "65%" : "93%",
-                    transition: "width 0.7s cubic-bezier(0.4,0,0.2,1)",
-                    animation: "shimmer 1.8s linear infinite",
-                  }} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-                  <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                    Step {step === "aggregating" ? 1 : step === "generating" ? 2 : 3} of 3
-                  </span>
-                  <span style={{ fontSize: 9, color: "#94a3b8", fontWeight: 600 }}>
-                    {step === "aggregating" ? "30" : step === "generating" ? "65" : "93"}%
-                  </span>
-                </div>
-              </div>
-
-              <style>{`
-                @keyframes pulse-ring {
-                  0%   { opacity: 0.8; transform: scale(1); }
-                  50%  { opacity: 0.3; transform: scale(1.05); }
-                  100% { opacity: 0.8; transform: scale(1); }
-                }
-                @keyframes shimmer {
-                  0%   { background-position: 200% 0; }
-                  100% { background-position: -200% 0; }
-                }
-              `}</style>
-            </div>
-          )}
-
-          {/* Error state */}
-          {step === "error" && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center justify-center gap-4"
-              style={{ height: "calc(100vh - 200px)" }}
-            >
+            {/* AI Narrative */}
+            {narrative && (
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #fef2f2, #fff1f2)", border: "2px solid #fecaca" }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl overflow-hidden shadow-sm mb-6"
+                style={{ background: "#fff", border: "1px solid #e2e8f0" }}
               >
-                <AlertCircle size={28} className="text-red-500" />
+                <div className="px-7 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)", borderBottom: "3px solid #f97316" }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(249,115,22,0.2)" }}>
+                    <Sparkles size={15} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <div className="text-[14px] font-bold text-white">{reportTitle}</div>
+                    <div className="text-[10px] text-gray-400">AI-generated narrative • All numbers verified against backend data</div>
+                  </div>
+                </div>
+                <div className="report-narrative px-7 py-6" style={{ fontSize: 13, lineHeight: 1.75, color: "#334155" }}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{narrative}</ReactMarkdown>
+                </div>
               </motion.div>
-              <h2 className="text-[17px] font-bold text-gray-900">Generation Failed</h2>
-              <p className="text-[13px] text-gray-400 max-w-[400px] text-center leading-relaxed">{errorMsg}</p>
+            )}
+
+            {/* Condition table */}
+            {summary && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="rounded-2xl overflow-hidden shadow-sm mb-6" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
+                <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #e2e8f0" }}>
+                  <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #dc2626, #ea580c)" }} />
+                  <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">Condition Distribution</h3>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)" }}>
+                      {["Condition Band", "Roads", "Percentage", "Implication"].map(h => (
+                        <th key={h} style={{ padding: "10px 14px", color: "#fff", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.3px" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { band: "Critical (PCI < 40)", count: summary.conditionBreakdown.Critical, pct: summary.conditionPercents.Critical, color: "#dc2626", note: "Emergency action required" },
+                      { band: "Poor (PCI 40–59)", count: summary.conditionBreakdown.Poor, pct: summary.conditionPercents.Poor, color: "#ea580c", note: "Major repair needed" },
+                      { band: "Fair (PCI 60–74)", count: summary.conditionBreakdown.Fair, pct: summary.conditionPercents.Fair, color: "#ca8a04", note: "Preventive maintenance" },
+                      { band: "Good (PCI ≥ 75)", count: summary.conditionBreakdown.Good, pct: summary.conditionPercents.Good, color: "#16a34a", note: "Routine monitoring" },
+                    ].map((row, i) => (
+                      <tr key={row.band} className="transition-colors hover:bg-blue-50/40" style={{ background: i % 2 === 0 ? "#f8fafc" : "#fff" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: 600 }}>{row.band}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "right" }}>{row.count.toLocaleString()}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700, color: row.color }}>{row.pct}%</td>
+                        <td style={{ padding: "10px 14px", color: "#64748b" }}>{row.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+            )}
+
+            {/* Top 10 worst roads */}
+            {summary && summary.top10WorstByPci.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-2xl overflow-hidden shadow-sm mb-6" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
+                <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #e2e8f0" }}>
+                  <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #ef4444, #dc2626)" }} />
+                  <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">Top 10 Priority Roads — Immediate Attention Required</h3>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)" }}>
+                      {["#", "Road ID", "District", "PCI", "CIBIL", "Surface", "Length"].map(h => (
+                        <th key={h} style={{ padding: "9px 12px", color: "#fff", textAlign: h === "#" || h === "PCI" || h === "CIBIL" || h === "Length" ? "center" : "left", fontSize: 10, fontWeight: 600, letterSpacing: "0.3px" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.top10WorstByPci.map((road, i) => (
+                      <tr key={road.road_id} className="transition-colors hover:bg-red-50/40" style={{ background: i % 2 === 0 ? "#fef2f2" : "#fff" }}>
+                        <td style={{ padding: "9px 12px", textAlign: "center", fontWeight: 700, color: "#dc2626" }}>{i + 1}</td>
+                        <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 10, color: "#475569" }}>{road.road_id}</td>
+                        <td style={{ padding: "9px 12px", color: "#334155" }}>{road.district}</td>
+                        <td style={{ padding: "9px 12px", textAlign: "center", fontWeight: 700, color: road.pci_score < 40 ? "#dc2626" : "#ea580c" }}>{road.pci_score}</td>
+                        <td style={{ padding: "9px 12px", textAlign: "center" }}>{road.cibil_score}</td>
+                        <td style={{ padding: "9px 12px", color: "#64748b", textTransform: "capitalize" }}>{road.surface_type}</td>
+                        <td style={{ padding: "9px 12px", textAlign: "center" }}>{road.length_km} km</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+            )}
+
+            {/* District breakdown */}
+            {summary && summary.districtBreakdown.length > 1 && (
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-2xl overflow-hidden shadow-sm mb-6" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
+                <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #e2e8f0" }}>
+                  <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #7c3aed, #2563eb)" }} />
+                  <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">District Breakdown</h3>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  <thead>
+                    <tr style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)" }}>
+                      {["District", "Roads", "Avg PCI", "Avg CIBIL", "Critical", "Length", "Est. Cost"].map(h => (
+                        <th key={h} style={{ padding: "9px 12px", color: "#fff", textAlign: "left", fontSize: 10, fontWeight: 600, letterSpacing: "0.3px" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.districtBreakdown.slice(0, 15).map((d, i) => (
+                      <tr key={d.district} className="transition-colors hover:bg-blue-50/40" style={{ background: i % 2 === 0 ? "#f8fafc" : "#fff" }}>
+                        <td style={{ padding: "9px 12px", fontWeight: 600 }}>{d.district}</td>
+                        <td style={{ padding: "9px 12px" }}>{d.totalRoads.toLocaleString()}</td>
+                        <td style={{ padding: "9px 12px", fontWeight: 700, color: d.avgPci < 40 ? "#dc2626" : d.avgPci < 60 ? "#ea580c" : "#16a34a" }}>{d.avgPci}</td>
+                        <td style={{ padding: "9px 12px" }}>{d.avgCibil}</td>
+                        <td style={{ padding: "9px 12px", color: d.criticalCount > 0 ? "#dc2626" : "#16a34a", fontWeight: 600 }}>{d.criticalCount}</td>
+                        <td style={{ padding: "9px 12px" }}>{d.totalLengthKm} km</td>
+                        <td style={{ padding: "9px 12px" }}>₹{d.estimatedCostLakhs.toLocaleString()} L</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+            )}
+
+            {/* AI disclaimer */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="rounded-xl overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #fffbeb, #fff7ed)", border: "1px solid #fed7aa" }}>
+              <div className="flex">
+                <div className="w-1.5 shrink-0" style={{ background: "linear-gradient(180deg, #f97316, #ea580c)" }} />
+                <div className="p-4 text-[11px] text-amber-900 leading-relaxed">
+                  <strong>⚠ AI Assistance Disclaimer:</strong> This report was generated using the Road-CIBIL Intelligence System v1.0.
+                  All numerical values are derived from backend analysis of field survey data.
+                  Gemini AI was used solely for narrative composition.
+                  Data source: {summary?.dataTimestamp}.
+                  Model: {summary?.modelVersion}.
+                  Generated: {summary && new Date(summary.generatedAt).toLocaleString("en-IN")}.
+                </div>
+              </div>
             </motion.div>
-          )}
 
-          {/* Preview content */}
-          {step === "done" && (
-            <div ref={previewRef} style={{ padding: "24px 32px", maxWidth: 1100, margin: "0 auto" }}>
-
-              {/* Summary stat cards */}
-              {summary && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-7">
-                  {[
-                    { label: "Roads Analysed", value: summary.totalFilteredRoads.toLocaleString(), from: "from-blue-500", to: "to-blue-600", shadow: "shadow-blue-500/20" },
-                    { label: "Network Coverage", value: `${summary.coveragePercent}%`, from: "from-violet-500", to: "to-purple-600", shadow: "shadow-violet-500/20" },
-                    { label: "Critical Roads", value: summary.conditionBreakdown.Critical.toLocaleString(), from: "from-red-500", to: "to-rose-600", shadow: "shadow-red-500/20" },
-                    { label: "Est. Repair Cost", value: `₹${summary.estimatedTotalCostCrores.toLocaleString()} Cr`, from: "from-amber-500", to: "to-orange-600", shadow: "shadow-amber-500/20" },
-                    { label: "Avg CIBIL Score", value: summary.avgCibilScore.toString(), from: "from-cyan-500", to: "to-teal-600", shadow: "shadow-cyan-500/20" },
-                    { label: "Avg PCI Score", value: summary.avgPciScore.toString(), from: "from-emerald-500", to: "to-green-600", shadow: "shadow-emerald-500/20" },
-                    { label: "Overdue Insp.", value: summary.inspection.overdueCount.toLocaleString(), from: "from-orange-500", to: "to-orange-600", shadow: "shadow-orange-500/20" },
-                    { label: "High Decay Roads", value: summary.highDecayCount.toLocaleString(), from: "from-rose-500", to: "to-red-600", shadow: "shadow-rose-500/20" },
-                  ].map((card, i) => (
-                    <motion.div
-                      key={card.label}
-                      initial={{ opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04, duration: 0.35, ease: "easeOut" }}
-                      whileHover={{ y: -4, scale: 1.02 }}
-                      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.from} ${card.to} text-white shadow-lg ${card.shadow} cursor-default`}
-                    >
-                      <div className="relative z-10 px-4 py-4">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-white/70 mb-1">{card.label}</p>
-                        <p className="text-[22px] font-extrabold tabular-nums leading-none">{card.value}</p>
-                      </div>
-                      {/* Decorative watermark */}
-                      <div className="absolute -bottom-2 -right-2 text-white/[0.08]">
-                        <Sparkles size={48} strokeWidth={1.5} />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* AI Narrative */}
-              {narrative && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="rounded-2xl overflow-hidden shadow-sm mb-6"
-                  style={{ background: "#fff", border: "1px solid #e2e8f0" }}
-                >
-                  <div className="px-7 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)", borderBottom: "3px solid #f97316" }}>
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(249,115,22,0.2)" }}>
-                      <Sparkles size={15} className="text-orange-400" />
-                    </div>
-                    <div>
-                      <div className="text-[14px] font-bold text-white">{reportTitle}</div>
-                      <div className="text-[10px] text-gray-400">AI-generated narrative • All numbers verified against backend data</div>
-                    </div>
-                  </div>
-                  <div className="report-narrative px-7 py-6" style={{ fontSize: 13, lineHeight: 1.75, color: "#334155" }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{narrative}</ReactMarkdown>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Condition table */}
-              {summary && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="rounded-2xl overflow-hidden shadow-sm mb-6" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
-                  <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #e2e8f0" }}>
-                    <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #dc2626, #ea580c)" }} />
-                    <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">Condition Distribution</h3>
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                    <thead>
-                      <tr style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)" }}>
-                        {["Condition Band", "Roads", "Percentage", "Implication"].map(h => (
-                          <th key={h} style={{ padding: "10px 14px", color: "#fff", textAlign: "left", fontSize: 11, fontWeight: 600, letterSpacing: "0.3px" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { band: "Critical (PCI < 40)", count: summary.conditionBreakdown.Critical, pct: summary.conditionPercents.Critical, color: "#dc2626", note: "Emergency action required" },
-                        { band: "Poor (PCI 40–59)", count: summary.conditionBreakdown.Poor, pct: summary.conditionPercents.Poor, color: "#ea580c", note: "Major repair needed" },
-                        { band: "Fair (PCI 60–74)", count: summary.conditionBreakdown.Fair, pct: summary.conditionPercents.Fair, color: "#ca8a04", note: "Preventive maintenance" },
-                        { band: "Good (PCI ≥ 75)", count: summary.conditionBreakdown.Good, pct: summary.conditionPercents.Good, color: "#16a34a", note: "Routine monitoring" },
-                      ].map((row, i) => (
-                        <tr key={row.band} className="transition-colors hover:bg-blue-50/40" style={{ background: i % 2 === 0 ? "#f8fafc" : "#fff" }}>
-                          <td style={{ padding: "10px 14px", fontWeight: 600 }}>{row.band}</td>
-                          <td style={{ padding: "10px 14px", textAlign: "right" }}>{row.count.toLocaleString()}</td>
-                          <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700, color: row.color }}>{row.pct}%</td>
-                          <td style={{ padding: "10px 14px", color: "#64748b" }}>{row.note}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </motion.div>
-              )}
-
-              {/* Top 10 worst roads */}
-              {summary && summary.top10WorstByPci.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="rounded-2xl overflow-hidden shadow-sm mb-6" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
-                  <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #e2e8f0" }}>
-                    <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #ef4444, #dc2626)" }} />
-                    <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">Top 10 Priority Roads — Immediate Attention Required</h3>
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                    <thead>
-                      <tr style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)" }}>
-                        {["#", "Road ID", "District", "PCI", "CIBIL", "Surface", "Length"].map(h => (
-                          <th key={h} style={{ padding: "9px 12px", color: "#fff", textAlign: h === "#" || h === "PCI" || h === "CIBIL" || h === "Length" ? "center" : "left", fontSize: 10, fontWeight: 600, letterSpacing: "0.3px" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {summary.top10WorstByPci.map((road, i) => (
-                        <tr key={road.road_id} className="transition-colors hover:bg-red-50/40" style={{ background: i % 2 === 0 ? "#fef2f2" : "#fff" }}>
-                          <td style={{ padding: "9px 12px", textAlign: "center", fontWeight: 700, color: "#dc2626" }}>{i + 1}</td>
-                          <td style={{ padding: "9px 12px", fontFamily: "monospace", fontSize: 10, color: "#475569" }}>{road.road_id}</td>
-                          <td style={{ padding: "9px 12px", color: "#334155" }}>{road.district}</td>
-                          <td style={{ padding: "9px 12px", textAlign: "center", fontWeight: 700, color: road.pci_score < 40 ? "#dc2626" : "#ea580c" }}>{road.pci_score}</td>
-                          <td style={{ padding: "9px 12px", textAlign: "center" }}>{road.cibil_score}</td>
-                          <td style={{ padding: "9px 12px", color: "#64748b", textTransform: "capitalize" }}>{road.surface_type}</td>
-                          <td style={{ padding: "9px 12px", textAlign: "center" }}>{road.length_km} km</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </motion.div>
-              )}
-
-              {/* District breakdown */}
-              {summary && summary.districtBreakdown.length > 1 && (
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="rounded-2xl overflow-hidden shadow-sm mb-6" style={{ background: "#fff", border: "1px solid #e2e8f0" }}>
-                  <div className="px-6 py-4 flex items-center gap-2" style={{ borderBottom: "1px solid #e2e8f0" }}>
-                    <div className="w-1 h-5 rounded-full" style={{ background: "linear-gradient(180deg, #7c3aed, #2563eb)" }} />
-                    <h3 className="text-[13px] font-bold text-gray-800 uppercase tracking-wide">District Breakdown</h3>
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                    <thead>
-                      <tr style={{ background: "linear-gradient(135deg, #0f172a, #1d3557)" }}>
-                        {["District", "Roads", "Avg PCI", "Avg CIBIL", "Critical", "Length", "Est. Cost"].map(h => (
-                          <th key={h} style={{ padding: "9px 12px", color: "#fff", textAlign: "left", fontSize: 10, fontWeight: 600, letterSpacing: "0.3px" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {summary.districtBreakdown.slice(0, 15).map((d, i) => (
-                        <tr key={d.district} className="transition-colors hover:bg-blue-50/40" style={{ background: i % 2 === 0 ? "#f8fafc" : "#fff" }}>
-                          <td style={{ padding: "9px 12px", fontWeight: 600 }}>{d.district}</td>
-                          <td style={{ padding: "9px 12px" }}>{d.totalRoads.toLocaleString()}</td>
-                          <td style={{ padding: "9px 12px", fontWeight: 700, color: d.avgPci < 40 ? "#dc2626" : d.avgPci < 60 ? "#ea580c" : "#16a34a" }}>{d.avgPci}</td>
-                          <td style={{ padding: "9px 12px" }}>{d.avgCibil}</td>
-                          <td style={{ padding: "9px 12px", color: d.criticalCount > 0 ? "#dc2626" : "#16a34a", fontWeight: 600 }}>{d.criticalCount}</td>
-                          <td style={{ padding: "9px 12px" }}>{d.totalLengthKm} km</td>
-                          <td style={{ padding: "9px 12px" }}>₹{d.estimatedCostLakhs.toLocaleString()} L</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </motion.div>
-              )}
-
-              {/* AI disclaimer */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="rounded-xl overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #fffbeb, #fff7ed)", border: "1px solid #fed7aa" }}>
-                <div className="flex">
-                  <div className="w-1.5 shrink-0" style={{ background: "linear-gradient(180deg, #f97316, #ea580c)" }} />
-                  <div className="p-4 text-[11px] text-amber-900 leading-relaxed">
-                    <strong>⚠ AI Assistance Disclaimer:</strong> This report was generated using the Road-CIBIL Intelligence System v1.0.
-                    All numerical values are derived from backend analysis of field survey data.
-                    Gemini AI was used solely for narrative composition.
-                    Data source: {summary?.dataTimestamp}.
-                    Model: {summary?.modelVersion}.
-                    Generated: {summary && new Date(summary.generatedAt).toLocaleString("en-IN")}.
-                  </div>
-                </div>
-              </motion.div>
-
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── Tailwind prose overrides for ReactMarkdown ── */}
@@ -1041,7 +929,7 @@ export default function ReportsPage() {
         .report-narrative tr:nth-child(even) td { background: #f8fafc; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-    </div >
+    </div>
   );
 }
 
