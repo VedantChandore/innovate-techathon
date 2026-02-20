@@ -241,44 +241,74 @@ export default function ReportsPage() {
         import("html2canvas"),
       ]);
 
-      // Render HTML in a hidden iframe
+      // A4 dimensions: 794px wide at 96dpi = 210mm
+      const A4_PX_WIDTH = 794;
+      const A4_MM_WIDTH = 210;
+      const A4_MM_HEIGHT = 297;
+
+      // Render HTML in a hidden iframe sized exactly to A4 width
       const iframe = document.createElement("iframe");
-      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:1200px;height:800px;";
+      iframe.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${A4_PX_WIDTH}px;border:none;visibility:hidden;`;
       document.body.appendChild(iframe);
-      iframe.contentDocument!.open();
-      iframe.contentDocument!.write(htmlContent);
-      iframe.contentDocument!.close();
 
-      await new Promise(r => setTimeout(r, 1200)); // wait for fonts/images
+      await new Promise<void>((resolve) => {
+        iframe.onload = () => resolve();
+        iframe.contentDocument!.open();
+        iframe.contentDocument!.write(htmlContent);
+        iframe.contentDocument!.close();
+        // Fallback in case onload doesn't fire for srcdoc writes
+        setTimeout(resolve, 1500);
+      });
 
-      const canvas = await html2canvas(iframe.contentDocument!.body, {
+      // Expand iframe to full content height so nothing is clipped
+      const body = iframe.contentDocument!.body;
+      const fullHeight = Math.max(body.scrollHeight, body.offsetHeight);
+      iframe.style.height = `${fullHeight}px`;
+
+      // Extra settle time for SVG charts and web fonts
+      await new Promise(r => setTimeout(r, 400));
+
+      // Capture at 2× scale for crisp text (retina quality)
+      const canvas = await html2canvas(body, {
         scale: 2,
         useCORS: true,
         logging: false,
-        width: 1200,
+        width: A4_PX_WIDTH,
+        height: fullHeight,
+        windowWidth: A4_PX_WIDTH,
         backgroundColor: "#ffffff",
       });
 
       document.body.removeChild(iframe);
 
-      const imgData = canvas.toDataURL("image/png");
+      // Build PDF – slice canvas into A4 pages
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      let heightLeft = pdfHeight;
-      let position = 0;
-      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-      heightLeft -= 297;
+      // How many pixels correspond to one A4 page height
+      const pageHeightPx = Math.round((A4_MM_HEIGHT / A4_MM_WIDTH) * canvas.width);
 
-      while (heightLeft > 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= 297;
+      const totalPages = Math.ceil(canvas.height / pageHeightPx);
+
+      for (let page = 0; page < totalPages; page++) {
+        if (page > 0) pdf.addPage();
+
+        // Crop the canvas to one page slice
+        const srcY = page * pageHeightPx;
+        const srcH = Math.min(pageHeightPx, canvas.height - srcY);
+
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = pageHeightPx; // always full page height (blank at bottom if last page)
+        const ctx = pageCanvas.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+
+        const sliceData = pageCanvas.toDataURL("image/jpeg", 0.97);
+        pdf.addImage(sliceData, "JPEG", 0, 0, A4_MM_WIDTH, A4_MM_HEIGHT);
       }
 
-      const filename = `${reportTitle.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
+      const filename = `${(reportTitle || "Road_Health_Report").replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`;
       pdf.save(filename);
     } catch (err) {
       console.error("PDF download error:", err);
