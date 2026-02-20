@@ -10,7 +10,11 @@
     "convert-data": "node scripts/convert-csv.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "csv-parse": "^6.1.0",
     "framer-motion": "^12.34.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.574.0",
     "next": "16.1.6",
@@ -18,7 +22,9 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0",
-    "recharts": "^3.7.0"
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.7.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
