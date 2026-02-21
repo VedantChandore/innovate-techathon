@@ -11,8 +11,8 @@ interface NavbarProps {
 }
 
 const DASHBOARD_TABS = [
-  { id: "geoview"    as const, label: "🗺 GeoView" },
-  { id: "complaints" as const, label: "📞 Complaints" },
+  { id: "geoview"    as const, label: "GeoView" },
+  { id: "complaints" as const, label: "Complaints" },
   { id: "reports"    as const, label: "Reports" },
   { id: "scheduling" as const, label: "Scheduler" },
   { id: "registry"   as const, label: "Road Registry" },

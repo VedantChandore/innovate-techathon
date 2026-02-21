@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, useCallback, Fragment } from "react";
+import { useMemo, useState, useCallback, useRef, Fragment } from "react";
 import {
   ScheduledInspection,
+  ScheduleSummary,
   InspectionPriority,
   ActionType,
   InspectionType,
@@ -11,16 +12,16 @@ import {
   getMonsoonMultiplier,
   recalculateAfterInspection,
 } from "@/lib/scheduler";
-import { RoadWithScore, Band } from "@/lib/types";
+import { RoadWithScore, Band, InspectionRecord } from "@/lib/types";
 import {
   AlertTriangle, CalendarClock, Clock, Search,
   ArrowUpDown, Shield, Droplets, Mountain, CloudRain, MapPin, Activity,
-  CheckCircle2, XCircle, Download, CloudLightning,
-  CalendarPlus, ClipboardCheck, X, Zap, Eye,
-  Wrench, FileWarning, BarChart3, History, Info,
+  CheckCircle2, XCircle, Download, CloudLightning, TrendingDown,
+  TrendingUp, CalendarPlus, ClipboardCheck, X, Zap, Eye,
+  Wrench, FileWarning, Timer, BarChart3, History, Info,
   Gauge, Truck, Ruler, Layers, ArrowRight,
   User, Building2, Navigation, Send, Calendar, Clipboard, Phone,
-  Globe, Thermometer, LocateFixed,
+  Globe, Thermometer, LocateFixed, ChevronRight,
 } from "lucide-react";
 
 /* ════════════════════════════════════════════════════════════════
@@ -1245,194 +1246,6 @@ function InspectorDetailCard({
 }
 
 /* ════════════════════════════════════════════════════════════════
-   ROAD CONDITION DETAIL MODAL — shows InspectorDetailCard in overlay
-   ════════════════════════════════════════════════════════════════ */
-
-function RoadDetailModal({
-  item,
-  onClose,
-  onSchedule,
-  onRecord,
-}: {
-  item: ScheduledInspection;
-  onClose: () => void;
-  onSchedule: (item: ScheduledInspection, date: string, agency: string, type: InspectionType) => void;
-  onRecord: (item: ScheduledInspection) => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4"
-      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}>
-      <div className="w-full max-w-5xl" style={{ animation: "fadeSlideUp 0.3s ease-out" }}>
-        {/* Close strip */}
-        <div className="flex justify-end mb-2">
-          <button onClick={onClose}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold transition-all">
-            <X size={14} /> Close Detail View
-          </button>
-        </div>
-        <InspectorDetailCard
-          item={item}
-          onClose={onClose}
-          onSchedule={onSchedule}
-          onRecord={onRecord}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════
-   HIGHWAY AGGREGATION — Group segments into highway-level rows
-   ════════════════════════════════════════════════════════════════ */
-
-interface HighwayRow {
-  /** Display label, e.g. "NH 361" */
-  highwayRef: string;
-  /** Total number of segments in this highway */
-  totalSegments: number;
-  /** Total length across all segments (km) */
-  totalLengthKm: number;
-  /** Unique districts this highway passes through */
-  districts: string[];
-  /** Aggregated CIBIL: avg across segments */
-  avgCibilScore: number;
-  /** Worst (lowest) CIBIL among segments */
-  worstCibilScore: number;
-  /** Best condition category from aggregated */
-  overallCondition: string;
-  /** Predicted next inspection due = earliest nextDueDate across segments */
-  nextDueDate: Date;
-  /** Days until the earliest due segment */
-  daysUntilDue: number;
-  /** Is ANY segment overdue? */
-  isOverdue: boolean;
-  /** How many segments are overdue */
-  overdueSegments: number;
-  /** Max overdue days across segments */
-  maxOverdueDays: number;
-  /** Worst (highest) priority across segments */
-  priority: InspectionPriority;
-  /** Highest priority score */
-  priorityScore: number;
-  /** The agency assigned to the worst segment */
-  assignedAgency: string;
-  /** Total estimated cost across all segments */
-  totalEstCostLakhs: number;
-  /** Last inspection date (most recent across any segment) */
-  lastInspectionDate: Date | null;
-  /** Avg decay rate */
-  avgDecayRate: number;
-  /** Is this highway already scheduled? */
-  isScheduled: boolean;
-  scheduledDate: Date | null;
-  scheduledType: InspectionType | null;
-  /** Segment breakdown by condition */
-  conditionBreakdown: { critical: number; poor: number; fair: number; good: number };
-  /** The worst-scoring segment's full ScheduledInspection (for detail view) */
-  worstSegment: ScheduledInspection;
-  /** All segment ScheduledInspection items (for export etc.) */
-  segments: ScheduledInspection[];
-}
-
-const PRIORITY_ORDER: Record<InspectionPriority, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-
-function aggregateHighways(schedule: ScheduledInspection[]): HighwayRow[] {
-  const groups = new Map<string, ScheduledInspection[]>();
-  for (const item of schedule) {
-    const ref = item.road.highway_ref || "Unknown";
-    const arr = groups.get(ref) || [];
-    arr.push(item);
-    groups.set(ref, arr);
-  }
-
-  const highways: HighwayRow[] = [];
-  for (const [ref, segments] of groups) {
-    // Find worst segment (highest priorityScore)
-    const sorted = [...segments].sort((a, b) => b.priorityScore - a.priorityScore);
-    const worst = sorted[0];
-
-    // Earliest due date
-    const earliestDue = segments.reduce((min, s) => s.nextDueDate < min ? s.nextDueDate : min, segments[0].nextDueDate);
-    const daysUntilDue = segments.reduce((min, s) => Math.min(min, s.daysUntilDue), Infinity);
-
-    // Districts
-    const districtSet = new Set<string>();
-    segments.forEach((s) => { if (s.road.district) districtSet.add(s.road.district); });
-
-    // CIBIL
-    const avgCibil = segments.reduce((sum, s) => sum + s.finalCibilScore, 0) / segments.length;
-    const worstCibil = segments.reduce((min, s) => Math.min(min, s.finalCibilScore), Infinity);
-
-    // Condition breakdown
-    const condBreak = { critical: 0, poor: 0, fair: 0, good: 0 };
-    segments.forEach((s) => {
-      if (s.conditionCategory === "Critical") condBreak.critical++;
-      else if (s.conditionCategory === "Poor") condBreak.poor++;
-      else if (s.conditionCategory === "Fair") condBreak.fair++;
-      else condBreak.good++;
-    });
-
-    // Overall condition (from avg CIBIL)
-    const overallCondition = avgCibil >= 80 ? "Good" : avgCibil >= 60 ? "Fair" : avgCibil >= 40 ? "Poor" : "Critical";
-
-    // Overdue
-    const overdueSegs = segments.filter((s) => s.isOverdue);
-    const maxOverdueDays = overdueSegs.length > 0 ? Math.max(...overdueSegs.map((s) => s.overdueDays)) : 0;
-
-    // Priority: worst across all segments
-    let bestPriority: InspectionPriority = "low";
-    for (const s of segments) {
-      if (PRIORITY_ORDER[s.priority] < PRIORITY_ORDER[bestPriority]) bestPriority = s.priority;
-    }
-
-    // Cost
-    const totalCost = segments.reduce((sum, s) => sum + s.estimatedCostLakhs, 0);
-
-    // Length
-    const totalLength = segments.reduce((sum, s) => sum + s.road.length_km, 0);
-
-    // Last inspection
-    const lastDates = segments.map((s) => s.lastInspectionDate).filter(Boolean) as Date[];
-    const lastInsp = lastDates.length > 0 ? lastDates.reduce((latest, d) => d > latest ? d : latest) : null;
-
-    // Decay
-    const avgDecay = segments.reduce((sum, s) => sum + s.decayRate, 0) / segments.length;
-
-    // Scheduled state
-    const anyScheduled = segments.some((s) => s.isScheduled);
-
-    highways.push({
-      highwayRef: ref,
-      totalSegments: segments.length,
-      totalLengthKm: Math.round(totalLength * 10) / 10,
-      districts: Array.from(districtSet).sort(),
-      avgCibilScore: Math.round(avgCibil * 10) / 10,
-      worstCibilScore: Math.round(worstCibil * 10) / 10,
-      overallCondition,
-      nextDueDate: earliestDue,
-      daysUntilDue: Math.round(daysUntilDue),
-      isOverdue: overdueSegs.length > 0,
-      overdueSegments: overdueSegs.length,
-      maxOverdueDays,
-      priority: bestPriority,
-      priorityScore: worst.priorityScore,
-      assignedAgency: worst.assignedAgency,
-      totalEstCostLakhs: Math.round(totalCost),
-      lastInspectionDate: lastInsp,
-      avgDecayRate: Math.round(avgDecay * 10000) / 10000,
-      isScheduled: anyScheduled,
-      scheduledDate: worst.scheduledDate,
-      scheduledType: worst.scheduledType,
-      conditionBreakdown: condBreak,
-      worstSegment: worst,
-      segments,
-    });
-  }
-
-  return highways;
-}
-
-/* ════════════════════════════════════════════════════════════════
    MAIN COMPONENT  
    ════════════════════════════════════════════════════════════════ */
 
@@ -1445,36 +1258,40 @@ export default function InspectionScheduler({ roads }: Props) {
   const [localRoads, setLocalRoads] = useState(roads);
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<InspectionPriority | "all">("all");
+  const [actionFilter, setActionFilter] = useState<ActionType | "all">("all");
   const [urgencyFilter, setUrgencyFilter] = useState<"all" | "overdue" | "this_week" | "this_month">("all");
-  const [sortKey, setSortKey] = useState<"priority" | "dueDate" | "cibil" | "segments">("priority");
+  const [conditionFilter, setConditionFilter] = useState<"all" | "Critical" | "Poor" | "Fair" | "Good">("all");
+  const [sortKey, setSortKey] = useState<"priority" | "dueDate" | "cibil" | "decay" | "pci">("priority");
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(0);
   const [recordModal, setRecordModal] = useState<ScheduledInspection | null>(null);
   const [toast, setToast] = useState<{ oldScore: number; newScore: number; oldBand: Band; newBand: Band; roadName: string } | null>(null);
-  const [detailItem, setDetailItem] = useState<ScheduledInspection | null>(null);
-  const PAGE_SIZE = 7;
+  const [selectedItem, setSelectedItem] = useState<ScheduledInspection | null>(null);
+  const detailCardRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 20;
 
-  // Generate segment-level schedule
+  // Generate schedule
   const schedule = useMemo(() => generateInspectionSchedule(localRoads, monsoonMode), [localRoads, monsoonMode]);
   const summary = useMemo(() => computeScheduleSummary(schedule), [schedule]);
 
-  // Aggregate to highway level — keep only top 7 for a clean demo view
-  const allHighways = useMemo(() => aggregateHighways(schedule).slice(0, 7), [schedule]);
-
-  // Filter + sort highways
+  // Filter + sort
   const filtered = useMemo(() => {
-    let list = allHighways;
+    let list = schedule;
     if (search) {
       const q = search.toLowerCase();
-      list = list.filter((h) =>
-        h.highwayRef.toLowerCase().includes(q) ||
-        h.districts.some((d) => d.toLowerCase().includes(q))
+      list = list.filter((s) =>
+        s.road.road_id.toLowerCase().includes(q) ||
+        s.road.name.toLowerCase().includes(q) ||
+        s.road.district.toLowerCase().includes(q) ||
+        s.road.highway_ref.toLowerCase().includes(q)
       );
     }
-    if (priorityFilter !== "all") list = list.filter((h) => h.priority === priorityFilter);
-    if (urgencyFilter === "overdue") list = list.filter((h) => h.isOverdue);
-    else if (urgencyFilter === "this_week") list = list.filter((h) => h.isOverdue || h.daysUntilDue <= 7);
-    else if (urgencyFilter === "this_month") list = list.filter((h) => h.isOverdue || h.daysUntilDue <= 30);
+    if (priorityFilter !== "all") list = list.filter((s) => s.priority === priorityFilter);
+    if (actionFilter !== "all") list = list.filter((s) => s.action === actionFilter);
+    if (conditionFilter !== "all") list = list.filter((s) => s.conditionCategory === conditionFilter);
+    if (urgencyFilter === "overdue") list = list.filter((s) => s.isOverdue);
+    else if (urgencyFilter === "this_week") list = list.filter((s) => s.isOverdue || s.daysUntilDue <= 7);
+    else if (urgencyFilter === "this_month") list = list.filter((s) => s.isOverdue || s.daysUntilDue <= 30);
 
     const sorted = [...list];
     sorted.sort((a, b) => {
@@ -1482,13 +1299,14 @@ export default function InspectionScheduler({ roads }: Props) {
       switch (sortKey) {
         case "priority": cmp = b.priorityScore - a.priorityScore; break;
         case "dueDate": cmp = a.daysUntilDue - b.daysUntilDue; break;
-        case "cibil": cmp = a.avgCibilScore - b.avgCibilScore; break;
-        case "segments": cmp = b.totalSegments - a.totalSegments; break;
+        case "cibil": cmp = a.finalCibilScore - b.finalCibilScore; break;
+        case "decay": cmp = b.decayRate - a.decayRate; break;
+        case "pci": cmp = a.road.pci_score - b.road.pci_score; break;
       }
       return sortAsc ? -cmp : cmp;
     });
     return sorted;
-  }, [allHighways, search, priorityFilter, urgencyFilter, sortKey, sortAsc]);
+  }, [schedule, search, priorityFilter, actionFilter, conditionFilter, urgencyFilter, sortKey, sortAsc]);
 
   const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -1498,14 +1316,11 @@ export default function InspectionScheduler({ roads }: Props) {
     else { setSortKey(key); setSortAsc(false); }
   };
 
-  // Overdue/due highway counts for header
-  const overdueHwys = allHighways.filter((h) => h.isOverdue).length;
-  const dueWeekHwys = allHighways.filter((h) => h.isOverdue || h.daysUntilDue <= 7).length;
-
-  // Record inspection handler
+  // Record inspection handler  
   const handleRecordSubmit = useCallback((data: RecordData) => {
     if (!recordModal) return;
 
+    // Update distress metrics on the road before recalculating
     const updatedRoadWithDistress: RoadWithScore = {
       ...recordModal.road,
       potholes_per_km: data.potholes,
@@ -1538,32 +1353,24 @@ export default function InspectionScheduler({ roads }: Props) {
 
   // Export
   const handleExport = () => {
-    const headers = ["#", "Highway", "Segments", "Total Length (km)", "Districts", "Avg CIBIL", "Worst CIBIL", "Condition", "Next Due Date", "Days Until Due", "Priority", "Agency", "Overdue Segments", "Last Inspection", "Est. Cost (₹L)", "Status"];
+    const headers = ["Road ID", "Name", "District", "CIBIL Score", "Condition", "PDI", "Priority Score", "Priority", "Last Inspection", "Next Due", "Days", "Overdue", "Action", "Agency", "Decay Rate", "Trend Alert", "Risk Factors", "Est Cost (₹L)"];
     const rows = [headers.join(",")];
-    filtered.forEach((h, idx) => {
+    filtered.forEach((s) => {
       rows.push([
-        idx + 1,
-        `"${h.highwayRef}"`,
-        h.totalSegments,
-        h.totalLengthKm,
-        `"${h.districts.join("; ")}"`,
-        h.avgCibilScore,
-        h.worstCibilScore,
-        h.overallCondition,
-        h.nextDueDate.toISOString().split("T")[0],
-        h.daysUntilDue,
-        PRIORITY_CFG[h.priority].label,
-        h.assignedAgency,
-        h.overdueSegments,
-        h.lastInspectionDate ? h.lastInspectionDate.toISOString().split("T")[0] : "Never",
-        h.totalEstCostLakhs,
-        h.isScheduled ? "Scheduled" : h.isOverdue ? "Overdue" : "Pending",
+        s.road.road_id, `"${s.road.name}"`, s.road.district,
+        s.finalCibilScore.toFixed(1), s.conditionCategory, s.pdi.toFixed(1),
+        s.priorityScore.toFixed(0), s.priority,
+        s.lastInspectionDate ? s.lastInspectionDate.toISOString().split("T")[0] : "Never",
+        s.nextDueDate.toISOString().split("T")[0], s.daysUntilDue, s.isOverdue ? "Yes" : "No",
+        ACTION_CFG[s.action].label, s.assignedAgency, s.decayRate.toFixed(4),
+        `"${s.trendAlert || "None"}"`,
+        `"${s.riskFactors.join("; ")}"`, s.estimatedCostLakhs,
       ].join(","));
     });
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
-    a.download = `highway_inspection_schedule_${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `inspection_schedule_${new Date().toISOString().split("T")[0]}.csv`;
     a.click(); URL.revokeObjectURL(url);
   };
 
@@ -1572,148 +1379,207 @@ export default function InspectionScheduler({ roads }: Props) {
       {/* Toast */}
       {toast && <RecalcToast {...toast} onClose={() => setToast(null)} />}
 
-      {/* ═══ TOOLBAR: Monsoon + Export + Filters ═══ */}
-      <div className="rounded-2xl bg-white border border-gray-200 p-3.5 flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-55">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search highway (e.g. NH 48, NH 361) or district…"
-            className="w-full pl-9 pr-3 h-9 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
-        </div>
-        <div className="flex gap-1">
-          {([["all", "All"], ["overdue", "Overdue"], ["this_week", "This Week"], ["this_month", "Month"]] as const).map(([val, label]) => (
-            <button key={val} onClick={() => { setUrgencyFilter(val); setPage(0); }}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${urgencyFilter === val
-                ? "bg-orange-50 border-orange-300 text-orange-700"
-                : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
-              {val === "overdue" && urgencyFilter !== "overdue"
-                ? <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />{label}</span>
-                : label}
-            </button>
-          ))}
-        </div>
-        <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value as InspectionPriority | "all"); setPage(0); }}
-          className="h-9 px-3 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 bg-white focus:outline-none focus:border-orange-400">
-          <option value="all">All Priorities</option>
-          <option value="critical">🔴 Critical</option>
-          <option value="high">🟠 High</option>
-          <option value="medium">🟡 Medium</option>
-          <option value="low">🟢 Low</option>
-        </select>
-        <button onClick={() => { setMonsoonMode(!monsoonMode); setPage(0); }}
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${monsoonMode
-            ? "text-cyan-700 border-cyan-300 bg-cyan-50"
-            : "text-gray-500 border-gray-200 hover:border-cyan-200"}`}>
-          <CloudLightning size={12} className={monsoonMode ? "text-cyan-500" : "text-gray-400"} />
-          Monsoon
-          <span className={`relative w-7 h-4 rounded-full transition-all flex items-center shrink-0 ${monsoonMode ? "bg-cyan-400" : "bg-gray-300"}`}>
-            <span className="absolute w-2.5 h-2.5 rounded-full bg-white shadow transition-all"
-              style={{ left: monsoonMode ? 14 : 2 }} />
-          </span>
-        </button>
-        <button onClick={handleExport}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-500 text-[11px] font-medium hover:bg-gray-50 transition-all">
-          <Download size={12} /> Export
-        </button>
-        <span className="text-[11px] text-gray-400 font-medium ml-auto">{filtered.length} highways</span>
+      {/* ═══ SUMMARY DASHBOARD ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard label="Total Roads" value={summary.total.toLocaleString()} icon={<MapPin size={16} />} color="#2563eb" bg="#eff6ff" />
+        <StatCard label="Overdue" value={summary.overdue.toLocaleString()} sub="Need immediate action" icon={<XCircle size={16} />} color="#dc2626" bg="#fef2f2" />
+        <StatCard label="Due This Week" value={summary.dueThisWeek.toLocaleString()} icon={<Timer size={16} />} color="#ea580c" bg="#fff7ed" />
+        <StatCard label="Avg CIBIL" value={summary.avgCibilScore.toFixed(0)} sub="Fleet health score" icon={<Gauge size={16} />} color={cibilColor(summary.avgCibilScore)} bg={cibilBg(summary.avgCibilScore)} />
+        <StatCard label="Critical + Poor" value={((summary.byCondition["Critical"] || 0) + (summary.byCondition["Poor"] || 0)).toLocaleString()} sub="Need intervention" icon={<AlertTriangle size={16} />} color="#991b1b" bg="#fef2f2" />
+        <StatCard label="Est. Cost" value={`₹${(summary.totalEstimatedCost / 100).toFixed(0)}Cr`} sub={`₹${summary.totalEstimatedCost.toLocaleString()}L`} icon={<Shield size={16} />} color="#0891b2" bg="#ecfeff" />
       </div>
 
-      {/* ═══ HIGHWAY TABLE ═══ */}
-      <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden shadow-sm">
+      {/* ═══ CIBIL CONDITION BREAKDOWN ═══ */}
+      <div className="grid grid-cols-4 gap-3">
+        {(["Critical", "Poor", "Fair", "Good"] as const).map((cat) => {
+          const cfg = conditionCfg(cat);
+          const count = summary.byCondition[cat] || 0;
+          const pct = summary.total > 0 ? ((count / summary.total) * 100).toFixed(1) : "0";
+          return (
+            <div key={cat} className="rounded-2xl border-2 p-4 flex items-center gap-4 hover:shadow-md transition-all"
+              style={{ borderColor: cfg.border, background: cfg.bg }}>
+              <div className="flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: cfg.color }}>{cat}</p>
+                <p className="text-2xl font-extrabold tabular-nums" style={{ color: cfg.color }}>{count.toLocaleString()}</p>
+                <p className="text-[10px] font-semibold text-gray-400 mt-0.5">{pct}% of fleet</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: `${cfg.color}18`, color: cfg.color }}>
+                {cat === "Critical" ? <Zap size={18} /> : cat === "Poor" ? <AlertTriangle size={18} /> : cat === "Fair" ? <Activity size={18} /> : <CheckCircle2 size={18} />}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ═══ MONSOON TOGGLE ═══ */}
+      <div className="rounded-2xl border p-4 transition-all" style={{
+        background: monsoonMode ? "linear-gradient(135deg, #0c4a6e, #164e63)" : "#ffffff",
+        borderColor: monsoonMode ? "#06b6d4" : "#e5e7eb",
+      }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CloudLightning size={20} className={monsoonMode ? "text-cyan-300" : "text-gray-400"} />
+            <div>
+              <h3 className={`text-[13px] font-bold ${monsoonMode ? "text-white" : "text-gray-700"}`}>Monsoon Mode</h3>
+              <p className={`text-[11px] leading-relaxed ${monsoonMode ? "text-cyan-200" : "text-gray-400"}`}>
+                {monsoonMode
+                  ? `Active — High-rainfall, flood-prone & ghat roads get accelerated schedules. ${schedule.filter((s) => getMonsoonMultiplier(s.road, true) < 0.9).length} roads affected.`
+                  : "Activate to simulate monsoon-season scheduling with tightened inspection intervals."
+                }
+              </p>
+            </div>
+          </div>
+          <button onClick={() => { setMonsoonMode(!monsoonMode); setPage(0); }}
+            className={`relative w-12 h-6 rounded-full transition-all shrink-0 ${monsoonMode ? "bg-cyan-400" : "bg-gray-300"}`}>
+            <span className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
+              style={{ left: monsoonMode ? 26 : 4 }} />
+          </button>
+        </div>
+      </div>
+
+      {/* ═══ FILTERS ═══ */}
+      <div className="rounded-2xl bg-white border border-gray-200 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-50">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="text" value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              placeholder="Search road ID, name, district, highway ref…"
+              className="w-full pl-9 pr-3 h-9 rounded-lg border border-gray-200 text-[13px] focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
+          </div>
+          <div className="flex gap-1">
+            {([["all", "All"], ["overdue", "Overdue"], ["this_week", "This Week"], ["this_month", "This Month"]] as const).map(([val, label]) => (
+              <button key={val} onClick={() => { setUrgencyFilter(val); setPage(0); }}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${urgencyFilter === val ? "bg-orange-50 border-orange-300 text-orange-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value as InspectionPriority | "all"); setPage(0); }}
+            className="h-9 px-3 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 bg-white focus:outline-none focus:border-orange-400">
+            <option value="all">All Priorities</option>
+            <option value="critical">Critical</option><option value="high">High</option>
+            <option value="medium">Medium</option><option value="low">Low</option>
+          </select>
+          <select value={conditionFilter} onChange={(e) => { setConditionFilter(e.target.value as typeof conditionFilter); setPage(0); }}
+            className="h-9 px-3 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 bg-white focus:outline-none focus:border-orange-400">
+            <option value="all">All Conditions</option>
+            <option value="Critical">🔴 Critical</option>
+            <option value="Poor">🟠 Poor</option>
+            <option value="Fair">🟡 Fair</option>
+            <option value="Good">🟢 Good</option>
+          </select>
+          <button onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-gray-200 bg-white text-gray-500 text-[11px] font-medium hover:bg-gray-50 transition-all">
+            <Download size={13} />Export
+          </button>
+          <span className="text-[10px] text-gray-400 font-medium">{filtered.length.toLocaleString()} of {schedule.length.toLocaleString()}</span>
+        </div>
+      </div>
+
+      {/* ═══ PRIORITY QUEUE TABLE ═══ */}
+      <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-[12px]">
+          <table className="registry-table w-full">
             <thead>
-              <tr style={{ background: "linear-gradient(135deg, #f8fafc, #f1f5f9)" }}>
-                <th className="text-center py-3 px-3 font-bold text-gray-400 uppercase text-[10px] tracking-wider w-8">#</th>
-                <th className="text-left py-3 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Highway</th>
-                <th className="text-left py-3 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider cursor-pointer select-none hover:text-orange-500 transition"
-                  onClick={() => toggleSort("segments")}>
-                  <span className="inline-flex items-center gap-1">Segments <ArrowUpDown size={10} className="text-gray-400" /></span>
+              <tr>
+                <th style={{ width: 32 }}>#</th>
+                <th>Road</th>
+                <th>District</th>
+                <th className="cursor-pointer select-none" onClick={() => toggleSort("cibil")}>
+                  <span className="inline-flex items-center gap-1">CIBIL <ArrowUpDown size={10} className="text-gray-400" /></span>
                 </th>
-                <th className="text-left py-3 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider cursor-pointer select-none hover:text-orange-500 transition"
-                  onClick={() => toggleSort("dueDate")}>
-                  <span className="inline-flex items-center gap-1">Next Due <ArrowUpDown size={10} className="text-gray-400" /></span>
-                </th>
-                <th className="text-left py-3 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Agency</th>
-                <th className="text-left py-3 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider cursor-pointer select-none hover:text-orange-500 transition"
-                  onClick={() => toggleSort("priority")}>
+                <th>Condition</th>
+                <th className="cursor-pointer select-none" onClick={() => toggleSort("priority")}>
                   <span className="inline-flex items-center gap-1">Priority <ArrowUpDown size={10} className="text-gray-400" /></span>
                 </th>
-                <th className="text-left py-3 px-4 font-bold text-gray-500 uppercase text-[10px] tracking-wider">Actions</th>
+                <th className="cursor-pointer select-none" onClick={() => toggleSort("dueDate")}>
+                  <span className="inline-flex items-center gap-1">Next Due <ArrowUpDown size={10} className="text-gray-400" /></span>
+                </th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paged.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="text-center py-16 text-gray-400">
-                    <CalendarClock size={32} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-[13px] font-semibold">No highways match your filters</p>
-                  </td>
-                </tr>
-              )}
-              {paged.map((hw, idx) => {
-                const pCfg = PRIORITY_CFG[hw.priority];
+              {paged.map((item, idx) => {
+                const pCfg = PRIORITY_CFG[item.priority];
                 const rank = page * PAGE_SIZE + idx + 1;
+                const isSelected = selectedItem?.road.road_id === item.road.road_id;
 
                 return (
-                  <tr key={hw.highwayRef}
-                    className="border-b border-gray-50 hover:bg-orange-50/30 transition-colors"
-                    style={hw.isScheduled ? { background: "#f0fdf4" } : hw.isOverdue ? { background: "#fff5f5" } : undefined}>
-                    <td className="text-center py-3.5 px-3 text-[11px] font-bold text-gray-300">{rank}</td>
-                    {/* Highway Name */}
-                    <td className="py-3.5 px-4">
-                      <div>
-                        <p className="font-extrabold text-gray-900 text-[14px] leading-tight tracking-tight">{hw.highwayRef}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{hw.totalLengthKm} km total</p>
-                      </div>
-                    </td>
-                    {/* Segments count */}
-                    <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-1 rounded-lg text-[12px] font-bold text-gray-700 bg-gray-100">{hw.totalSegments}</span>
-                    </td>
-                    {/* Next Due */}
-                    <td className="py-3.5 px-4">
-                      <div>
-                        <p className={`font-bold text-[13px] ${hw.isOverdue ? "text-red-600" : hw.isScheduled ? "text-green-700" : "text-gray-800"}`}>
-                          {fmt(hw.nextDueDate)}
-                        </p>
-                        {hw.isOverdue ? (
-                          <p className="text-[10px] text-red-500 font-semibold mt-0.5">{hw.overdueSegments} seg overdue ({hw.maxOverdueDays}d max)</p>
+                  <Fragment key={item.road.road_id}>
+                    <tr onClick={() => {
+                      setSelectedItem(isSelected ? null : item);
+                      if (!isSelected) setTimeout(() => detailCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                    }}
+                      className={`group cursor-pointer ${isSelected ? "ring-2 ring-orange-400 ring-inset" : ""}`}
+                      style={item.isScheduled ? { background: "#f0fdf4" } : isSelected ? { background: "#fff7ed" } : undefined}>
+                      <td className="text-[11px] font-bold text-gray-400 text-center">{rank}</td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <ChevronRight size={13} className={`transition-transform ${isSelected ? "rotate-90 text-orange-500" : "text-gray-300 group-hover:text-orange-400"}`} />
+                          <div>
+                            <p className="text-[12px] font-semibold text-gray-900 truncate max-w-45">{item.road.name}</p>
+                            <p className="text-[10px] text-gray-400">{item.road.road_id} · {item.road.highway_ref}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="text-[11px] text-gray-600">{item.road.district}</td>
+                      <td>
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="text-[15px] font-extrabold tabular-nums leading-tight"
+                            style={{ color: cibilColor(item.finalCibilScore) }}>{item.finalCibilScore.toFixed(0)}</span>
+                          <span className="text-[9px] font-semibold text-gray-400">/ 100</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{
+                            background: conditionCfg(item.conditionCategory).bg, color: conditionCfg(item.conditionCategory).color,
+                            border: `1px solid ${conditionCfg(item.conditionCategory).border}`
+                          }}>
+                          {item.conditionCategory}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{ color: pCfg.color, background: pCfg.bg, border: `1px solid ${pCfg.border}` }}>
+                          {item.priorityScore.toFixed(0)} {pCfg.label}
+                        </span>
+                      </td>
+                      <td className="text-[11px] font-medium">
+                        <span className={item.isOverdue ? "text-red-600" : "text-gray-600"}>{fmt(item.nextDueDate)}</span>
+                      </td>
+                      <td>
+                        {item.isScheduled ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-[10px] font-bold text-green-700">
+                            <CheckCircle2 size={10} />Scheduled
+                          </span>
+                        ) : item.isOverdue ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-[10px] font-bold text-red-700">
+                            <XCircle size={10} />{item.overdueDays}d overdue
+                          </span>
+                        ) : item.daysUntilDue <= 7 ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700">
+                            <Clock size={10} />{item.daysUntilDue}d
+                          </span>
                         ) : (
-                          <p className="text-[10px] text-gray-400 mt-0.5">in {hw.daysUntilDue}d</p>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-[10px] font-bold text-green-700">
+                            <CheckCircle2 size={10} />{item.daysUntilDue}d
+                          </span>
                         )}
-                      </div>
-                    </td>
-                    {/* Agency */}
-                    <td className="py-3.5 px-4">
-                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold text-gray-700 bg-gray-100">{hw.assignedAgency}</span>
-                    </td>
-                    {/* Priority */}
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                        style={{ color: pCfg.color, background: pCfg.bg, border: `1px solid ${pCfg.border}` }}>
-                        {pCfg.label}
-                      </span>
-                    </td>
-                    {/* Actions */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setDetailItem(hw.worstSegment)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold border-2 transition-all hover:shadow-md hover:-translate-y-0.5"
-                          style={{ borderColor: "#fed7aa", color: "#c2410c", background: "#fff7ed" }}>
-                          <Eye size={11} /> View Details
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => setRecordModal(item)}
+                          className="px-2.5 py-1.5 rounded-md text-[10px] font-semibold border transition-all hover:shadow-sm"
+                          style={{ borderColor: "#bbf7d0", color: "#15803d", background: "#f0fdf4" }}
+                          title="Record inspection results with distress metrics">
+                          <ClipboardCheck size={11} className="inline mr-0.5 -mt-0.5" />Record
                         </button>
-                        <button
-                          onClick={() => setRecordModal(hw.worstSegment)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-all hover:shadow-sm"
-                          style={{ borderColor: "#bbf7d0", color: "#15803d", background: "#f0fdf4" }}>
-                          <ClipboardCheck size={11} /> Record
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -1722,46 +1588,54 @@ export default function InspectionScheduler({ roads }: Props) {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
-            <p className="text-[11px] text-gray-400">
-              Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} of {filtered.length} highways
-            </p>
+          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
+            <p className="text-[11px] text-gray-400">Page {page + 1} of {totalPages} ({filtered.length.toLocaleString()} results)</p>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all">← Prev</button>
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Prev</button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const p = page < 3 ? i : page - 2 + i;
                 if (p >= totalPages) return null;
                 return (
                   <button key={p} onClick={() => setPage(p)}
-                    className={`w-8 h-8 rounded-lg text-[11px] font-semibold transition-all ${p === page ? "text-white shadow-sm" : "border border-gray-200 text-gray-600 hover:bg-white"}`}
+                    className={`w-7 h-7 rounded-lg text-[11px] font-semibold transition-all ${p === page ? "text-white shadow-sm" : "border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
                     style={p === page ? { background: "#f97316" } : undefined}>{p + 1}</button>
                 );
               })}
               <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page === totalPages - 1}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next →</button>
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next</button>
             </div>
           </div>
         )}
       </div>
 
-      {/* ═══ ROAD CONDITION DETAIL MODAL (shown only on "View Details" click) ═══ */}
-      {detailItem && (
-        <RoadDetailModal
-          item={detailItem}
-          onClose={() => setDetailItem(null)}
-          onSchedule={(it, date, agency, type) => {
-            it.isScheduled = true;
-            it.scheduledDate = new Date(date);
-            it.scheduledAgency = agency;
-            it.scheduledType = type;
-            setDetailItem(null);
-          }}
-          onRecord={(it) => { setDetailItem(null); setRecordModal(it); }}
-        />
+      {/* ═══ INSPECTOR DETAIL CARD ═══ */}
+      {selectedItem && (
+        <div ref={detailCardRef} className="scroll-mt-24">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, #f97316, #ea580c)" }}>
+              <User size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-[16px] font-extrabold text-gray-900 tracking-tight">Inspector / Engineer Panel</h2>
+              <p className="text-[11px] text-gray-400">Select a road from the table above to view details and schedule inspection</p>
+            </div>
+          </div>
+          <InspectorDetailCard
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            onSchedule={(it, date, agency, type) => {
+              it.isScheduled = true;
+              it.scheduledDate = new Date(date);
+              it.scheduledAgency = agency;
+              it.scheduledType = type;
+            }}
+            onRecord={(it) => setRecordModal(it)}
+          />
+        </div>
       )}
 
-      {/* ═══ RECORD RESULT MODAL ═══ */}
+      {/* ═══ MODALS ═══ */}
       {recordModal && <RecordModal item={recordModal} onClose={() => setRecordModal(null)} onSubmit={handleRecordSubmit} />}
 
       {/* Inline Keyframes */}

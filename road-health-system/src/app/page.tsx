@@ -187,27 +187,10 @@ export default function Home() {
     dashboardContent = (
       <>
         <Navbar currentPage="complaints" onNavigate={navigate} />
-        <main className="min-h-screen pt-[67px]" style={{ background: "var(--bg)" }}>
-          {/* ── Header ── */}
-          <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
-            <div className="max-w-[1600px] mx-auto flex items-center justify-between h-14 px-6">
-              <div>
-                <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">
-                  📞 Citizen Complaint Portal
-                </h1>
-                <p className="text-[11px] text-gray-400">
-                  Crowdsourced road complaint system • Voice, Keypad &amp; Photo enabled
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-[11px] font-semibold">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                IVR Active
-              </span>
-            </div>
-          </header>
+        <main className="min-h-screen pt-22" style={{ background: "var(--bg)" }}>
 
           {/* ── Prominent Tab Switcher ── */}
-          <div className="max-w-[1600px] mx-auto px-6 pt-5 pb-1">
+          <div className="max-w-400 mx-auto px-6 pt-5 pb-1">
             <div className="grid grid-cols-2 gap-3 max-w-xl">
               <button
                 onClick={() => setComplaintTab("dashboard")}
@@ -264,7 +247,7 @@ export default function Home() {
           </div>
 
           {/* ── Content ── */}
-          <div className="max-w-[1600px] mx-auto px-6 py-5">
+          <div className="max-w-400 mx-auto px-6 py-5">
             {complaintTab === "dashboard" ? (
               <ComplaintsDashboard refreshTrigger={complaintRefresh} />
             ) : (
@@ -328,14 +311,6 @@ export default function Home() {
         <>
           <Navbar currentPage="scheduling" onNavigate={navigate} />
           <main className="min-h-screen pt-22" style={{ background: "var(--bg)" }}>
-            <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
-              <div className="max-w-400 mx-auto flex items-center justify-between h-14 px-6">
-                <div>
-                  <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">Automatic Inspection Scheduler</h1>
-                  <p className="text-[11px] text-gray-400">AI-driven scheduling based on health scores, risk factors &amp; compliance cycles</p>
-                </div>
-              </div>
-            </header>
             <div className="max-w-400 mx-auto px-6 py-6">
               <InspectionScheduler roads={roads} />
             </div>
@@ -383,41 +358,7 @@ export default function Home() {
         <>
           <Navbar currentPage="registry" onNavigate={navigate} />
           <main className="min-h-screen pt-22" style={{ background: "var(--bg)" }}>
-            <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
-              <div className="max-w-400 mx-auto flex items-center justify-between h-14 px-6">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">Central Road Registry</h1>
-                    <p className="text-[11px] text-gray-400">
-                      {roads.length} segments • {totalKm.toLocaleString()} km • {districts} districts
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={handleExportCSV} className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-gray-200 bg-white text-gray-600 text-xs font-medium hover:bg-gray-50 hover:border-gray-300 transition-all">
-                    <Download size={14} /> Export
-                  </button>
-                  <button className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-gray-200 bg-white text-gray-600 text-xs font-medium hover:bg-gray-50 hover:border-gray-300 transition-all">
-                    <Upload size={14} /> Import
-                  </button>
-                  <button onClick={() => setShowAddModal(true)} className="inline-flex items-center gap-1.5 px-4 h-9 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 shadow-sm shadow-orange-500/20 transition-all">
-                    <Plus size={15} /> Add Road Segment
-                  </button>
-                </div>
-              </div>
-            </header>
-
-            <div className="max-w-400 mx-auto px-6 pt-5 pb-0">
-              <FilterBar
-                filters={filters}
-                onFilterChange={setFilters}
-                options={filterOptions}
-                totalCount={roads.length}
-                filteredCount={filteredRoads.length}
-              />
-            </div>
-
-            <div className="max-w-400 mx-auto px-6 pb-6 pt-4">
+            <div className="max-w-400 mx-auto px-6 py-6">
               <RegistryTable roads={filteredRoads} />
             </div>
           </main>
