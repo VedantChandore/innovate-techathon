@@ -1,4 +1,5 @@
-﻿"use client";
+﻿
+"use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,9 +16,10 @@ import GeoView from "@/components/GeoView";
 import ReportsPage from "@/components/ReportsPage";
 import CitizenIVR from "@/components/CitizenIVR";
 import ComplaintsDashboard from "@/components/ComplaintsDashboard";
+import PhotoComplaint from "@/components/PhotoComplaint";
 import {
   Loader2, Plus, Download, Upload, Database,
-  CalendarClock, Map, FileText, Phone, ListChecks,
+  CalendarClock, Camera, LayoutDashboard, Map, FileText, Phone, ListChecks,
 } from "lucide-react";
 
 const BAND_ORDER: Band[] = ["A+", "A", "B", "C", "D", "E"];
@@ -44,6 +46,7 @@ export default function Home() {
   const [filters, setFilters] = useState<RegistryFilters>(EMPTY_FILTERS);
   const [showAddModal, setShowAddModal] = useState(false);
   const [complaintRefresh, setComplaintRefresh] = useState(0);
+  const [complaintTab, setComplaintTab] = useState<"dashboard" | "photo">("dashboard");
 
   useEffect(() => {
     if (
@@ -184,12 +187,17 @@ export default function Home() {
     dashboardContent = (
       <>
         <Navbar currentPage="complaints" onNavigate={navigate} />
-        <main className="min-h-screen pt-22" style={{ background: "var(--bg)" }}>
+        <main className="min-h-screen pt-[67px]" style={{ background: "var(--bg)" }}>
+          {/* ── Header ── */}
           <header className="border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
-            <div className="max-w-400 mx-auto flex items-center justify-between h-14 px-6">
+            <div className="max-w-[1600px] mx-auto flex items-center justify-between h-14 px-6">
               <div>
-                <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">📞 Citizen Complaint Hotline</h1>
-                <p className="text-[11px] text-gray-400">IVR-powered road complaint system • Voice &amp; keypad enabled</p>
+                <h1 className="text-[16px] font-bold text-gray-900 tracking-tight">
+                  📞 Citizen Complaint Portal
+                </h1>
+                <p className="text-[11px] text-gray-400">
+                  Crowdsourced road complaint system • Voice, Keypad &amp; Photo enabled
+                </p>
               </div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-[11px] font-semibold">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -197,8 +205,76 @@ export default function Home() {
               </span>
             </div>
           </header>
-          <div className="max-w-400 mx-auto px-6 py-6">
-            <ComplaintsDashboard refreshTrigger={complaintRefresh} />
+
+          {/* ── Prominent Tab Switcher ── */}
+          <div className="max-w-[1600px] mx-auto px-6 pt-5 pb-1">
+            <div className="grid grid-cols-2 gap-3 max-w-xl">
+              <button
+                onClick={() => setComplaintTab("dashboard")}
+                className={`relative flex items-center gap-3 px-5 py-3.5 rounded-xl border-2 transition-all ${
+                  complaintTab === "dashboard"
+                    ? "border-orange-400 bg-orange-50 shadow-md shadow-orange-100"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  complaintTab === "dashboard"
+                    ? "bg-orange-500 text-white"
+                    : "bg-gray-100 text-gray-400"
+                }`}>
+                  <LayoutDashboard className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className={`text-sm font-bold ${complaintTab === "dashboard" ? "text-orange-700" : "text-gray-700"}`}>
+                    Complaints Dashboard
+                  </p>
+                  <p className="text-[10px] text-gray-400">View &amp; manage all complaints</p>
+                </div>
+                {complaintTab === "dashboard" && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
+                )}
+              </button>
+
+              <button
+                onClick={() => setComplaintTab("photo")}
+                className={`relative flex items-center gap-3 px-5 py-3.5 rounded-xl border-2 transition-all ${
+                  complaintTab === "photo"
+                    ? "border-orange-400 bg-orange-50 shadow-md shadow-orange-100"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  complaintTab === "photo"
+                    ? "bg-orange-500 text-white"
+                    : "bg-gray-100 text-gray-400"
+                }`}>
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div className="text-left">
+                  <p className={`text-sm font-bold ${complaintTab === "photo" ? "text-orange-700" : "text-gray-700"}`}>
+                    Submit Photo Report
+                  </p>
+                  <p className="text-[10px] text-gray-400">Report with AI-verified photo</p>
+                </div>
+                {complaintTab === "photo" && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-orange-500 border-2 border-white" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Content ── */}
+          <div className="max-w-[1600px] mx-auto px-6 py-5">
+            {complaintTab === "dashboard" ? (
+              <ComplaintsDashboard refreshTrigger={complaintRefresh} />
+            ) : (
+              <PhotoComplaint
+                onComplaintSubmitted={() => {
+                  setComplaintRefresh((n) => n + 1);
+                  setComplaintTab("dashboard");
+                }}
+              />
+            )}
           </div>
         </main>
         <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />
@@ -209,7 +285,7 @@ export default function Home() {
     dashboardContent = (
       <>
         <Navbar currentPage="reports" onNavigate={navigate} />
-        <div style={{ paddingTop: 88, minHeight: "100vh" }}>
+        <div style={{ paddingTop: 67, minHeight: "100vh" }}>
           <ReportsPage />
         </div>
       </>

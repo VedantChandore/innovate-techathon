@@ -146,7 +146,7 @@ export type ComplaintType =
 
 export type ComplaintSeverity = "low" | "medium" | "high" | "critical";
 export type ComplaintStatus = "new" | "acknowledged" | "in-progress" | "resolved" | "closed";
-export type ComplaintSource = "ivr_voice" | "ivr_keypad" | "web_form" | "telegram" | "twilio_ivr" | "browser_voice";
+export type ComplaintSource = "ivr_voice" | "ivr_keypad" | "web_form" | "telegram" | "twilio_ivr" | "browser_voice" | "photo_upload";
 
 export interface Complaint {
   id: string;
@@ -181,4 +181,11 @@ export interface Complaint {
 
   // Audio (for IVR calls)
   voice_transcript?: string;
+
+  // Photo evidence (for photo-based complaints)
+  photo_url?: string;            // base64 data URL of the uploaded image
+  photo_thumbnail?: string;      // smaller version for list cards
+  ai_photo_analysis?: string;    // LLM description of what's in the photo
+  ai_match_score?: number;       // 0-100: how well description matches photo
+  ai_match_verdict?: "match" | "mismatch" | "inconclusive"; // verification result
 }

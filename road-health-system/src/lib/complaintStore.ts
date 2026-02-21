@@ -139,10 +139,18 @@ export function getComplaintStats() {
 
 export function seedDemoComplaints(_count?: number) {
   const existing = readStore();
-  // Keep only if the data matches our curated set (≤ 6 items); reset stale bulk seeds
-  if (existing.length > 0 && existing.length <= 6) return existing;
-  // Clear stale data from previous bulk seeds
-  if (existing.length > 6) writeStore([]);
+  // If any user-submitted complaints exist (non-demo IDs), always preserve
+  const hasUserData = existing.some((c) => !c.id.startsWith("CMP-RR-"));
+  if (hasUserData) {
+    // Ensure demo data is present alongside user data
+    const demoIds = new Set(existing.filter((c) => c.id.startsWith("CMP-RR-")).map((c) => c.id));
+    if (demoIds.size >= 4) return existing; // all demos present
+    // Otherwise fall through to add missing demos (handled below)
+  }
+  // Keep if the data matches our curated set
+  if (existing.length > 0 && existing.length <= 10) return existing;
+  // Clear stale data from previous bulk seeds (only if no user data)
+  if (existing.length > 10 && !hasUserData) writeStore([]);
 
   const now = Date.now();
   const complaints: Complaint[] = [

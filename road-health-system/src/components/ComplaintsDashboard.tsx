@@ -21,6 +21,9 @@ import {
   Radio,
   ChevronRight,
   Volume2,
+  Camera,
+  ImageIcon,
+  Sparkles,
 } from "lucide-react";
 import {
   Complaint,
@@ -164,6 +167,11 @@ const SOURCE_CONFIG: Record<
     label: "Browser AI",
     icon: "🧠",
     accent: "text-purple-600",
+  },
+  photo_upload: {
+    label: "Photo Upload",
+    icon: "📸",
+    accent: "text-cyan-600",
   },
 };
 
@@ -882,6 +890,31 @@ export default function ComplaintsDashboard({
                           {complaint.description}
                         </p>
 
+                        {/* Photo Thumbnail */}
+                        {complaint.photo_thumbnail && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={complaint.photo_thumbnail} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            {complaint.ai_match_verdict && (
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                complaint.ai_match_verdict === "match"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : complaint.ai_match_verdict === "mismatch"
+                                    ? "bg-red-50 text-red-700 border border-red-200"
+                                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                              }`}>
+                                {complaint.ai_match_verdict === "match" ? "✓ AI Verified" :
+                                 complaint.ai_match_verdict === "mismatch" ? "✗ Mismatch" : "~ Review"}
+                                {complaint.ai_match_score != null && (
+                                  <span className="ml-0.5 opacity-70">{complaint.ai_match_score}%</span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                         {/* Bottom metadata */}
                         <div className="flex items-center gap-4 mt-2">
                           <span className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
@@ -1046,6 +1079,62 @@ function ComplaintDetail({
             {sevConf.label}
           </span>
         </div>
+
+        {/* Photo Evidence — shown FIRST when available */}
+        {complaint.photo_url && (
+          <div className="rounded-xl bg-blue-50/70 border border-blue-200/50 overflow-hidden">
+            <div className="p-4 pb-3">
+              <label className="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <Camera size={10} /> Photo Evidence
+              </label>
+            </div>
+            <div className="px-4 pb-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={complaint.photo_url}
+                alt="Road condition evidence"
+                className="w-full rounded-lg border border-blue-200 shadow-sm max-h-[280px] object-cover"
+              />
+            </div>
+            {complaint.ai_match_verdict && (
+              <div className="mx-4 mb-4 p-3 rounded-lg bg-white/80 border border-blue-200/60">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles size={12} className="text-violet-500" />
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">AI Verification</span>
+                  <span className={`ml-auto px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                    complaint.ai_match_verdict === "match"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : complaint.ai_match_verdict === "mismatch"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700"
+                  }`}>
+                    {complaint.ai_match_verdict === "match" ? "✓ Verified" :
+                     complaint.ai_match_verdict === "mismatch" ? "✗ Mismatch" : "~ Inconclusive"}
+                    {complaint.ai_match_score != null && ` (${complaint.ai_match_score}%)`}
+                  </span>
+                </div>
+                {complaint.ai_photo_analysis && (
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {complaint.ai_photo_analysis}
+                  </p>
+                )}
+                {complaint.ai_match_score != null && (
+                  <div className="mt-2">
+                    <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          complaint.ai_match_score >= 70 ? "bg-emerald-500" :
+                          complaint.ai_match_score >= 40 ? "bg-amber-500" : "bg-red-500"
+                        }`}
+                        style={{ width: `${complaint.ai_match_score}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Description */}
         <div>
