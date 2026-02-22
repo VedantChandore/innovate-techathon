@@ -8,6 +8,9 @@ __pycache__/
 *.pyd
 .venv*/
 *.egg-info/
+*.db
+*.sqlite
+*.sqlite3
 
 # Next.js
 road-health-system/.next/
@@ -15,3 +18,18 @@ road-health-system/node_modules/
 
 # ML model venv (large, local only)
 road-health-system/Cibil_Score_Model/.venv*/
+
+# LIDAR data files (large binary files - DO NOT COMMIT)
+*.las
+*.laz
+lidar-backend/storage/
+lidar-backend/highway_with_potholes_cracks.laz
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/

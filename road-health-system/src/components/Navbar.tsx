@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Shield, Menu, X, Home } from "lucide-react";
 
-type PageId = "landing" | "registry" | "scheduling" | "geoview" | "reports" | "complaints";
+type PageId = "landing" | "registry" | "scheduling" | "geoview" | "reports" | "complaints" | "lidar";
 
 interface NavbarProps {
   currentPage: PageId;
@@ -12,6 +12,7 @@ interface NavbarProps {
 
 const DASHBOARD_TABS = [
   { id: "geoview"    as const, label: "GeoView" },
+  { id: "lidar"      as const, label: "LiDAR" },
   { id: "complaints" as const, label: "Complaints" },
   { id: "reports"    as const, label: "Reports" },
   { id: "scheduling" as const, label: "Scheduler" },

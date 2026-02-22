@@ -126,7 +126,6 @@ export async function POST(req: NextRequest) {
           }],
           generationConfig: {
             temperature: 0.1,
-            // @ts-expect-error — thinkingConfig is valid for Gemini 2.5
             thinkingConfig: { thinkingBudget: 0 },
           },
         }),

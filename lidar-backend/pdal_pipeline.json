@@ -1,0 +1,28 @@
+[
+  {
+    "type": "readers.las",
+    "filename": "INPUT.las"
+  },
+  {
+    "type": "filters.outlier",
+    "method": "statistical",
+    "mean_k": 12,
+    "multiplier": 2.0
+  },
+  {
+    "type": "filters.smrf",
+    "ignore": "Classification[7:7]",
+    "slope": 0.2,
+    "threshold": 0.45,
+    "window": 16.0
+  },
+  {
+    "type": "filters.dem",
+    "resolution": 0.05
+  },
+  {
+    "type": "writers.las",
+    "filename": "OUTPUT.las",
+    "compression": "laszip"
+  }
+]

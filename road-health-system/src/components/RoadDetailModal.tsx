@@ -20,7 +20,13 @@ import {
   Gauge,
   Copy,
   ExternalLink,
+  Box,
+  Loader2,
 } from "lucide-react";
+import { fetchLidarScans, fetchLidarMetrics, LidarScansResponse, LidarMetrics } from "@/lib/lidarApi";
+import dynamic from "next/dynamic";
+
+const PotreeViewer = dynamic(() => import("@/components/PotreeViewer"), { ssr: false });
 
 interface RoadDetailModalProps {
   road: RoadWithScore;
@@ -35,6 +41,10 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
   // Start with fallback score from bulk load; silently upgrade to ML score in background
   const [liveScore, setLiveScore] = useState<HealthScore>(road.healthScore);
   const [mlLoading, setMlLoading] = useState(true);
+  const [lidarData, setLidarData] = useState<LidarScansResponse | null>(null);
+  const [lidarMetrics, setLidarMetrics] = useState<LidarMetrics | null>(null);
+  const [lidarLoading, setLidarLoading] = useState(false);
+  const [embedScanId, setEmbedScanId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +53,23 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
     });
     return () => { cancelled = true; };
   }, [road.road_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let cancelled = false;
+    setLidarLoading(true);
+    fetchLidarScans(road.road_id).then((data) => {
+      if (!cancelled) {
+        setLidarData(data);
+        if (data?.scans?.[0]) {
+          fetchLidarMetrics(data.scans[0].scan_id).then((m) => {
+            if (!cancelled) setLidarMetrics(m);
+          });
+        }
+        setLidarLoading(false);
+      }
+    }).catch(() => { if (!cancelled) setLidarLoading(false); });
+    return () => { cancelled = true; };
+  }, [road.road_id]);
 
   const repairCost = estimateRepairCost(road, liveScore.conditionCategory);
   const inspDays = getInspectionInterval(liveScore.band);
@@ -194,6 +221,68 @@ export default function RoadDetailModal({ road, onClose }: RoadDetailModalProps)
               <DetailItem icon={<IndianRupee size={13} />} label="Repair Cost" value={`₹${repairCost} L`} sub={road.surface_type} />
               <DetailItem icon={<MapPin size={13} />} label="Elevation" value={`${road.elevation_m}m`} sub={road.terrain_type} />
             </div>
+          </div>
+
+          {/* LiDAR 3D Scan */}
+          <div>
+            <h3 className="text-[12px] font-bold text-gray-800 mb-2.5 flex items-center gap-1.5">
+              <Box size={13} className="text-blue-600" />
+              LiDAR 3D Scan
+            </h3>
+            {lidarLoading && (
+              <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2">
+                <Loader2 size={14} className="animate-spin" />
+                Loading scan data…
+              </div>
+            )}
+            {!lidarLoading && lidarData && lidarData.scans.length > 0 && (
+              <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {lidarData.scans.slice(0, 3).map((s) => (
+                    <div key={s.scan_id} className="flex gap-1">
+                      <button
+                        onClick={() => setEmbedScanId(embedScanId === s.scan_id ? null : s.scan_id)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition ${
+                          embedScanId === s.scan_id
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                        }`}
+                      >
+                        <Box size={12} />
+                        {embedScanId === s.scan_id ? "Hide 3D" : "View 3D"}
+                      </button>
+                      <a
+                        href={`/viewer/${s.scan_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-[11px] font-medium hover:bg-gray-300 transition"
+                      >
+                        <ExternalLink size={12} />
+                        Fullscreen
+                      </a>
+                    </div>
+                  ))}
+                </div>
+                {embedScanId && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-gray-200">
+                    <PotreeViewer scanId={embedScanId} height={260} />
+                  </div>
+                )}
+                {lidarMetrics && (
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px] text-gray-600">
+                    <span>Potholes: {lidarMetrics.pothole_count}</span>
+                    <span>Volume: {lidarMetrics.pothole_total_volume_m3.toFixed(3)} m³</span>
+                    <span>Max depth: {lidarMetrics.max_pothole_depth_mm} mm</span>
+                    <span>Rut depth: {lidarMetrics.avg_rut_depth_mm} mm</span>
+                    <span>Roughness: {lidarMetrics.roughness_proxy}</span>
+                    <span>Damage: {lidarMetrics.damaged_area_percent.toFixed(2)}%</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {!lidarLoading && (!lidarData || lidarData.scans.length === 0) && (
+              <p className="text-[11px] text-gray-400 py-2">No LiDAR scan data for this road</p>
+            )}
           </div>
 
           {/* Risk Flags */}

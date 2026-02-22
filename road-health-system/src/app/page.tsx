@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -17,9 +17,10 @@ import ReportsPage from "@/components/ReportsPage";
 import CitizenIVR from "@/components/CitizenIVR";
 import ComplaintsDashboard from "@/components/ComplaintsDashboard";
 import PhotoComplaint from "@/components/PhotoComplaint";
+import LidarDashboard from "@/components/LidarDashboard";
 import {
   Loader2, Plus, Download, Upload, Database,
-  CalendarClock, Camera, LayoutDashboard, Map, FileText, Phone, ListChecks,
+  CalendarClock, Camera, LayoutDashboard, Map, FileText, Phone, ListChecks, Box,
 } from "lucide-react";
 
 const BAND_ORDER: Band[] = ["A+", "A", "B", "C", "D", "E"];
@@ -34,7 +35,7 @@ const EMPTY_FILTERS: RegistryFilters = {
   band: "",
 };
 
-type Page = "landing" | "registry" | "scheduling" | "geoview" | "reports" | "complaints";
+type Page = "landing" | "registry" | "scheduling" | "geoview" | "reports" | "complaints" | "lidar";
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
@@ -156,11 +157,12 @@ export default function Home() {
   const tabIcon = (page: Page) => {
     switch (page) {
       case "geoview":    return <Map          size={44} className="text-orange-500 animate-bounce" />;
-      case "reports":    return <FileText      size={44} className="text-blue-500 animate-pulse"  />;
-      case "complaints": return <Phone         size={44} className="text-purple-500 animate-bounce" />;
-      case "registry":   return <ListChecks    size={44} className="text-green-500 animate-pulse"  />;
+      case "lidar":      return <Box          size={44} className="text-blue-500 animate-pulse"  />;
+      case "reports":    return <FileText     size={44} className="text-blue-500 animate-pulse"  />;
+      case "complaints": return <Phone        size={44} className="text-purple-500 animate-bounce" />;
+      case "registry":   return <ListChecks   size={44} className="text-green-500 animate-pulse"  />;
       case "scheduling": return <CalendarClock size={44} className="text-cyan-500 animate-spin"   />;
-      default:           return <Loader2       size={44} className="text-gray-400 animate-spin"   />;
+      default:           return <Loader2      size={44} className="text-gray-400 animate-spin"   />;
     }
   };
 
@@ -258,6 +260,19 @@ export default function Home() {
                 }}
               />
             )}
+          </div>
+        </main>
+        <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />
+      </>
+    );
+
+  } else if (currentPage === "lidar") {
+    dashboardContent = (
+      <>
+        <Navbar currentPage="lidar" onNavigate={navigate} />
+        <main className="min-h-screen pt-22" style={{ background: "var(--bg)" }}>
+          <div className="max-w-400 mx-auto px-6 py-6">
+            <LidarDashboard />
           </div>
         </main>
         <CitizenIVR onComplaintSubmitted={() => setComplaintRefresh((n) => n + 1)} />
@@ -390,6 +405,7 @@ export default function Home() {
               {tabIcon(pendingPage)}
               <span className="mt-3 text-[15px] font-bold text-gray-700 tracking-tight">
                 {pendingPage === "geoview"    && "Loading Map..."}
+                {pendingPage === "lidar"      && "Loading LiDAR..."}
                 {pendingPage === "reports"    && "Loading Reports..."}
                 {pendingPage === "complaints" && "Loading Complaints..."}
                 {pendingPage === "registry"   && "Loading Registry..."}
